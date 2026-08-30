@@ -1,0 +1,42 @@
+name: Gerar APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Instalar Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Preparar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Aceitar licenças do SDK
+        run: yes | sdkmanager --licenses || true
+
+      - name: Preparar Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.11.1'
+
+      - name: Rodar os testes
+        run: gradle testDebugUnitTest --no-daemon --stacktrace
+
+      - name: Compilar APK de teste
+        run: gradle assembleDebug --no-daemon --stacktrace
+
+      - name: Publicar o APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pericia-campo-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
