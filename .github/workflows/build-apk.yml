@@ -9,10 +9,10 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Instalar Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: '17'
@@ -20,23 +20,52 @@ jobs:
       - name: Preparar Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Aceitar licenças do SDK
-        run: yes | sdkmanager --licenses || true
+      - name: Localizar o projeto
+        id: proj
+        run: |
+          set -e
+          echo "--- conteudo do repositorio ---"
+          find . -maxdepth 3 -not -path './.git/*' | sort | head -40
+          ARQ=$(find . -name settings.gradle.kts -not -path '*/build/*' -not -path './.git/*' | head -1)
+          if [ -z "$ARQ" ]; then
+            echo "ERRO: settings.gradle.kts nao encontrado no repositorio."
+            exit 1
+          fi
+          DIR=$(dirname "$ARQ")
+          echo "dir=$DIR" >> "$GITHUB_OUTPUT"
+          echo "--- projeto encontrado em: $DIR ---"
+          ls -la "$DIR"
 
       - name: Preparar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.11.1'
 
+      - name: Conferir ambiente
+        working-directory: ${{ steps.proj.outputs.dir }}
+        run: |
+          gradle --version
+          echo "ANDROID_HOME=$ANDROID_HOME"
+
       - name: Rodar os testes
+        working-directory: ${{ steps.proj.outputs.dir }}
         run: gradle testDebugUnitTest --no-daemon --stacktrace
 
       - name: Compilar APK de teste
+        working-directory: ${{ steps.proj.outputs.dir }}
         run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: Publicar o APK
         uses: actions/upload-artifact@v4
         with:
           name: pericia-campo-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: ${{ steps.proj.outputs.dir }}/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+      - name: Publicar relatórios (quando falhar)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-de-teste
+          path: ${{ steps.proj.outputs.dir }}/app/build/reports/
+          if-no-files-found: ignore
