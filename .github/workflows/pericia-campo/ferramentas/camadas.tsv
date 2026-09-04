@@ -1,0 +1,26 @@
+# Camadas do grupo "Restrição Ambiental" do IDE-Sisema (geovisualizador, capturado em 30/08/2026).
+# prioridade: 1 = pacote BASE embarcado (estadual) | 2 = pacote REGIONAL sob demanda
+# tipo: poligono | ponto      raio_m: usado apenas quando tipo=ponto
+# tecnico: PREENCHER com o Name que sair do GetCapabilities (passo 1 do montar-pacote.sh)
+#
+# prioridade	tabela	nome	fonte	tipo	raio_m	tecnico
+1	areas_protegidas	Áreas Protegidas	IEF/ICMBio	poligono		
+1	zonas_amortecimento	Zonas de Amortecimento de Unidades de Conservação	IEF	poligono		
+1	influencia_cavidades	Áreas de influência de cavidades	Cecav/Feam	poligono		
+1	ocorrencia_cavidades	Ocorrência de Cavidades	Cecav	ponto	250	
+1	mata_atlantica	Lei da Mata Atlântica	MMA	poligono		
+1	corredores_ecologicos	Corredores Ecológicos Legalmente Instituídos	IEF/PBH	poligono		
+1	drenagem_classe_especial	Áreas de Drenagem à Montante de Cursos d'água Classe Especial	Igam	poligono		
+1	enquadramento_corpos_agua	Enquadramentos de Corpos D'água	Igam	poligono		
+1	rios_preservacao_permanente	Rios de Preservação Permanente	Igam	poligono		
+1	zoneamento_ucs_estaduais	Zoneamento de Unidades de Conservação Estaduais	IEF	poligono		
+1	terras_indigenas	Terras indígenas	Funai	poligono		
+1	raios_terras_indigenas	Raios de restrição de Terras Indígenas	Feam/Funai	poligono		
+1	quilombolas	Quilombolas	Incra	poligono		
+1	raios_quilombolas	Raios de restrição de Terras Quilombolas	Feam/Incra	poligono		
+2	reservas_biosfera	Reservas da Biosfera	IEF/MMA/UNESCO	poligono		
+2	sitios_ramsar	Sítios Ramsar	Igam	poligono		
+2	patrimonio_cultural	Patrimônio Cultural	Iepha-MG	poligono		
+2	conflito_recursos_hidricos	Conflito por Recursos Hídricos	Igam	poligono		
+2	seguranca_aeroportuaria	Áreas de Segurança Aeroportuária	Feam/Decea	poligono		
+2	marco_rio_sao_marcos	Marco regulatório da bacia do rio São Marcos	ANA/ADASA/Igam/Semad	poligono		
