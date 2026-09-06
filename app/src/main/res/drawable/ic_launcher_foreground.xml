@@ -1,0 +1,12 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- retículo de mira: a marca do instrumento de campo -->
+    <path android:strokeColor="#E8EAED" android:strokeWidth="3.2"
+        android:fillColor="#00000000"
+        android:pathData="M54,32 A22,22 0 1,1 53.9,32" />
+    <path android:strokeColor="#E8EAED" android:strokeWidth="3.2" android:strokeLineCap="round"
+        android:pathData="M54,24 L54,36 M54,72 L54,84 M24,54 L36,54 M72,54 L84,54" />
+    <path android:fillColor="#7FD18F"
+        android:pathData="M54,48 A6,6 0 1,1 53.9,48 Z" />
+</vector>

@@ -1,0 +1,240 @@
+package br.com.oanalistaambiental.pericia.laudo
+
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.graphics.Matrix
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.Typeface
+import android.graphics.pdf.PdfDocument
+import android.media.ExifInterface
+import br.com.oanalistaambiental.pericia.dados.Banco
+import br.com.oanalistaambiental.pericia.dados.Foto
+import br.com.oanalistaambiental.pericia.dados.Sessao
+import br.com.oanalistaambiental.pericia.geo.Utm
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+/**
+ * Laudo fotografico em PDF, gerado com a API nativa do Android (sem dependencia externa).
+ *
+ * Estrutura: capa -> galeria com legenda e restricoes -> relatorio de integridade.
+ *
+ * O relatorio de integridade traz o comando de verificacao escrito por extenso, de proposito:
+ * uma prova que qualquer pessoa consegue conferir SEM o app vale mais que uma prova que
+ * depende do app que a gerou.
+ */
+object LaudoPdf {
+
+    private const val LARGURA = 595   // A4 72dpi
+    private const val ALTURA = 842
+    private const val MARGEM = 40f
+    private val fmt = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR"))
+
+    fun gerar(banco: Banco, sessao: Sessao, fotos: List<Foto>, destino: File): File {
+        val doc = PdfDocument()
+        capa(doc, sessao, fotos)
+        fotos.forEachIndexed { i, f -> paginaFoto(doc, banco, f, i + 1, fotos.size) }
+        integridade(doc, sessao, fotos)
+        // Observacao: o numero de pagina do PdfDocument e apenas um indice interno; paginas
+        // que transbordam recebem indices adicionais e a ordem de escrita e preservada.
+        FileOutputStream(destino).use { doc.writeTo(it) }
+        doc.close()
+        return destino
+    }
+
+    private fun novaPagina(doc: PdfDocument, numero: Int): PdfDocument.Page =
+        doc.startPage(PdfDocument.PageInfo.Builder(LARGURA, ALTURA, numero).create())
+
+    private fun titulo(size: Float, bold: Boolean = true) = Paint().apply {
+        color = Color.BLACK; textSize = size; isAntiAlias = true
+        typeface = Typeface.create(Typeface.SANS_SERIF, if (bold) Typeface.BOLD else Typeface.NORMAL)
+    }
+
+    private fun mono(size: Float) = Paint().apply {
+        color = Color.DKGRAY; textSize = size; isAntiAlias = true
+        typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
+    }
+
+    private fun capa(doc: PdfDocument, s: Sessao, fotos: List<Foto>) {
+        val p = novaPagina(doc, 1); val c = p.canvas
+        var y = 120f
+        c.drawText("LAUDO FOTOGRÁFICO DE VISTORIA", MARGEM, y, titulo(18f)); y += 40f
+        c.drawText(s.titulo, MARGEM, y, titulo(14f, false)); y += 28f
+        s.processo?.let { c.drawText("Processo/Auto: $it", MARGEM, y, titulo(11f, false)); y += 20f }
+        c.drawText("Início: ${fmt.format(Date(s.criadaEm))}", MARGEM, y, titulo(11f, false)); y += 20f
+        c.drawText("Registros fotográficos: ${fotos.size}", MARGEM, y, titulo(11f, false)); y += 20f
+        c.drawText("Datum de referência: SIRGAS 2000 (EPSG:4674)", MARGEM, y, titulo(11f, false)); y += 40f
+
+        val aviso = listOf(
+            "Este documento reúne registros fotográficos georreferenciados produzidos em campo.",
+            "Cada imagem possui código hash SHA-256 calculado no momento da captura, permitindo",
+            "verificar posteriormente se o arquivo foi alterado. As indicações de restrição",
+            "ambiental são INDÍCIOS obtidos por consulta a bases públicas, sujeitos à precisão do",
+            "receptor GNSS e à data de extração das camadas — não substituem a análise técnica."
+        )
+        aviso.forEach { c.drawText(it, MARGEM, y, titulo(9f, false)); y += 14f }
+        doc.finishPage(p)
+    }
+
+    private fun paginaFoto(doc: PdfDocument, banco: Banco, f: Foto, n: Int, total: Int) {
+        var pagina = novaPagina(doc, n + 1)
+        var c = pagina.canvas
+        var y = MARGEM + 14f
+        var extras = 0
+        c.drawText("Registro $n de $total", MARGEM, y, titulo(12f)); y += 20f
+
+        val arq = File(f.arquivoComLegenda ?: f.arquivoOriginal)
+        if (arq.exists()) {
+            decodificarOrientado(arq, 2)?.let { bmp ->
+                val larguraMax = LARGURA - 2 * MARGEM
+                // Nao deixa a imagem sozinha ocupar a pagina inteira: sobra espaco para os dados.
+                val alturaMax = ALTURA * 0.52f
+                var largura = larguraMax
+                var altura = larguraMax * bmp.height / bmp.width
+                if (altura > alturaMax) {
+                    largura = alturaMax * bmp.width / bmp.height
+                    altura = alturaMax
+                }
+                val esquerda = MARGEM + (larguraMax - largura) / 2f
+                c.drawBitmap(bmp, null, Rect(
+                    esquerda.toInt(), y.toInt(), (esquerda + largura).toInt(), (y + altura).toInt()
+                ), null)
+                y += altura + 16f
+                bmp.recycle()
+            }
+        }
+
+        // BUG corrigido: as linhas abaixo eram desenhadas sem checar o fim da pagina, entao em
+        // foto em retrato o hash e as ultimas restricoes sumiam do laudo, em silencio.
+        fun linha(texto: String, p: Paint, recuo: Float = 0f) {
+            if (y > ALTURA - MARGEM - 14f) {
+                doc.finishPage(pagina)
+                extras += 1
+                pagina = novaPagina(doc, n + 1 + extras)
+                c = pagina.canvas
+                y = MARGEM + 14f
+                c.drawText("Registro $n de $total (continuação)", MARGEM, y, titulo(10f))
+                y += 20f
+            }
+            c.drawText(texto, MARGEM + recuo, y, p)
+            y += 13f
+        }
+
+        val semPosicao = f.lat == 0.0 && f.lon == 0.0
+        if (semPosicao) {
+            linha("SEM POSIÇÃO GNSS NO MOMENTO DA CAPTURA", titulo(9f))
+        } else {
+            val utm = Utm.projetar(f.lat, f.lon)
+            linha("UTM SIRGAS 2000: ${utm.formatado()}", titulo(9f, false))
+            linha("Geográfica: %.6f, %.6f".format(f.lat, f.lon), titulo(9f, false))
+            linha("Precisão do GNSS: ±%.0f m".format(f.precisaoM), titulo(9f, false))
+        }
+        linha("Data/hora: ${fmt.format(Date(f.instante))}", titulo(9f, false))
+        f.altitudeM?.let { linha("Altitude: %.0f m".format(it), titulo(9f, false)) }
+        f.azimuteGraus?.let { linha("Azimute da câmera: %.0f°".format(it), titulo(9f, false)) }
+        f.endereco?.let { linha("Endereço: $it", titulo(9f, false)) }
+        f.tipoOcorrencia?.let { linha("Ocorrência: $it", titulo(9f, false)) }
+        f.observacao?.takeIf { it.isNotBlank() }?.let { linha("Observação: $it", titulo(9f, false)) }
+
+        val restr = banco.restricoesDaFoto(f.id)
+        if (restr.isNotEmpty()) {
+            y += 6f
+            linha("Indícios de restrição ambiental:", titulo(9f))
+            restr.forEach { r ->
+                linha("• ${r.camada} (${r.fonte}) — ${legivel(r.situacao)}, %.0f m".format(r.distanciaM), titulo(8.5f, false), 8f)
+                linha("  base de ${r.dataExtracao}, pacote ${r.pacoteVersao}, simplificação ${r.toleranciaM} m", mono(7.5f), 8f)
+            }
+        }
+        y += 4f
+        linha("SHA-256: ${f.sha256}", mono(7f))
+        doc.finishPage(pagina)
+    }
+
+    private fun legivel(situacao: String) = when (situacao) {
+        "DENTRO" -> "indício de ponto interno"
+        "PROXIMO_AO_LIMITE" -> "próximo ao limite, indefinido"
+        else -> "fora"
+    }
+
+    /**
+     * BitmapFactory ignora a orientacao EXIF, e o CameraX grava os pixels na orientacao do
+     * sensor. Sem isto, toda foto em retrato sai deitada no laudo.
+     */
+    private fun decodificarOrientado(arquivo: File, amostragem: Int): Bitmap? {
+        val opts = BitmapFactory.Options().apply { inSampleSize = amostragem }
+        val bmp = BitmapFactory.decodeFile(arquivo.absolutePath, opts) ?: return null
+        val graus = when (
+            runCatching {
+                ExifInterface(arquivo.absolutePath)
+                    .getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+            }.getOrDefault(ExifInterface.ORIENTATION_NORMAL)
+        ) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> 90f
+            ExifInterface.ORIENTATION_ROTATE_180 -> 180f
+            ExifInterface.ORIENTATION_ROTATE_270 -> 270f
+            else -> 0f
+        }
+        if (graus == 0f) return bmp
+        val girado = Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height,
+            Matrix().apply { postRotate(graus) }, true)
+        if (girado !== bmp) bmp.recycle()
+        return girado
+    }
+
+    private fun integridade(doc: PdfDocument, s: Sessao, fotos: List<Foto>) {
+        val p = novaPagina(doc, fotos.size + 2); val c = p.canvas
+        var y = MARGEM + 14f
+        c.drawText("RELATÓRIO DE INTEGRIDADE", MARGEM, y, titulo(14f)); y += 26f
+
+        listOf(
+            "Cada arquivo original desta vistoria teve seu código hash SHA-256 calculado no",
+            "instante da captura, antes de qualquer processamento. Conferir os códigos abaixo",
+            "contra os arquivos entregues demonstra que não houve alteração.",
+            "",
+            "Como verificar (não é preciso ter o aplicativo):",
+            "   Linux/macOS:  sha256sum ARQUIVO.jpg",
+            "   Windows:      certutil -hashfile ARQUIVO.jpg SHA256",
+            "",
+            "ATENÇÃO: aplicativos de mensagem e clientes de e-mail recomprimem imagens e removem",
+            "metadados. Um arquivo trafegado por esses canais NÃO confere mais com o hash. Os",
+            "originais devem ser entregues em mídia ou canal que não reprocesse o arquivo."
+        ).forEach { c.drawText(it, MARGEM, y, titulo(9f, false)); y += 13f }
+
+        y += 10f
+        s.raizMerkle?.let {
+            c.drawText("Raiz de Merkle da sessão:", MARGEM, y, titulo(9f)); y += 12f
+            c.drawText(it, MARGEM, y, mono(7f)); y += 18f
+        }
+        s.carimboTempo?.let {
+            c.drawText("Carimbo do tempo (RFC 3161) aplicado sobre a raiz.", MARGEM, y, titulo(9f)); y += 18f
+        }
+
+        c.drawText("Arquivos e respectivos hashes:", MARGEM, y, titulo(9f)); y += 14f
+
+        // BUG corrigido: a lista era cortada em silencio quando a sessao tinha muitas fotos.
+        // Agora o relatorio pagina, e nenhum hash fica de fora do laudo.
+        var pagina = p
+        var canvas = c
+        var numero = fotos.size + 2
+        fotos.forEach { f ->
+            if (y > ALTURA - MARGEM - 24f) {
+                doc.finishPage(pagina)
+                numero += 1
+                pagina = novaPagina(doc, numero)
+                canvas = pagina.canvas
+                y = MARGEM + 14f
+                canvas.drawText("Relatório de integridade (continuação)", MARGEM, y, titulo(10f))
+                y += 20f
+            }
+            canvas.drawText(File(f.arquivoOriginal).name, MARGEM, y, mono(7.5f)); y += 10f
+            canvas.drawText(f.sha256, MARGEM + 10f, y, mono(7f)); y += 14f
+        }
+        doc.finishPage(pagina)
+    }
+}
