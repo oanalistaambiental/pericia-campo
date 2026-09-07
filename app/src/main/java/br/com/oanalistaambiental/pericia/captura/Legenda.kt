@@ -28,7 +28,14 @@ object Legenda {
     /** Maior lado da COPIA com legenda. O original nunca e redimensionado. */
     private const val LADO_MAXIMO = 4000
 
-    private val fmtData = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR"))
+    // SimpleDateFormat NAO e thread-safe, e uma instancia de `object` e compartilhada por todo
+    // o app. A legenda e gerada no fluxo de captura enquanto um export pode estar rodando em
+    // paralelo; o resultado de uma corrida em SimpleDateFormat nao e excecao — e uma data
+    // silenciosamente errada, carimbada na imagem que vai para o processo. ThreadLocal da uma
+    // instancia por thread e resolve sem trocar a API.
+    private val fmtData = ThreadLocal.withInitial {
+        SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR"))
+    }
 
     fun gerar(original: File, destino: File, foto: Foto, sessaoTitulo: String): File {
         // BUG corrigido: a imagem era decodificada em tamanho cheio e mutavel (ARGB_8888).
@@ -114,7 +121,12 @@ object Legenda {
         } else {
             val utm = Utm.projetar(foto.lat, foto.lon)
             linhas += "UTM SIRGAS 2000  ${utm.formatado()}"
-            linhas += "GEO  %.6f, %.6f  (SIRGAS 2000)".format(foto.lat, foto.lon)
+            // Locale.US e obrigatorio aqui, nao preferencia. Em aparelho pt-BR o `.format`
+            // sem locale escrevia "GEO  -19,922700, -43,945100": a virgula fazia papel de
+            // separador decimal E de separador do par, na legenda queimada na imagem que vai
+            // para o processo. Quem copiasse aquilo para outro sistema nao teria como saber
+            // onde termina a latitude.
+            linhas += "GEO  %.6f, %.6f  (SIRGAS 2000)".format(Locale.US, foto.lat, foto.lon)
         }
 
         val partes = mutableListOf<String>()
@@ -122,7 +134,7 @@ object Legenda {
         foto.altitudeM?.let { partes += "Alt %.0f m".format(it) }
         foto.azimuteGraus?.let { partes += "Azimute %.0f° (%s)".format(it, rosa(it)) }
         if (partes.isNotEmpty()) linhas += partes.joinToString("  ")
-        linhas += fmtData.format(Date(foto.instante))
+        linhas += fmtData.get()!!.format(Date(foto.instante))
         foto.endereco?.let { linhas += it }
         foto.tipoOcorrencia?.let { linhas += "Ocorrência: $it" }
         linhas += "SHA-256 ${foto.sha256.take(32)}..."

@@ -43,17 +43,37 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
         val altitudeM: Double? = null,
         val instante: Long = System.currentTimeMillis(),
         /** Nome do provedor que entregou o ponto: distingue GNSS de rede. */
-        val provedor: String? = null
+        val provedor: String? = null,
+        /**
+         * Leitura que passou do prazo: o GNSS parou de entregar e este ponto ja nao diz onde
+         * o perito esta AGORA.
+         *
+         * BUG grave que isto corrige. A posicao ficava guardada para sempre. Se o sinal caisse
+         * — mata fechada, galpao, localizacao desligada no atalho da barra — o app continuava
+         * exibindo o selo verde e a coordenada de minutos atras, e a foto tirada 600 m adiante
+         * era gravada com aquela coordenada velha, carimbada com a hora de agora e com a
+         * precisao antiga. Coordenada de um lugar, hora de outro, e o app afirmando confianca.
+         * E o erro que invalida laudo.
+         */
+        val vencida: Boolean = false
     ) {
         /** Selo de qualidade do ponto: ensina o perito a esperar mais alguns segundos. */
         val qualidade: Qualidade get() = when {
-            precisaoM == null -> Qualidade.SEM_SINAL
+            !temPosicao || precisaoM == null -> Qualidade.SEM_SINAL
+            vencida -> Qualidade.VENCIDA
             precisaoM <= 5f -> Qualidade.BOA
             precisaoM <= 15f -> Qualidade.ACEITAVEL
             else -> Qualidade.RUIM
         }
 
         val temPosicao: Boolean get() = lat != null && lon != null
+
+        /** Idade da leitura em segundos, para a tela dizer de quando e o ponto. */
+        fun idadeSegundos(agora: Long = System.currentTimeMillis()): Long =
+            ((agora - instante).coerceAtLeast(0L)) / 1000L
+
+        /** Serve para prova? Precisa existir, estar no prazo e nao ser palpite de rede. */
+        val serveParaProva: Boolean get() = temPosicao && !vencida && !aproximada
 
         /** Posicao vinda da rede, nao do GNSS: serve de ponte, nao de prova. */
         val aproximada: Boolean get() = provedor == LocationManager.NETWORK_PROVIDER
@@ -76,6 +96,10 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
         /** Declividade da superficie em porcentagem, que e como talude aparece em laudo. */
         val declividadePercent: Float?
             get() = inclinacaoSuperficieGraus?.let { Orientacoes.declividadePercent(it) }
+                // ?.let achataria dois casos diferentes num so: "sem leitura de sensor" e
+                // "vertical demais para a tangente significar alguma coisa". A tela precisa
+                // distinguir, entao null aqui e sempre "nao ha numero util", e quem exibe olha
+                // tambem inclinacaoSuperficieGraus para saber qual dos dois e.
     }
 
     data class Barometro(
@@ -91,7 +115,7 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
         val barometro: Barometro
     )
 
-    enum class Qualidade { SEM_SINAL, RUIM, ACEITAVEL, BOA }
+    enum class Qualidade { SEM_SINAL, VENCIDA, RUIM, ACEITAVEL, BOA }
 
     enum class PrecisaoBussola { DESCONHECIDA, INUTILIZAVEL, BAIXA, MEDIA, ALTA;
         /** Abaixo de MEDIA o azimute nao serve para laudo e o app precisa dizer isso. */
@@ -121,8 +145,34 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
     private val sm = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
 
     private val rotacao = FloatArray(9)
+    private val vetorCurto = FloatArray(4)
     private var ultimaOrientacaoMs = 0L
     private var ligado = false
+
+    companion object {
+        /**
+         * Prazo de validade de um ponto de GNSS parado. O receptor entrega uma leitura por
+         * segundo; passados quinze, ou o sinal caiu ou a localizacao foi desligada, e o ponto
+         * guardado deixa de valer como "onde estou".
+         */
+        const val VALIDADE_FIX_MS = 15_000L
+    }
+
+    /**
+     * Vigia do prazo: um StateFlow so reemite quando alguem escreve nele, e o tempo passando
+     * nao escreve nada. Sem este relogio a tela ficaria eternamente verde com um ponto morto.
+     */
+    private val relogio = android.os.Handler(android.os.Looper.getMainLooper())
+    private val vigiaDeValidade = object : Runnable {
+        override fun run() {
+            val p = _posicao.value
+            if (p.temPosicao) {
+                val venceu = System.currentTimeMillis() - p.instante > VALIDADE_FIX_MS
+                if (venceu != p.vencida) _posicao.value = p.copy(vencida = venceu)
+            }
+            if (ligado) relogio.postDelayed(this, 2_000L)
+        }
+    }
 
     /**
      * BUG corrigido, tres de uma vez:
@@ -144,6 +194,7 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
         _falha.value = null
 
         var algumProvedor = false
+        var permissaoNegada = false
         for (provedor in listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)) {
             runCatching {
                 if (lm.isProviderEnabled(provedor)) {
@@ -151,11 +202,20 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
                     algumProvedor = true
                     lm.getLastKnownLocation(provedor)?.let { semear(it) }
                 }
-            }.onFailure { _falha.value = "Localização recusada pelo sistema: ${it.message}" }
+            }.onFailure { if (it is SecurityException) permissaoNegada = true }
         }
-        if (!algumProvedor) {
-            _falha.value = "Localização desligada no aparelho — ligue o GPS antes de fotografar."
+        // As duas causas produziam a MESMA frase, e a frase falava do GPS. O perito ia ao
+        // painel de atalhos, via o GPS ligado, e nunca descobria que faltava a permissao.
+        _falha.value = when {
+            permissaoNegada ->
+                "Sem permissão de localização — libere em Ajustes › Apps › Perícia › Permissões."
+            !algumProvedor ->
+                "Localização desligada no aparelho — ligue o GPS antes de fotografar."
+            else -> null
         }
+
+        relogio.removeCallbacks(vigiaDeValidade)
+        relogio.post(vigiaDeValidade)
 
         sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)?.let {
             sm.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
@@ -172,6 +232,7 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
 
     fun parar() {
         ligado = false
+        relogio.removeCallbacks(vigiaDeValidade)
         runCatching { lm.removeUpdates(this) }
         sm.unregisterListener(this)
     }
@@ -193,14 +254,25 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
             precisaoM = if (location.hasAccuracy()) location.accuracy else null,
             altitudeM = if (location.hasAltitude()) location.altitude else anterior.altitudeM,
             instante = System.currentTimeMillis(),
-            provedor = location.provider
+            provedor = location.provider,
+            vencida = false
         )
+        if (!vindoDaRede) _falha.value = null
     }
 
     override fun onSensorChanged(event: SensorEvent) {
         when (event.sensor.type) {
             Sensor.TYPE_ROTATION_VECTOR -> {
-                SensorManager.getRotationMatrixFromVector(rotacao, event.values)
+                // Algumas ROMs antigas entregam o vetor com 5 componentes e
+                // getRotationMatrixFromVector lanca IllegalArgumentException — o app fechava
+                // sozinho ao mexer no aparelho. Copiar os quatro primeiros resolve.
+                val v = if (event.values.size > 4) {
+                    vetorCurto.also { System.arraycopy(event.values, 0, it, 0, 4) }
+                } else {
+                    event.values
+                }
+                runCatching { SensorManager.getRotationMatrixFromVector(rotacao, v) }
+                    .onFailure { return }
 
                 // BUG corrigido, e dos que contaminam a prova: o azimute vinha de
                 // getOrientation, que devolve a direcao do TOPO do aparelho. Fotografando em
@@ -268,9 +340,20 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
     // Em Android 8 a 10 (API 26-29) estes metodos ainda sao abstratos em LocationListener.
     // Sem eles o app fecha com AbstractMethodError assim que o GPS troca de estado — e o
     // minSdk do projeto e 26, entao esses aparelhos estao no alvo.
-    override fun onProviderEnabled(provider: String) {}
+    override fun onProviderEnabled(provider: String) {
+        if (provider == LocationManager.GPS_PROVIDER) _falha.value = null
+    }
 
-    override fun onProviderDisabled(provider: String) {}
+    /**
+     * Antes era um corpo vazio. Quem desligasse a localizacao no atalho da barra de
+     * notificacoes — coisa comum, para poupar bateria — continuava vendo o ultimo ponto como
+     * se fosse atual. Agora a leitura vence na hora e o app diz o que aconteceu.
+     */
+    override fun onProviderDisabled(provider: String) {
+        if (provider != LocationManager.GPS_PROVIDER) return
+        _posicao.value = _posicao.value.copy(vencida = true)
+        _falha.value = "GPS desligado agora — a última coordenada não vale mais."
+    }
 
     @Deprecated("Mantido apenas para compatibilidade com Android 8-10")
     override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) {}

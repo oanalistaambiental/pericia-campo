@@ -66,9 +66,21 @@ object Orientacoes {
         return Math.toDegrees(acos(cos)).toFloat()
     }
 
-    /** Declividade em porcentagem, que e como talude e rampa aparecem em laudo. */
-    fun declividadePercent(graus: Float): Float =
-        (kotlin.math.tan(Math.toRadians(abs(graus).toDouble())) * 100).toFloat()
+    /**
+     * Declividade em porcentagem, que e como talude e rampa aparecem em laudo.
+     *
+     * Null acima do teto. A tangente explode perto de 90 graus — e a propria ajuda da tela
+     * manda encostar o celular numa parede, que da exatamente 90. O app imprimia, em verde e
+     * negrito, "1633123935319537,0% de declividade". Ja em 85 graus sai 1143%, numero que nao
+     * significa nada em campo. Acima do teto a resposta honesta e "praticamente vertical".
+     */
+    const val TETO_DECLIVIDADE_GRAUS = 80f
+
+    fun declividadePercent(graus: Float): Float? {
+        val g = abs(graus)
+        if (g >= TETO_DECLIVIDADE_GRAUS) return null
+        return (kotlin.math.tan(Math.toRadians(g.toDouble())) * 100).toFloat()
+    }
 
     /** Menor angulo entre dois azimutes, cuidando da volta em 360 graus. */
     fun diferencaAngular(a: Float, b: Float): Float {
