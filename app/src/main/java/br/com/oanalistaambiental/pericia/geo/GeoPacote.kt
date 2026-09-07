@@ -41,6 +41,23 @@ class GeoPacote(private val arquivo: File) : AutoCloseable {
         return lista
     }
 
+    /**
+     * A tabela da camada existe fisicamente no arquivo?
+     *
+     * Serve para separar duas coisas que antes se pareciam: camada que o pacote regional
+     * simplesmente nao traz (normal, silencioso) e camada declarada nos metadados mas
+     * inconsultavel — arquivo truncado, indice R-tree ausente, esquema mudado. A primeira nao
+     * e noticia; a segunda precisa chegar ao perito, porque sem ela o app diz "nada aqui"
+     * quando o certo seria "nao sei".
+     */
+    fun temTabela(tabela: String): Boolean =
+        runCatching {
+            db.rawQuery(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name=? LIMIT 1",
+                arrayOf(tabela)
+            ).use { it.moveToFirst() }
+        }.getOrDefault(false)
+
     fun versaoPacote(): String =
         db.rawQuery("SELECT valor FROM pericia_pacote WHERE chave='versao'", null).use {
             if (it.moveToFirst()) it.getString(0) else "desconhecida"

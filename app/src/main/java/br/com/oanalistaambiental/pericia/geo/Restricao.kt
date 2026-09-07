@@ -67,6 +67,16 @@ class ConsultaRestricao(
     private val camadasCache by lazy { pacote.camadas() }
     private val versaoCache by lazy { pacote.versaoPacote() }
 
+    /**
+     * Camadas que existem no pacote mas nao puderam ser consultadas na ultima chamada.
+     * Preenchida por `consultar` e lida logo depois: a consulta e sequencial e roda numa
+     * corrotina de IO por vez.
+     */
+    private val camadasComFalha = mutableListOf<String>()
+
+    /** Rotulos das camadas que falharam na ultima consulta, para o app avisar em vez de calar. */
+    fun falhasDaUltimaConsulta(): List<String> = camadasComFalha.toList()
+
     override fun close() = pacote.close()
 
     fun consultar(ponto: PontoConsulta, incluirFora: Boolean = false): List<Restricao> {
@@ -77,12 +87,18 @@ class ConsultaRestricao(
         val dLat = margemM / 111_320.0
         val dLon = margemM / (111_320.0 * cos(Math.toRadians(ponto.lat)).coerceAtLeast(0.1))
 
+        // Zona E hemisferio do ponto de consulta, aplicados a tudo que for comparado com ele.
+        // Sem o hemisferio forcado, uma unidade de conservacao que cruze o Equador tinha
+        // metade da fronteira deslocada 10.000 km: `contains` respondia qualquer coisa, e
+        // DENTRO virava FORA sem que nada na tela indicasse problema.
         val zona = Utm.zonaDe(ponto.lon)
-        val pontoUtm = Utm.projetar(ponto.lat, ponto.lon, zona)
+        val sul = ponto.lat < 0
+        val pontoUtm = Utm.projetar(ponto.lat, ponto.lon, zona, sul)
         val pUtm = gf.createPoint(Coordinate(pontoUtm.easting, pontoUtm.northing))
 
         val achados = mutableListOf<Restricao>()
 
+        camadasComFalha.clear()
         for (camada in camadasCache) {
             val candidatas = try {
                 pacote.candidatas(
@@ -91,12 +107,21 @@ class ConsultaRestricao(
                     ponto.lon + dLon, ponto.lat + dLat
                 )
             } catch (e: Exception) {
-                continue // camada ausente no pacote regional: nao e erro fatal
+                // ANTES: `continue` mudo. Um pacote truncado por copia interrompida abria
+                // normalmente, a tela de configuracoes mostrava "7 camadas" em verde, e toda
+                // consulta devolvia lista vazia. O perito fotografava dentro de uma APP e nao
+                // via alerta nenhum — resultado identico a "fora de qualquer restricao".
+                //
+                // Ausencia de alerta e falha de consulta sao coisas diferentes e agora dizem
+                // isso. Camada que simplesmente nao existe no pacote regional continua sendo
+                // caso normal e nao entra na lista.
+                if (pacote.temTabela(camada.tabela)) camadasComFalha += camada.nome
+                continue
             }
 
             var melhor: Pair<Double, Feicao>? = null
             for (f in candidatas) {
-                val geomUtm = projetarParaUtm(f.geometria, zona)
+                val geomUtm = projetarParaUtm(f.geometria, zona, sul)
                 val d = distanciaAssinada(geomUtm, pUtm, camada)
                 val atual = melhor
                 if (atual == null || d < atual.first) melhor = d to f
@@ -141,10 +166,10 @@ class ConsultaRestricao(
         return if (geom.contains(ponto)) -bruta else bruta
     }
 
-    private fun projetarParaUtm(geom: Geometry, zona: Int): Geometry {
+    private fun projetarParaUtm(geom: Geometry, zona: Int, sul: Boolean): Geometry {
         val copia = geom.copy()
         copia.apply(CoordinateFilter { c ->
-            val p = Utm.projetar(c.y, c.x, zona)   // GeoPackage guarda x=lon, y=lat
+            val p = Utm.projetar(c.y, c.x, zona, sul)   // GeoPackage guarda x=lon, y=lat
             c.x = p.easting
             c.y = p.northing
         })

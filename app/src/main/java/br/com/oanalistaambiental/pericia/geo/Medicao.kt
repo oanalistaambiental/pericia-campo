@@ -45,16 +45,26 @@ object Medicao {
         val areaHa: Double get() = areaM2 / 10_000.0
         val incertezaHa: Double get() = incertezaAreaM2 / 10_000.0
 
+        /**
+         * A unidade e escolhida UMA vez, pela area, e vale para os dois numeros.
+         *
+         * Antes cada formatador decidia sozinho e a tela mostrava "1,20 ha" em corpo 44 com
+         * "± 2100 m²" logo abaixo — dois numeros da mesma medida em unidades diferentes,
+         * lado a lado. E `usarMedicaoComoObservacao` copiava essa mistura para dentro da
+         * observacao, que vai queimada na foto, no CSV e no laudo.
+         */
+        private val emHectares: Boolean get() = areaM2 >= 10_000
+
         fun areaFormatada(): String = when {
             vertices.size < 3 -> "—"
-            areaM2 < 10_000 -> "%.0f m²".format(areaM2)
-            else -> "%.2f ha".format(areaHa)
+            emHectares -> "%.2f ha".format(areaHa)
+            else -> "%.0f m²".format(areaM2)
         }
 
         fun incertezaFormatada(): String = when {
             vertices.size < 3 -> "—"
-            incertezaAreaM2 < 10_000 -> "± %.0f m²".format(incertezaAreaM2)
-            else -> "± %.2f ha".format(incertezaHa)
+            emHectares -> "± %.2f ha".format(incertezaHa)
+            else -> "± %.0f m²".format(incertezaAreaM2)
         }
 
         fun perimetroFormatado(): String =
@@ -71,14 +81,20 @@ object Medicao {
      *
      * Projetar antes de calcular e o que torna a conta correta em metros: sobre lat/lon cru,
      * um grau de longitude vale menos que um grau de latitude e a area sai deformada. Todos os
-     * vertices sao projetados na MESMA zona — a do primeiro ponto — para que um caminhamento
-     * que cruze a divisa de fuso nao produza um salto de 500 km no meio do poligono.
+     * vertices sao projetados na MESMA zona E no MESMO hemisferio — os do primeiro ponto —
+     * para que um caminhamento que cruze a divisa de fuso nao produza um salto de 500 km no
+     * meio do poligono, nem um que cruze o Equador produza um salto de 10.000 km.
+     *
+     * O hemisferio forcado corrige um erro de cem mil vezes: sem ele, cada vertice somava (ou
+     * nao) o falso-norte conforme o proprio sinal da latitude, e um quadrado de 100 m sobre a
+     * linha do Equador saia com 100.146 hectares.
      */
     fun medir(vertices: List<Vertice>): Poligono {
         if (vertices.isEmpty()) return Poligono(vertices, 0.0, 0.0, 0.0, 0)
 
         val zona = Utm.zonaDe(vertices.first().lon)
-        val pontos = vertices.map { Utm.projetar(it.lat, it.lon, zona) }
+        val sul = vertices.first().lat < 0
+        val pontos = vertices.map { Utm.projetar(it.lat, it.lon, zona, sul) }
 
         var soma = 0.0
         for (i in pontos.indices) {

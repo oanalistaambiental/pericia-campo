@@ -30,21 +30,43 @@ object Utm {
         /** Ex.: "23S 612345E 7801234N" — zona, hemisferio, easting, northing. */
         fun formatado(): String {
             val h = if (hemisferioSul) "S" else "N"
-            return "%d%s %.0fE %.0fN".format(zona, h, easting, northing)
+            // Locale.US: coordenada UTM com virgula decimal, ou com ponto de milhar herdado do
+            // locale do aparelho, deixa de ser copiavel para qualquer outro sistema.
+            return "%d%s %.0fE %.0fN".format(java.util.Locale.US, zona, h, easting, northing)
         }
     }
 
-    fun zonaDe(lonGraus: Double): Int = floor((lonGraus + 180.0) / 6.0).toInt() + 1
+    /**
+     * Zona de 1 a 60. O `coerceIn` nao e paranoia: `zonaDe(180.0)` dava 61, uma zona que nao
+     * existe, com meridiano central em 183 graus — e nada validava o resultado antes de
+     * exibi-lo como se fosse coordenada legitima.
+     */
+    fun zonaDe(lonGraus: Double): Int =
+        (floor((lonGraus + 180.0) / 6.0).toInt() + 1).coerceIn(1, 60)
 
     /** Longitude do meridiano central da zona, em graus. */
     fun meridianoCentral(zona: Int): Double = (zona - 1) * 6.0 - 180.0 + 3.0
 
     /**
      * Projeta lat/lon (graus, SIRGAS 2000) para UTM.
+     *
      * [zonaForcada] permite manter varios pontos na MESMA zona, o que e necessario quando se
      * mede distancia entre geometrias proximas a uma divisa de fuso.
+     *
+     * [hemisferioSulForcado] existe pelo mesmo motivo, e a falta dele era um erro grave.
+     * O falso-norte de 10.000.000 m e somado quando a latitude e negativa. Forcando so a zona,
+     * cada vertice de um mesmo poligono decidia o hemisferio pelo proprio sinal: um poligono
+     * cruzando o Equador ficava com metade dos vertices deslocados 10.000 km em relacao a
+     * outra metade. Um quadrado de 100 m x 100 m sobre a linha, em Macapa, devolvia
+     * 100.146 hectares em vez de 0,98 — cem mil vezes maior, sem nenhum aviso. Num auto de
+     * infracao isso e a diferenca entre um hectare e um estado.
      */
-    fun projetar(latGraus: Double, lonGraus: Double, zonaForcada: Int? = null): Coordenada {
+    fun projetar(
+        latGraus: Double,
+        lonGraus: Double,
+        zonaForcada: Int? = null,
+        hemisferioSulForcado: Boolean? = null
+    ): Coordenada {
         val zona = zonaForcada ?: zonaDe(lonGraus)
         val lat = Math.toRadians(latGraus)
         val lon = Math.toRadians(lonGraus)
@@ -78,7 +100,7 @@ object Utm {
             )
         )
 
-        val sul = latGraus < 0
+        val sul = hemisferioSulForcado ?: (latGraus < 0)
         if (sul) northing += FALSE_NORTHING
 
         return Coordenada(easting, northing, zona, sul)
