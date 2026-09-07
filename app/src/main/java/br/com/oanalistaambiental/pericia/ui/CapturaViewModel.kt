@@ -13,6 +13,7 @@ import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
 import br.com.oanalistaambiental.pericia.dados.Sessao
 import br.com.oanalistaambiental.pericia.exportacao.Exportador
 import br.com.oanalistaambiental.pericia.geo.CamadaInfo
+import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.ConsultaRestricao
 import br.com.oanalistaambiental.pericia.geo.PontoConsulta
 import br.com.oanalistaambiental.pericia.geo.PontoRetorno
@@ -20,6 +21,7 @@ import br.com.oanalistaambiental.pericia.geo.Restricao
 import br.com.oanalistaambiental.pericia.laudo.LaudoPdf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -59,15 +61,53 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     private val _versaoPacote = MutableStateFlow<String?>(null)
     val versaoPacote: StateFlow<String?> = _versaoPacote
 
-    /** Foto escolhida como alvo do ponto de retorno. */
-    private val _alvoRetorno = MutableStateFlow<Foto?>(null)
-    val alvoRetorno: StateFlow<Foto?> = _alvoRetorno
+    /**
+     * Para onde o app esta guiando. Nasceu como "voltar aquela foto" e virou generico, porque
+     * a outra metade do trabalho e chegar a uma coordenada que veio de fora: auto de infracao,
+     * planta, memorial descritivo. So o rotulo e o enquadramento mudam.
+     */
+    data class Alvo(
+        val lat: Double,
+        val lon: Double,
+        /** Enquadramento a reproduzir. Nulo quando o alvo e so um ponto a alcancar. */
+        val azimuteGraus: Float?,
+        val rotulo: String,
+        val fotoId: Long? = null
+    )
 
-    private val _orientacao = MutableStateFlow<PontoRetorno.Orientacao?>(null)
-    val orientacao: StateFlow<PontoRetorno.Orientacao?> = _orientacao
+    private val _alvo = MutableStateFlow<Alvo?>(null)
+    val alvo: StateFlow<Alvo?> = _alvo
 
-    var tipoOcorrencia: String? = null
-    var observacao: String = ""
+    /** Instrucao de caminhada ate o alvo. Nome distinto do fluxo de sensor, de proposito. */
+    private val _guia = MutableStateFlow<PontoRetorno.Orientacao?>(null)
+    val guia: StateFlow<PontoRetorno.Orientacao?> = _guia
+
+    // ---- medicao de area por caminhamento ----
+
+    private val _vertices = MutableStateFlow<List<Medicao.Vertice>>(emptyList())
+    val vertices: StateFlow<List<Medicao.Vertice>> = _vertices
+
+    private val _poligono = MutableStateFlow<Medicao.Poligono?>(null)
+    val poligono: StateFlow<Medicao.Poligono?> = _poligono
+
+    /**
+     * BUG corrigido: `tipoOcorrencia` e `observacao` eram campos comuns (`var`). O Compose nao
+     * observa campo comum: o perito escolhia o tipo no formulario, o valor era guardado, mas a
+     * tela continuava mostrando "definir" e o campo de observacao voltava vazio. Parecia que o
+     * app nao aceitava informacao nenhuma. Agora sao StateFlow e a tela reage.
+     */
+    private val _tipoOcorrencia = MutableStateFlow<String?>(null)
+    val tipoOcorrencia: StateFlow<String?> = _tipoOcorrencia
+
+    private val _observacao = MutableStateFlow("")
+    val observacao: StateFlow<String> = _observacao
+
+    fun definirTipoOcorrencia(tipo: String?) { _tipoOcorrencia.value = tipo }
+
+    fun definirObservacao(texto: String) { _observacao.value = texto }
+
+    /** Aviso curto na barra inferior. Usado tambem pela tela de camera. */
+    fun avisar(texto: String) { _mensagem.value = texto }
 
     /** BUG corrigido: uma instancia reaproveitada, em vez de reabrir o GeoPackage a cada foto. */
     private var consulta: ConsultaRestricao? = null
@@ -161,8 +201,9 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             _mensagem.value = "Crie ou selecione uma sessão antes de fotografar."
             return
         }
-        val leitura = estadoCampo.leitura.value
-        if (leitura.lat == null || leitura.lon == null) {
+        val leitura = estadoCampo.leituraAtual()
+        val pos = leitura.posicao
+        if (!pos.temPosicao) {
             _mensagem.value = "Sem posição GNSS: a foto foi guardada, mas sem coordenada."
         }
         _ultimasRestricoes.value = emptyList()
@@ -175,15 +216,15 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 arquivoOriginal = original.absolutePath,
                 arquivoComLegenda = null,
                 sha256 = hash,
-                lat = leitura.lat ?: 0.0,
-                lon = leitura.lon ?: 0.0,
-                precisaoM = leitura.precisaoM ?: 999f,
-                altitudeM = leitura.altitudeM,
-                azimuteGraus = leitura.azimuteGraus,
-                inclinacaoGraus = leitura.inclinacaoGraus,
+                lat = pos.lat ?: 0.0,
+                lon = pos.lon ?: 0.0,
+                precisaoM = pos.precisaoM ?: 999f,
+                altitudeM = pos.altitudeM,
+                azimuteGraus = leitura.orientacao.azimuteGraus,
+                inclinacaoGraus = leitura.orientacao.elevacaoGraus,
                 instante = System.currentTimeMillis(),
-                tipoOcorrencia = tipoOcorrencia,
-                observacao = observacao.ifBlank { null }
+                tipoOcorrencia = _tipoOcorrencia.value,
+                observacao = _observacao.value.ifBlank { null }
             )
             val fotoId = banco.inserirFoto(foto)
             val comId = foto.copy(id = fotoId)
@@ -196,7 +237,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 banco.atualizarLegenda(fotoId, destino.absolutePath)
             }.onFailure { _mensagem.value = "Legenda não gerada: ${it.message}" }
 
-            if (leitura.lat != null && leitura.lon != null) consultarRestricoes(fotoId, comId)
+            if (pos.temPosicao) consultarRestricoes(fotoId, comId)
             carregarFotos(sessao.id)
             _sessoes.value = banco.sessoes()
         }
@@ -229,17 +270,92 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     // ------------------------------------------------------------ ponto de retorno
 
-    fun definirAlvoRetorno(foto: Foto?) { _alvoRetorno.value = foto }
+    fun definirAlvoRetorno(foto: Foto?) {
+        _alvo.value = foto?.let {
+            Alvo(it.lat, it.lon, it.azimuteGraus, "Repetir registro #${it.id}", it.id)
+        }
+    }
 
+    fun definirAlvoCoordenada(lat: Double, lon: Double, rotulo: String) {
+        _alvo.value = Alvo(lat, lon, null, rotulo)
+    }
+
+    fun limparAlvo() { _alvo.value = null }
+
+    /**
+     * DESEMPENHO: combina os dois fluxos em vez de assinar um objeto gigante. A conta so roda
+     * quando posicao ou rumo mudam de verdade, e nao a cada tremida do aparelho.
+     */
     private fun observarPosicaoParaRetorno() {
         viewModelScope.launch {
-            estadoCampo.leitura.collect { l ->
-                val alvo = _alvoRetorno.value
-                _orientacao.value = if (alvo != null && l.lat != null && l.lon != null) {
-                    PontoRetorno.orientar(alvo, l.lat, l.lon, l.precisaoM ?: 99f, l.azimuteGraus)
-                } else null
-            }
+            combine(estadoCampo.posicao, estadoCampo.orientacao) { p, o -> p to o }
+                .collect { (p, o) ->
+                    val alvo = _alvo.value
+                    val lat = p.lat
+                    val lon = p.lon
+                    _guia.value = if (alvo != null && lat != null && lon != null) {
+                        PontoRetorno.orientar(
+                            alvo.lat, alvo.lon, alvo.azimuteGraus,
+                            lat, lon, p.precisaoM ?: 99f, o.azimuteGraus
+                        )
+                    } else null
+                }
         }
+    }
+
+    // ------------------------------------------------------------------ medicao de area
+
+    /**
+     * Marca um vertice do caminhamento na posicao atual.
+     *
+     * Marcar manualmente, e nao gravar rastro continuo, e deliberado: o perito anda o
+     * perimetro parando nos cantos, que e como se levanta uma area em campo. Rastro continuo
+     * enche o poligono de ruido de GNSS e infla o perimetro.
+     */
+    fun marcarVertice() {
+        val p = estadoCampo.posicao.value
+        val lat = p.lat
+        val lon = p.lon
+        if (lat == null || lon == null) {
+            _mensagem.value = "Sem posição: aguarde o GNSS antes de marcar o vértice."
+            return
+        }
+        if (p.aproximada) {
+            _mensagem.value = "Posição ainda vem da rede. Aguarde o GNSS para medir área."
+            return
+        }
+        val novo = _vertices.value + Medicao.Vertice(lat, lon, p.precisaoM ?: 99f, System.currentTimeMillis())
+        _vertices.value = novo
+        _poligono.value = Medicao.medir(novo)
+    }
+
+    fun desfazerVertice() {
+        val atual = _vertices.value
+        if (atual.isEmpty()) return
+        val novo = atual.dropLast(1)
+        _vertices.value = novo
+        _poligono.value = if (novo.isEmpty()) null else Medicao.medir(novo)
+    }
+
+    fun limparMedicao() {
+        _vertices.value = emptyList()
+        _poligono.value = null
+    }
+
+    /**
+     * Leva o resultado da medicao para a observacao das proximas fotos — assim a area entra na
+     * legenda queimada, no laudo e no CSV, em vez de morrer numa tela que ninguem exporta.
+     */
+    fun usarMedicaoComoObservacao() {
+        val pol = _poligono.value
+        if (pol == null || pol.vertices.size < 3) {
+            _mensagem.value = "Marque pelo menos três vértices antes de usar a medição."
+            return
+        }
+        val texto = "Área medida por caminhamento: ${pol.areaFormatada()} ${pol.incertezaFormatada()}" +
+            " (perímetro ${pol.perimetroFormatado()}, ${pol.vertices.size} vértices)"
+        definirObservacao(texto)
+        _mensagem.value = "Medição copiada para a observação das próximas fotos."
     }
 
     // ------------------------------------------------------------------ sessao/selo

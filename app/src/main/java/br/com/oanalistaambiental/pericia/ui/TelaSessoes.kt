@@ -50,12 +50,12 @@ fun TelaSessoes(
         }
 
         if (sessoes.isEmpty()) {
-            Text(
-                "Nenhuma sessão ainda. Uma sessão agrupa as fotos de uma mesma vistoria, " +
-                    "e é ela que vira o laudo.",
-                color = Cores.textoFraco, fontSize = 13.sp, lineHeight = 19.sp,
-                modifier = Modifier.padding(24.dp)
-            )
+            Vazio(
+                "Nenhuma sessão ainda",
+                "A sessão é a vistoria: agrupa as fotos, recebe o selo de integridade ao ser " +
+                    "fechada e é ela que vira o laudo. Dê o nome do local ou do processo.",
+                acao = "Criar a primeira sessão"
+            ) { criando = true }
         }
 
         LazyColumn(Modifier.weight(1f)) {
@@ -224,6 +224,29 @@ fun TelaDetalheSessao(
                     Spacer(Modifier.height(8.dp))
                 }
 
+                Ajuda(
+                    "O que cada exportação serve para",
+                    "PDF é o laudo fotográfico, com a memória de integridade paginada — é o que " +
+                        "se anexa ao processo. CSV traz os metadados de cada registro para " +
+                        "planilha. KMZ abre no Google Earth e no QGIS, para mostrar os pontos " +
+                        "sobre imagem de satélite. “Arquivos originais” envia as fotos sem " +
+                        "legenda, que são as que conferem com o hash."
+                )
+                Ajuda(
+                    "Por que fechar a sessão",
+                    "Ao fechar, o app monta uma árvore de Merkle com os hashes de todas as fotos " +
+                        "e grava a raiz. A partir daí, qualquer alteração em qualquer foto muda a " +
+                        "raiz — e cada foto continua demonstrável isoladamente pelo caminho até " +
+                        "ela. Uma sessão aberta ainda aceita fotos novas e por isso não tem selo."
+                )
+                Ajuda(
+                    "O hash prova o quê, exatamente",
+                    "Prova que o arquivo não mudou desde o cálculo. Não prova QUANDO isso " +
+                        "aconteceu, porque o relógio do aparelho é ajustável pelo próprio " +
+                        "usuário. Quem resolve a data é o carimbo do tempo (RFC 3161) de uma " +
+                        "autoridade credenciada — por isso ele aparece como pendente aqui."
+                )
+
                 Rotulo("REGISTROS")
             }
 
@@ -255,7 +278,9 @@ private fun LinhaFoto(
         if (f.lat == 0.0 && f.lon == 0.0) {
             Mono("sem posição GNSS · ${fmt.format(Date(f.instante))}", Cores.atencaoClaro, 10)
         } else {
-            val utm = br.com.oanalistaambiental.pericia.geo.Utm.projetar(f.lat, f.lon)
+            // DESEMPENHO: sem o remember, a projecao UTM roda de novo para CADA foto a cada
+            // recomposicao da lista. Numa sessao longa isso trava a rolagem.
+            val utm = remember(f.lat, f.lon) { br.com.oanalistaambiental.pericia.geo.Utm.projetar(f.lat, f.lon) }
             Mono("${utm.formatado()} · ±%.0f m · %s".format(f.precisaoM, fmt.format(Date(f.instante))), Cores.textoFraco, 10)
         }
         f.endereco?.let { Spacer(Modifier.height(3.dp)); Mono(it, Cores.textoFraco, 10) }
