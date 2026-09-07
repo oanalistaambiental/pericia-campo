@@ -15,7 +15,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.darkColorScheme
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -61,8 +63,27 @@ private enum class Rota { CAMERA, SESSOES, DETALHE, FERRAMENTAS, BUSSOLA, CLINOM
 private fun App() {
     val vm: CapturaViewModel = viewModel()
     val contexto = LocalContext.current
-    var rota by remember { mutableStateOf(Rota.CAMERA) }
-    var sessaoAberta by remember { mutableStateOf<Sessao?>(null) }
+    /**
+     * `rememberSaveable`, nao `remember`. Com `remember`, girar o aparelho recriava a Activity
+     * e jogava o perito de volta na camera no meio do que estivesse fazendo.
+     */
+    var rota by rememberSaveable { mutableStateOf(Rota.CAMERA) }
+
+    /**
+     * Guarda o ID, nao o objeto.
+     *
+     * BUG grave que isto corrige. A tela de detalhe recebia uma copia congelada da sessao,
+     * tirada no instante do clique. Depois de "Fechar sessão e selar integridade" o banco
+     * ficava selado, mas o objeto na tela continuava com `raizMerkle = null` — e o botao
+     * "Laudo fotografico (PDF)", ali do lado, gerava o laudo A PARTIR DESSA COPIA. Resultado:
+     * o PDF entregue ao processo saia sem a raiz de Merkle, em silencio, com a sessao selada
+     * no banco. Lendo pelo ID a tela reobserva a sessao de verdade.
+     */
+    var sessaoAbertaId by rememberSaveable { mutableStateOf<Long?>(null) }
+    val listaSessoes by vm.sessoes.collectAsState()
+    val sessaoAberta = remember(sessaoAbertaId, listaSessoes) {
+        sessaoAbertaId?.let { id -> listaSessoes.firstOrNull { it.id == id } }
+    }
 
     fun concedida(p: String) =
         ContextCompat.checkSelfPermission(contexto, p) == PackageManager.PERMISSION_GRANTED
@@ -112,6 +133,8 @@ private fun App() {
     // BUG corrigido: o ViewModel iniciava o GNSS antes de existir permissao, a chamada era
     // recusada em silencio e nada religava depois do usuario conceder. Na primeira instalacao
     // isso deixava o selo em "SEM SINAL" e gravava toda foto sem coordenada.
+    // Quem liga e desliga de fato e o observador de ciclo de vida mais abaixo; este efeito
+    // cobre o caso de a permissao ser concedida com o app ja em primeiro plano.
     LaunchedEffect(localOk) {
         if (localOk) vm.estadoCampo.iniciar()
     }
@@ -150,6 +173,46 @@ private fun App() {
         return
     }
 
+    /**
+     * O botao/gesto Voltar do Android.
+     *
+     * BUG grave que isto corrige. Nao havia BackHandler nenhum. Em qualquer tela interna o
+     * Voltar — que e o gesto natural, e nao o "‹" pequeno do cabecalho — encerrava a Activity.
+     * Encerrar a Activity limpa o ViewModel, e os vertices da medicao so existiam em memoria:
+     * quarenta minutos caminhando um perimetro, 26 vertices marcados, e o app fechava sem
+     * pergunta nenhuma. Agora o Voltar navega, e so sai do app quando ja esta na camera.
+     */
+    BackHandler(enabled = rota != Rota.CAMERA) {
+        rota = when (rota) {
+            Rota.DETALHE -> Rota.SESSOES
+            Rota.SESSOES, Rota.FERRAMENTAS -> Rota.CAMERA
+            Rota.BUSSOLA, Rota.CLINOMETRO, Rota.MEDICAO,
+            Rota.COORDENADA, Rota.CONFIGURACOES -> Rota.FERRAMENTAS
+            Rota.CAMERA -> Rota.CAMERA
+        }
+    }
+
+    /**
+     * Sensores e GNSS param quando o app sai da tela.
+     *
+     * Antes so paravam em `onCleared`, ou seja, quase nunca. Quem abrisse o app as 8h e
+     * guardasse o celular no bolso para dirigir entre pontos deixava o GNSS a 1 Hz e o vetor
+     * de rotacao a ~60 Hz ligados a manha inteira, com a orientacao sendo recalculada a cada
+     * evento. Chegava no ponto critico da vistoria com a bateria no fim — em campo, sem
+     * tomada, isso e vistoria perdida.
+     */
+    DisposableEffect(dono, localOk) {
+        val observador = LifecycleEventObserver { _, evento ->
+            when (evento) {
+                Lifecycle.Event.ON_START -> if (localOk) vm.estadoCampo.iniciar()
+                Lifecycle.Event.ON_STOP -> vm.estadoCampo.parar()
+                else -> Unit
+            }
+        }
+        dono.lifecycle.addObserver(observador)
+        onDispose { dono.lifecycle.removeObserver(observador) }
+    }
+
     Box(Modifier.fillMaxSize()) {
         when (rota) {
             Rota.CAMERA -> TelaCamera(
@@ -159,7 +222,7 @@ private fun App() {
             )
             Rota.SESSOES -> TelaSessoes(
                 vm,
-                aoAbrir = { sessaoAberta = it; rota = Rota.DETALHE },
+                aoAbrir = { sessaoAbertaId = it.id; rota = Rota.DETALHE },
                 voltar = { rota = Rota.CAMERA }
             )
             Rota.DETALHE -> sessaoAberta?.let {
@@ -194,7 +257,11 @@ private fun App() {
             Text(
                 "SEM PERMISSÃO DE LOCALIZAÇÃO — as fotos serão gravadas sem coordenada. " +
                     "Toque para conceder.",
-                color = Color.White, fontSize = 11.sp, lineHeight = 15.sp,
+                // 11sp era pequeno demais para o aviso mais consequente do app, numa tela lida
+                // ao sol. Se a foto vai sair sem coordenada, isso tem que ser impossivel de
+                // nao ver.
+                color = Color.White, fontSize = 13.sp, lineHeight = 18.sp,
+                fontWeight = FontWeight.SemiBold,
                 modifier = Modifier.align(Alignment.TopCenter)
                     .windowInsetsPadding(WindowInsets.statusBars)
                     .fillMaxWidth()
