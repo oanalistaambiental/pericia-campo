@@ -32,7 +32,7 @@ object Exportador {
     fun csv(banco: Banco, fotos: List<Foto>, destino: File): File {
         val sb = StringBuilder()
         sb.append("arquivo;data_hora;latitude;longitude;datum;utm_zona;utm_e;utm_n;")
-        sb.append("precisao_m;altitude_m;azimute;tipo_ocorrencia;observacao;endereco;")
+        sb.append("precisao_m;altitude_m;azimute_camera;elevacao_camera;tipo_ocorrencia;observacao;endereco;")
         sb.append("restricoes;sha256\n")
 
         fotos.forEach { f ->
@@ -54,6 +54,7 @@ object Exportador {
                     if (semPosicao) "" else "%.1f".format(Locale.US, f.precisaoM),
                     f.altitudeM?.let { "%.1f".format(Locale.US, it) } ?: "",
                     f.azimuteGraus?.let { "%.0f".format(Locale.US, it) } ?: "",
+                    f.inclinacaoGraus?.let { "%.0f".format(Locale.US, it) } ?: "",
                     f.tipoOcorrencia ?: "",
                     f.observacao ?: "",
                     f.endereco ?: "",
