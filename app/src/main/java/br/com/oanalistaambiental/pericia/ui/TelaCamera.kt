@@ -92,10 +92,18 @@ fun TelaCamera(
     DisposableEffect(lifecycleOwner, previewView) {
         val futuro = ProcessCameraProvider.getInstance(contexto)
         var provedor: ProcessCameraProvider? = null
+        // CORRIDA corrigida: quem saisse da tela antes de o provedor ficar pronto — abrir o
+        // app e tocar "Ferramentas" em menos de ~300 ms, coisa banal em aparelho lento —
+        // rodava o onDispose com `provedor` ainda null (nao desligava nada) e SO DEPOIS o
+        // listener disparava o bindToLifecycle. A camera ficava aberta com a previa ja
+        // descartada: bateria, aquecimento, e camera indisponivel para outros apps ate o
+        // processo morrer. Esta bandeira faz o listener desistir se a tela ja saiu.
+        var descartado = false
         futuro.addListener({
             try {
                 val p = futuro.get()
                 provedor = p
+                if (descartado) { runCatching { p.unbindAll() }; return@addListener }
                 val preview = Preview.Builder().build().also {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
@@ -111,7 +119,10 @@ fun TelaCamera(
             }
         }, ContextCompat.getMainExecutor(contexto))
 
-        onDispose { runCatching { provedor?.unbindAll() } }
+        onDispose {
+            descartado = true
+            runCatching { provedor?.unbindAll() }
+        }
     }
 
     /**
@@ -371,16 +382,48 @@ private fun BlocoCoordenada(vm: CapturaViewModel) {
     }
 }
 
+/**
+ * O tipo de ocorrencia VALE PARA AS PROXIMAS FOTOS, e isso precisa ser obvio na tela.
+ *
+ * O comportamento pegajoso e proposital — quem registra oito angulos do mesmo dano nao quer
+ * escolher oito vezes. Mas o risco e assimetrico: marcar "Foco de queimada" no ponto 3 e
+ * esquecer faz as fotos 4 a 20, sem relacao nenhuma, herdarem o mesmo tipo no banco, na
+ * legenda queimada, no CSV, no KML e no laudo. Um laudo que classifica dezessete registros com
+ * uma ocorrencia que nao ocorreu e atacavel — e o erro nasce de um texto de 12,5sp num canto.
+ *
+ * Entao, quando ha tipo ativo, o rotulo vira "ATIVA", ganha destaque e o app oferece limpar
+ * ali mesmo, num toque.
+ */
 @Composable
 private fun BotaoOcorrencia(vm: CapturaViewModel, aoTocar: () -> Unit) {
     val tipo by vm.tipoOcorrencia.collectAsState()
-    Column(Modifier.width(94.dp).clickable { aoTocar() }) {
-        Text("OCORRÊNCIA", color = Cores.textoFraco, fontSize = 10.sp, letterSpacing = 0.8.sp)
+    val ativo = tipo != null
+    Column(
+        Modifier.width(104.dp)
+            .background(
+                if (ativo) Cores.bom.copy(alpha = 0.22f) else Color.Transparent,
+                RoundedCornerShape(4.dp)
+            )
+            .clickable { aoTocar() }
+            .padding(horizontal = 6.dp, vertical = 4.dp)
+    ) {
+        Text(
+            if (ativo) "OCORRÊNCIA ATIVA" else "OCORRÊNCIA",
+            color = if (ativo) Cores.bomClaro else Cores.textoFraco,
+            fontSize = 10.sp, letterSpacing = 0.8.sp, fontWeight = FontWeight.Bold
+        )
         Text(
             tipo ?: "definir",
-            color = if (tipo == null) Cores.textoFraco else Cores.bomClaro,
+            color = if (ativo) Cores.bomClaro else Cores.textoFraco,
             fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp
         )
+        if (ativo) {
+            Text(
+                "vale para as próximas · toque p/ trocar",
+                color = Cores.bomClaro.copy(alpha = 0.85f),
+                fontSize = 9.5.sp, lineHeight = 12.sp
+            )
+        }
     }
 }
 

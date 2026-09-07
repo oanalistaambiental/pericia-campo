@@ -5,11 +5,13 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -194,7 +196,11 @@ fun TelaClinometro(vm: CapturaViewModel, voltar: () -> Unit) {
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                percent?.let { "%.1f%% de declividade".format(it) } ?: "sem leitura",
+                when {
+                    percent != null -> "%.1f%% de declividade".format(percent)
+                    graus != null -> "praticamente vertical (acima de 80°)"
+                    else -> "sem leitura"
+                },
                 color = Cores.bomClaro, fontSize = 17.sp, fontWeight = FontWeight.SemiBold
             )
 
@@ -252,6 +258,7 @@ fun TelaMedicao(vm: CapturaViewModel, voltar: () -> Unit) {
     val p by vm.estadoCampo.posicao.collectAsState()
     val vertices by vm.vertices.collectAsState()
     val pol by vm.poligono.collectAsState()
+    var confirmarLimpeza by rememberSaveable { mutableStateOf(false) }
 
     Column(
         Modifier.fillMaxSize().background(Cores.fundo)
@@ -290,16 +297,39 @@ fun TelaMedicao(vm: CapturaViewModel, voltar: () -> Unit) {
         }
 
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            BotaoLargo("Marcar vértice aqui", principal = true) { vm.marcarVertice() }
+            BotaoLargo("Marcar vértice aqui", principal = true) {
+                confirmarLimpeza = false; vm.marcarVertice()
+            }
             Spacer(Modifier.height(8.dp))
             Row {
                 Box(Modifier.weight(1f)) {
-                    BotaoLargo("Desfazer", habilitado = vertices.isNotEmpty()) { vm.desfazerVertice() }
+                    BotaoLargo("Desfazer", habilitado = vertices.isNotEmpty()) {
+                        confirmarLimpeza = false; vm.desfazerVertice()
+                    }
                 }
                 Spacer(Modifier.width(8.dp))
                 Box(Modifier.weight(1f)) {
-                    BotaoLargo("Limpar", habilitado = vertices.isNotEmpty()) { vm.limparMedicao() }
+                    // Antes: um toque, e os vertices sumiam. Botao do mesmo tamanho de
+                    // "Desfazer", ao lado dele, operado com luva e o celular na mao. E
+                    // "Desfazer" tira um vertice por vez — nao desfaz o "Limpar". Duas horas
+                    // de caminhamento cabiam num toque errado. Agora pede confirmacao, e a
+                    // confirmacao diz quantos vertices vao embora.
+                    BotaoLargo(
+                        if (confirmarLimpeza) "Confirmar?" else "Limpar",
+                        habilitado = vertices.isNotEmpty()
+                    ) {
+                        if (confirmarLimpeza) { vm.limparMedicao(); confirmarLimpeza = false }
+                        else confirmarLimpeza = true
+                    }
                 }
+            }
+            if (confirmarLimpeza) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Apagar os ${vertices.size} vértices marcados? Toque de novo em " +
+                        "“Confirmar?” para apagar, ou em qualquer outro botão para desistir.",
+                    color = Cores.alertaClaro, fontSize = 12.sp, lineHeight = 16.sp
+                )
             }
             if ((pol?.vertices?.size ?: 0) >= 3) {
                 Spacer(Modifier.height(8.dp))
@@ -315,8 +345,10 @@ fun TelaMedicao(vm: CapturaViewModel, voltar: () -> Unit) {
             )
         } else {
             LazyColumn(Modifier.weight(1f)) {
-                items(vertices) { v ->
-                    val i = vertices.indexOf(v)
+                // itemsIndexed, nao items + indexOf: o indexOf percorria a lista inteira para
+                // cada item desenhado (O(n^2) na rolagem) e, por comparar por igualdade,
+                // numerava dois vertices identicos com o mesmo numero.
+                itemsIndexed(vertices) { i, v ->
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 9.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -325,7 +357,7 @@ fun TelaMedicao(vm: CapturaViewModel, voltar: () -> Unit) {
                             "${i + 1}", color = Cores.textoFraco, fontSize = 12.sp,
                             modifier = Modifier.width(26.dp)
                         )
-                        Mono("%.6f, %.6f".format(v.lat, v.lon), Cores.texto, 11)
+                        Mono("%.6f, %.6f".format(java.util.Locale.US, v.lat, v.lon), Cores.texto, 11)
                         Spacer(Modifier.weight(1f))
                         Mono("±%.0f m".format(v.precisaoM), Cores.textoFraco, 10)
                     }

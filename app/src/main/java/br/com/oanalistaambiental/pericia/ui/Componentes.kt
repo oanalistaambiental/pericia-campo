@@ -35,7 +35,19 @@ object Cores {
     val superficie = Color(0xFF121418)
     val linha = Color(0xFF1E2227)
     val texto = Color(0xFFE8EAED)
-    val textoFraco = Color(0xFF9AA0A6)
+
+    /**
+     * Clareado de #9AA0A6 para #B9BFC6.
+     *
+     * Este app foi feito para ser usado ao sol, de pe, com pressa — e usava #9AA0A6 em 9,5 a
+     * 11 sp para informacao OPERACIONAL: a dica do selo de GNSS, o rotulo do alvo na fita da
+     * bussola, o aviso de calibrar, a faixa de "sem permissao de localizacao". Sobre a previa
+     * da camera, com veu de 70% de preto, em tela a 100% de brilho debaixo de sol de meio-dia,
+     * aquilo era praticamente invisivel — ou seja, os avisos que mais importam eram os menos
+     * legiveis. #B9BFC6 sobe o contraste sobre o fundo #0C0D0F de cerca de 6,6:1 para 10,5:1,
+     * sem virar branco e sem competir com o texto principal.
+     */
+    val textoFraco = Color(0xFFB9BFC6)
     val bom = Color(0xFF1B7F3B)
     val bomClaro = Color(0xFF7FD18F)
     val atencao = Color(0xFF8A6100)
@@ -43,7 +55,9 @@ object Cores {
     val alerta = Color(0xFFB91C1C)
     val alertaClaro = Color(0xFFE4736F)
     val neutro = Color(0xFF2A2F36)
-    val veuEscuro = Color(0xB3000000)
+    // Veu mais denso (0xB3 -> 0xCC, 70% -> 80%). O texto sobre a previa da camera concorre com
+    // o que a lente estiver vendo; num barranco claro ao sol, 70% nao bastava.
+    val veuEscuro = Color(0xCC000000)
 }
 
 /**
@@ -59,9 +73,15 @@ fun SeloPrecisao(p: EstadoCampo.Posicao, modifier: Modifier = Modifier, comDica:
         EstadoCampo.Qualidade.BOA -> Cores.bom to "GNSS BOM"
         EstadoCampo.Qualidade.ACEITAVEL -> Cores.atencao to "GNSS ACEITÁVEL"
         EstadoCampo.Qualidade.RUIM -> Cores.alerta to "GNSS RUIM"
+        EstadoCampo.Qualidade.VENCIDA -> Cores.alerta to "SINAL PARADO"
         EstadoCampo.Qualidade.SEM_SINAL -> Color(0xFF3A3F46) to "SEM SINAL GNSS"
     }
     val dica = when {
+        // O aviso mais importante da tela: enquanto o selo estiver assim, foto e vertice saem
+        // SEM coordenada. Dizer ha quantos segundos parou e o que fazer, nao so que parou.
+        p.qualidade == EstadoCampo.Qualidade.VENCIDA ->
+            "Última leitura tem ${p.idadeSegundos()} s. Enquanto isso, a foto sai sem coordenada. " +
+                "Vá para céu aberto ou confira se a localização continua ligada."
         p.aproximada -> "Posição vinda da rede, não do satélite. Aguarde o GNSS fixar."
         p.qualidade == EstadoCampo.Qualidade.SEM_SINAL ->
             "Vá para céu aberto e aguarde. Sem coordenada, a foto vale como imagem, não como prova."
@@ -87,7 +107,10 @@ fun SeloPrecisao(p: EstadoCampo.Posicao, modifier: Modifier = Modifier, comDica:
             }
             Spacer(Modifier.weight(1f))
             Text(
-                p.precisaoM?.let { "±%.0f m".format(it) } ?: "—",
+                // Exibir "+-4 m" ao lado de "SINAL PARADO" seria repetir a mentira que o selo
+                // acabou de desmentir: aquela precisao e da leitura velha.
+                if (p.qualidade == EstadoCampo.Qualidade.VENCIDA) "há ${p.idadeSegundos()} s"
+                else p.precisaoM?.let { "±%.0f m".format(it) } ?: "—",
                 color = Color.White, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.SemiBold
             )
@@ -95,7 +118,7 @@ fun SeloPrecisao(p: EstadoCampo.Posicao, modifier: Modifier = Modifier, comDica:
         if (comDica && dica != null) {
             Text(
                 dica,
-                color = Color(0xE6FFFFFF), fontSize = 10.5.sp, lineHeight = 14.sp,
+                color = Color(0xE6FFFFFF), fontSize = 12.sp, lineHeight = 16.sp,
                 modifier = Modifier.padding(start = 14.dp, end = 14.dp, bottom = 7.dp)
             )
         }
@@ -185,7 +208,7 @@ fun FitaBussola(
             if (rotuloAlvo != null) {
                 Text(
                     rotuloAlvo,
-                    color = Cores.bomClaro, fontSize = 9.5.sp,
+                    color = Cores.bomClaro, fontSize = 11.sp,
                     modifier = Modifier.align(Alignment.BottomStart).padding(start = 10.dp, bottom = 4.dp)
                 )
             }
@@ -206,7 +229,7 @@ fun FitaBussola(
         if (orientacao.precisaoBussola.precisaCalibrar) {
             Text(
                 "calibrar: faça um 8 no ar",
-                color = Cores.atencaoClaro, fontSize = 9.5.sp,
+                color = Cores.atencaoClaro, fontSize = 11.sp,
                 modifier = Modifier.align(Alignment.BottomEnd).padding(end = 10.dp, bottom = 4.dp)
             )
         }

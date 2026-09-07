@@ -141,8 +141,16 @@ fun TelaDetalheSessao(
     val indefinidos = remember(restricoes) {
         restricoes.values.count { lista -> lista.any { it.situacao == "PROXIMO_AO_LIMITE" } }
     }
-    val precisaoMedia = remember(fotos) {
-        if (fotos.isEmpty()) 0f else fotos.map { it.precisaoM }.average().toFloat()
+    /**
+     * Media so das fotos QUE TEM coordenada.
+     *
+     * Foto sem GNSS grava precisao 999 como sentinela. Antes essas entravam na media: 19 fotos
+     * com +-5 m mais uma sem sinal davam "+-55 m" no indicador da sessao — numero que, copiado
+     * para o laudo, desqualifica a vistoria inteira sem que nada de errado tenha acontecido.
+     */
+    val comPosicao = remember(fotos) { fotos.filter { it.lat != 0.0 || it.lon != 0.0 } }
+    val precisaoMedia = remember(comPosicao) {
+        if (comPosicao.isEmpty()) 0f else comPosicao.map { it.precisaoM }.average().toFloat()
     }
 
     Column(
@@ -160,7 +168,12 @@ fun TelaDetalheSessao(
                     Spacer(Modifier.width(22.dp))
                     Indicador("$indefinidos", "INDEFINIDOS", Cores.atencaoClaro)
                     Spacer(Modifier.width(22.dp))
-                    Indicador("±%.0f m".format(precisaoMedia), "PRECISÃO MÉD.", Cores.texto)
+                    Indicador(
+                        if (comPosicao.isEmpty()) "—" else "±%.0f m".format(precisaoMedia),
+                        if (comPosicao.size == fotos.size) "PRECISÃO MÉD."
+                        else "PREC. MÉD. (${comPosicao.size}/${fotos.size})",
+                        Cores.texto
+                    )
                 }
 
                 Rotulo("EXPORTAR")
@@ -287,9 +300,14 @@ private fun LinhaFoto(
         restricoes.forEach { r ->
             Spacer(Modifier.height(3.dp))
             Text(
-                "${if (r.situacao == "DENTRO") "▲" else "◆"} ${r.camada} — ${
-                    if (r.situacao == "DENTRO") "interno" else "a %.0f m, indefinido".format(r.distanciaM)
-                }",
+                // O `.format` ficava DEPOIS da interpolacao, entao o nome da camada entrava
+                // dentro da string de formato. Uma camada chamada "APP - faixa 100% marginal"
+                // fazia String.format achar um especificador "% m" e lancar excecao — aqui,
+                // dentro de um composable, durante a rolagem: o app fechava. Formatar o numero
+                // primeiro e concatenar depois resolve de vez.
+                (if (r.situacao == "DENTRO") "▲ " else "◆ ") + r.camada + " — " +
+                    if (r.situacao == "DENTRO") "interno"
+                    else "a " + "%.0f".format(Locale.US, r.distanciaM) + " m, indefinido",
                 color = if (r.situacao == "DENTRO") Cores.alertaClaro else Cores.atencaoClaro,
                 fontSize = 10.5.sp
             )

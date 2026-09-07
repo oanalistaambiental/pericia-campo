@@ -161,7 +161,57 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             val lista = banco.sessoes()
             _sessoes.value = lista
             if (_sessaoAtual.value == null) _sessaoAtual.value = lista.firstOrNull { it.fechadaEm == null }
-            _sessaoAtual.value?.let { carregarFotos(it.id) }
+            _sessaoAtual.value?.let {
+                resgatarFotosOrfas(it.id)
+                carregarFotos(it.id)
+            }
+        }
+    }
+
+    /**
+     * Recupera foto que existe no disco mas nao tem linha no banco.
+     *
+     * COMO A FOTO SUMIA. O CameraX grava o JPEG, o clarao branco confirma para o perito que
+     * deu certo, e so entao uma corrotina calcula o SHA-256 — segundos, num sensor de 50 MP —
+     * e insere no banco. Se o sistema matar o app nesse intervalo (memoria baixa, ou o proprio
+     * perito fechando pelo botao de recentes), o arquivo fica em disco e o registro nunca
+     * nasce. A foto nao aparece na sessao, nao entra no laudo, nao entra no Merkle, nao entra
+     * no CSV — e nada no app jamais a procurava de novo. Ela estava la, e para o app nao
+     * existia.
+     *
+     * O resgate roda ao abrir o app. A foto volta sem coordenada: a leitura de GNSS daquele
+     * instante se perdeu junto com o processo, e inventar posicao seria pior que nao ter.
+     */
+    private fun resgatarFotosOrfas(sessaoId: Long) {
+        runCatching {
+            val pasta = pastaDaSessao(sessaoId)
+            val registradas = banco.fotosDaSessao(sessaoId).map { it.arquivoOriginal }.toSet()
+            val orfas = pasta.listFiles { f ->
+                f.isFile && f.name.endsWith(".jpg") && !f.name.endsWith("_legenda.jpg") &&
+                    f.absolutePath !in registradas
+            }?.sortedBy { it.lastModified() } ?: return
+
+            for (arq in orfas) {
+                banco.inserirFoto(
+                    Foto(
+                        sessaoId = sessaoId,
+                        arquivoOriginal = arq.absolutePath,
+                        arquivoComLegenda = null,
+                        sha256 = Integridade.sha256(arq),
+                        lat = 0.0, lon = 0.0, precisaoM = 999f, altitudeM = null,
+                        azimuteGraus = null, inclinacaoGraus = null,
+                        instante = arq.lastModified(),
+                        idadeFixSegundos = null,
+                        tipoOcorrencia = null,
+                        observacao = "Registro recuperado: o aplicativo foi encerrado antes de " +
+                            "gravar os dados desta foto. A coordenada daquele instante se perdeu."
+                    )
+                )
+            }
+            if (orfas.isNotEmpty()) {
+                _mensagem.value = "${orfas.size} foto(s) recuperada(s) do disco, sem coordenada — " +
+                    "o app tinha sido encerrado antes de registrá-las."
+            }
         }
     }
 
@@ -203,8 +253,23 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
         val leitura = estadoCampo.leituraAtual()
         val pos = leitura.posicao
-        if (!pos.temPosicao) {
-            _mensagem.value = "Sem posição GNSS: a foto foi guardada, mas sem coordenada."
+
+        // REGRA DURA: coordenada vencida NAO entra na prova.
+        //
+        // O erro que isto impede: o perito pega o fix de +-4 m na entrada da area, o sinal cai
+        // debaixo da mata, ele caminha 600 m ate o ponto do dano e fotografa. Antes, a foto
+        // saia com a coordenada da entrada, a hora de agora e "+-4 m" — tres afirmacoes
+        // coerentes entre si e todas erradas. Preferimos foto sem coordenada, que e honesta e
+        // recuperavel, a foto com coordenada falsa, que nao e nem uma coisa nem outra.
+        val posValida = pos.temPosicao && !pos.vencida
+        val idadeFix = if (posValida) pos.idadeSegundos() else null
+        _mensagem.value = when {
+            !pos.temPosicao ->
+                "Sem posição GNSS: a foto foi guardada, mas sem coordenada."
+            pos.vencida ->
+                "Sinal de GNSS parado há ${pos.idadeSegundos()} s — foto guardada SEM coordenada. " +
+                    "Espere o selo voltar ao verde e refaça o registro deste ponto."
+            else -> null
         }
         _ultimasRestricoes.value = emptyList()
 
@@ -216,13 +281,14 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 arquivoOriginal = original.absolutePath,
                 arquivoComLegenda = null,
                 sha256 = hash,
-                lat = pos.lat ?: 0.0,
-                lon = pos.lon ?: 0.0,
-                precisaoM = pos.precisaoM ?: 999f,
-                altitudeM = pos.altitudeM,
+                lat = if (posValida) pos.lat ?: 0.0 else 0.0,
+                lon = if (posValida) pos.lon ?: 0.0 else 0.0,
+                precisaoM = if (posValida) pos.precisaoM ?: 999f else 999f,
+                altitudeM = if (posValida) pos.altitudeM else null,
                 azimuteGraus = leitura.orientacao.azimuteGraus,
                 inclinacaoGraus = leitura.orientacao.elevacaoGraus,
                 instante = System.currentTimeMillis(),
+                idadeFixSegundos = idadeFix,
                 tipoOcorrencia = _tipoOcorrencia.value,
                 observacao = _observacao.value.ifBlank { null }
             )
@@ -237,7 +303,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 banco.atualizarLegenda(fotoId, destino.absolutePath)
             }.onFailure { _mensagem.value = "Legenda não gerada: ${it.message}" }
 
-            if (pos.temPosicao) consultarRestricoes(fotoId, comId)
+            if (posValida) consultarRestricoes(fotoId, comId)
             carregarFotos(sessao.id)
             _sessoes.value = banco.sessoes()
         }
@@ -264,6 +330,14 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                         toleranciaM = r.proveniencia.toleranciaSimplificacaoM
                     )
                 )
+            }
+            // Camada que existe no pacote mas nao pode ser lida NAO pode passar por "nada
+            // aqui". O perito precisa saber que aquela camada especifica ficou sem resposta,
+            // senao ele le a ausencia de alerta como ausencia de restricao.
+            val falhas = c.falhasDaUltimaConsulta()
+            if (falhas.isNotEmpty()) {
+                _mensagem.value = "Camadas sem resposta nesta consulta: ${falhas.joinToString(", ")}. " +
+                    "Não é 'sem restrição' — é sem leitura. Refaça o pacote de camadas."
             }
         }.onFailure { _mensagem.value = "Consulta de restrição falhou: ${it.message}" }
     }
@@ -322,6 +396,15 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
         if (p.aproximada) {
             _mensagem.value = "Posição ainda vem da rede. Aguarde o GNSS para medir área."
+            return
+        }
+        // Sem esta guarda, um perimetro inteiro podia ser marcado sobre o mesmo ponto
+        // congelado: o perito anda, toca "marcar" em cada canto, e todos os vertices caem no
+        // mesmo lugar. Sai area zero, ou uma figura sem sentido, sem aviso nenhum.
+        if (p.vencida) {
+            _mensagem.value =
+                "Sinal parado há ${p.idadeSegundos()} s — vértice não marcado. " +
+                    "Sem GNSS ao vivo, todos os cantos cairiam no mesmo ponto."
             return
         }
         val novo = _vertices.value + Medicao.Vertice(lat, lon, p.precisaoM ?: 99f, System.currentTimeMillis())
@@ -403,12 +486,20 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * Ao contrario de `exportar`, esta funcao nao tinha runCatching nenhum — e
+     * `getUriForFile` lanca para arquivo fora dos caminhos declarados, `startActivity` lanca
+     * quando nao ha app receptor, e `compartilhar` agora lanca quando os arquivos sumiram.
+     * Excecao nao tratada dentro de viewModelScope derruba o processo inteiro.
+     */
     fun compartilharOriginais(sessao: Sessao) {
         viewModelScope.launch(Dispatchers.IO) {
             val ctx = getApplication<Application>()
             val fotos = banco.fotosDaSessao(sessao.id).map { File(it.arquivoOriginal) }
             withContext(Dispatchers.Main) {
-                Exportador.compartilhar(ctx, fotos, "${sessao.titulo} — arquivos originais")
+                runCatching {
+                    Exportador.compartilhar(ctx, fotos, "${sessao.titulo} — arquivos originais")
+                }.onFailure { _mensagem.value = "Não foi possível compartilhar: ${it.message}" }
             }
         }
     }
@@ -417,8 +508,26 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     fun resolverEnderecos() {
         viewModelScope.launch(Dispatchers.IO) {
-            val n = runCatching { Enderecos.resolverPendentes(getApplication(), banco) }.getOrDefault(0)
-            _mensagem.value = if (n > 0) "$n endereço(s) completado(s)." else "Nenhum endereço pendente foi resolvido."
+            // Cada causa tem a sua frase. Antes as tres davam a mesma, e a mesma frase para
+            // "seu aparelho nao tem esse servico" e "voce esta sem internet" nao ajuda ninguem.
+            val r = runCatching { Enderecos.resolver(getApplication(), banco) }.getOrNull()
+            _mensagem.value = when (r) {
+                null -> "Falha ao consultar endereços."
+                is Enderecos.Resultado.SemServico ->
+                    "Este aparelho não tem serviço de geocodificação. O endereço fica em branco — " +
+                        "a coordenada, que é o que vale para o laudo, continua registrada."
+                is Enderecos.Resultado.NadaPendente ->
+                    "Nenhuma foto com endereço pendente."
+                is Enderecos.Resultado.Concluido -> when {
+                    r.resolvidos == r.tentados -> "${r.resolvidos} endereço(s) completado(s)."
+                    r.resolvidos > 0 ->
+                        "${r.resolvidos} de ${r.tentados} endereços completados. " +
+                            "O resto continua na fila — tente de novo com sinal melhor."
+                    else ->
+                        "Nenhum dos ${r.tentados} endereços foi resolvido. Provavelmente falta " +
+                            "conexão: eles continuam na fila para a próxima tentativa."
+                }
+            }
             _sessaoAtual.value?.let { carregarFotos(it.id) }
         }
     }
