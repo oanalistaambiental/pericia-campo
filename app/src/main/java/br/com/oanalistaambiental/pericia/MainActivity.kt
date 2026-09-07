@@ -1,6 +1,7 @@
 package br.com.oanalistaambiental.pericia
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -22,7 +23,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.oanalistaambiental.pericia.dados.Sessao
 import br.com.oanalistaambiental.pericia.ui.*
@@ -48,7 +55,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Rota { CAMERA, SESSOES, DETALHE, FERRAMENTAS, BUSSOLA, CONFIGURACOES }
+private enum class Rota { CAMERA, SESSOES, DETALHE, FERRAMENTAS, BUSSOLA, CLINOMETRO, MEDICAO, COORDENADA, CONFIGURACOES }
 
 @Composable
 private fun App() {
@@ -57,33 +64,88 @@ private fun App() {
     var rota by remember { mutableStateOf(Rota.CAMERA) }
     var sessaoAberta by remember { mutableStateOf<Sessao?>(null) }
 
-    fun temPermissoes() =
-        ContextCompat.checkSelfPermission(contexto, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(contexto, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+    fun concedida(p: String) =
+        ContextCompat.checkSelfPermission(contexto, p) == PackageManager.PERMISSION_GRANTED
 
-    var permissoesOk by remember { mutableStateOf(temPermissoes()) }
+    fun temCamera() = concedida(Manifest.permission.CAMERA)
+
+    // ACCESS_FINE_LOCATION sozinho nao basta como teste: quando o usuario escolhe "Aproximada"
+    // na caixa do Android 12+, so a COARSE e concedida. Aceitamos as duas — a precisao real
+    // aparece no selo do GNSS, que e onde ela importa.
+    fun temLocal() =
+        concedida(Manifest.permission.ACCESS_FINE_LOCATION) ||
+            concedida(Manifest.permission.ACCESS_COARSE_LOCATION)
+
+    var cameraOk by remember { mutableStateOf(temCamera()) }
+    var localOk by remember { mutableStateOf(temLocal()) }
     var jaPediu by remember { mutableStateOf(false) }
 
     val pedir = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissoesOk = temPermissoes(); jaPediu = true }
+    ) { cameraOk = temCamera(); localOk = temLocal(); jaPediu = true }
 
-    LaunchedEffect(Unit) {
-        if (!permissoesOk) pedir.launch(
-            arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION)
-        )
+    val permissoes = arrayOf(
+        Manifest.permission.CAMERA,
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION
+    )
+
+    LaunchedEffect(Unit) { if (!cameraOk || !localOk) pedir.launch(permissoes) }
+
+    /**
+     * BUG corrigido: quem concedia a permissao pelas Configuracoes do Android voltava para um
+     * app que continuava dizendo que faltava permissao — o estado so era lido uma vez, na
+     * primeira composicao. Agora e reconferido a cada retorno ao primeiro plano.
+     */
+    val dono = LocalLifecycleOwner.current
+    DisposableEffect(dono) {
+        val observador = LifecycleEventObserver { _, evento ->
+            if (evento == Lifecycle.Event.ON_RESUME) {
+                cameraOk = temCamera()
+                localOk = temLocal()
+            }
+        }
+        dono.lifecycle.addObserver(observador)
+        onDispose { dono.lifecycle.removeObserver(observador) }
     }
 
     // BUG corrigido: o ViewModel iniciava o GNSS antes de existir permissao, a chamada era
     // recusada em silencio e nada religava depois do usuario conceder. Na primeira instalacao
     // isso deixava o selo em "SEM SINAL" e gravava toda foto sem coordenada.
-    LaunchedEffect(permissoesOk) {
-        if (permissoesOk) vm.estadoCampo.iniciar()
+    LaunchedEffect(localOk) {
+        if (localOk) vm.estadoCampo.iniciar()
     }
 
-    if (!permissoesOk) {
-        TelaPermissoes(jaPediu) {
-            pedir.launch(arrayOf(Manifest.permission.CAMERA, Manifest.permission.ACCESS_FINE_LOCATION))
+    // Falha de GNSS deixa de ser silenciosa.
+    val falhaGnss by vm.estadoCampo.falha.collectAsState()
+    LaunchedEffect(falhaGnss) { falhaGnss?.let { vm.avisar(it) } }
+
+    /**
+     * BUG corrigido — este e o outro "nao tira foto".
+     *
+     * O app exigia camera E localizacao precisa para deixar entrar. Quem concedesse a camera
+     * e recusasse (ou marcasse "Aproximada") a localizacao ficava preso para sempre na tela de
+     * permissoes, sem conseguir fotografar nada. Agora so a camera e obrigatoria: sem
+     * localizacao o app funciona e avisa, em letras grandes, que a foto sai sem coordenada.
+     */
+    if (!cameraOk) {
+        TelaPermissoes(jaPediu) { pedir.launch(permissoes) }
+        return
+    }
+
+    /**
+     * Primeiro uso.
+     *
+     * Nao e tela de boas-vindas: e a unica chance de ensinar as quatro coisas sem as quais o
+     * app vira uma camera comum com coordenada. Quem pula, pula uma vez; quem le, para de
+     * cometer os erros que invalidam registro em campo.
+     */
+    val prefs = remember { contexto.getSharedPreferences("pericia", Context.MODE_PRIVATE) }
+    var viuIntro by remember { mutableStateOf(prefs.getBoolean("viu_intro_1", false)) }
+    if (!viuIntro) {
+        TelaPrimeiroUso {
+            prefs.edit().putBoolean("viu_intro_1", true).apply()
+            viuIntro = true
         }
         return
     }
@@ -110,12 +172,36 @@ private fun App() {
             Rota.FERRAMENTAS -> TelaFerramentas(
                 vm,
                 irParaBussola = { rota = Rota.BUSSOLA },
+                irParaClinometro = { rota = Rota.CLINOMETRO },
+                irParaMedicao = { rota = Rota.MEDICAO },
+                irParaCoordenada = { rota = Rota.COORDENADA },
                 irParaConfiguracoes = { rota = Rota.CONFIGURACOES },
                 irParaSessoes = { rota = Rota.SESSOES },
                 voltar = { rota = Rota.CAMERA }
             )
             Rota.BUSSOLA -> TelaBussola(vm) { rota = Rota.FERRAMENTAS }
+            Rota.CLINOMETRO -> TelaClinometro(vm) { rota = Rota.FERRAMENTAS }
+            Rota.MEDICAO -> TelaMedicao(vm) { rota = Rota.FERRAMENTAS }
+            Rota.COORDENADA -> TelaIrParaCoordenada(
+                vm,
+                aoDefinir = { rota = Rota.CAMERA },
+                voltar = { rota = Rota.FERRAMENTAS }
+            )
             Rota.CONFIGURACOES -> TelaConfiguracoes(vm) { rota = Rota.FERRAMENTAS }
+        }
+
+        if (!localOk) {
+            Text(
+                "SEM PERMISSÃO DE LOCALIZAÇÃO — as fotos serão gravadas sem coordenada. " +
+                    "Toque para conceder.",
+                color = Color.White, fontSize = 11.sp, lineHeight = 15.sp,
+                modifier = Modifier.align(Alignment.TopCenter)
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .fillMaxWidth()
+                    .background(Cores.alerta)
+                    .clickable { pedir.launch(permissoes) }
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+            )
         }
 
         Mensagem(vm, Modifier.align(Alignment.BottomCenter))
@@ -162,6 +248,87 @@ private fun TelaPermissoes(jaPediu: Boolean, aoPedir: () -> Unit) {
                     "Perícia Campo › Permissões e conceda Câmera e Local (precisão exata ligada).",
                 color = Cores.atencaoClaro, fontSize = 11.5.sp, lineHeight = 16.sp
             )
+        }
+    }
+}
+
+/**
+ * O que o perito precisa saber antes da primeira foto.
+ *
+ * Quatro licoes, na ordem em que os erros acontecem em campo. Texto curto de proposito: a tela
+ * que ninguem le nao ensina nada, e este app e usado no sol, com pressa.
+ */
+@Composable
+private fun TelaPrimeiroUso(aoComecar: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().background(Cores.fundo)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 24.dp, vertical = 28.dp)
+    ) {
+        Text(
+            "Antes da primeira foto",
+            color = Cores.texto, fontSize = 24.sp, fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "Quatro coisas separam um registro que sustenta laudo de uma foto bonita.",
+            color = Cores.textoFraco, fontSize = 13.sp, lineHeight = 19.sp
+        )
+
+        Licao(
+            "1",
+            "Espere o selo ficar verde",
+            "A faixa no topo mostra a precisão do GNSS. Vermelha, a coordenada pode errar " +
+                "dezenas de metros — o bastante para colocar a ocorrência dentro ou fora de uma " +
+                "área protegida. Pare, fique a céu aberto e espere. Costuma levar segundos."
+        )
+        Licao(
+            "2",
+            "Toda foto pertence a uma sessão",
+            "A sessão é a vistoria. É ela que vira laudo, que recebe o selo de integridade ao " +
+                "ser fechada e que agrupa as fotos numa sequência com começo e fim. Foto solta " +
+                "não vira nada."
+        )
+        Licao(
+            "3",
+            "O arquivo original nunca é tocado",
+            "No instante da captura o app calcula o SHA-256 do arquivo e guarda. A legenda " +
+                "técnica é queimada numa CÓPIA. É a cópia que você compartilha; o original fica " +
+                "no aparelho, íntegro e conferível."
+        )
+        Licao(
+            "4",
+            "Não mande o original por aplicativo de mensagem",
+            "Aplicativos de mensagem recomprimem a imagem. O arquivo muda, o hash deixa de " +
+                "bater e a cadeia de custódia se quebra em silêncio. Exporte pela própria tela " +
+                "de sessões, que preserva o arquivo. O verificador do app mostra na hora " +
+                "quando um arquivo foi alterado."
+        )
+
+        Spacer(Modifier.height(28.dp))
+        BotaoLargo("Começar", principal = true) { aoComecar() }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            "Isto reaparece só se você reinstalar o aplicativo.",
+            color = Cores.textoFraco, fontSize = 10.5.sp
+        )
+        Spacer(Modifier.height(24.dp))
+    }
+}
+
+@Composable
+private fun Licao(numero: String, titulo: String, texto: String) {
+    Row(Modifier.fillMaxWidth().padding(top = 26.dp)) {
+        Text(
+            numero,
+            color = Cores.bomClaro, fontSize = 20.sp, fontWeight = FontWeight.Bold,
+            modifier = Modifier.width(30.dp)
+        )
+        Column {
+            Text(titulo, color = Cores.texto, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(5.dp))
+            Text(texto, color = Cores.textoFraco, fontSize = 12.5.sp, lineHeight = 19.sp)
         }
     }
 }
