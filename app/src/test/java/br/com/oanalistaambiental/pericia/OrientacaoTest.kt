@@ -91,13 +91,15 @@ class OrientacaoTest {
     @Test
     fun `declividade em porcentagem nao e o angulo`() {
         // Erro comum de laudo: 45 graus nao e 50%, e 100%.
-        assertEquals(100.0, Orientacoes.declividadePercent(45f).toDouble(), 0.1)
-        assertEquals(50.0, Orientacoes.declividadePercent(26.565f).toDouble(), 0.1)
-        assertEquals(0.0, Orientacoes.declividadePercent(0f).toDouble(), 0.01)
+        // declividadePercent passou a devolver null acima de 80 graus, onde a tangente
+        // explode; abaixo disso continua sendo o mesmo numero de sempre.
+        assertEquals(100.0, Orientacoes.declividadePercent(45f)!!.toDouble(), 0.1)
+        assertEquals(50.0, Orientacoes.declividadePercent(26.565f)!!.toDouble(), 0.1)
+        assertEquals(0.0, Orientacoes.declividadePercent(0f)!!.toDouble(), 0.01)
         // O sinal nao importa: subida e descida tem a mesma declividade.
         assertEquals(
-            Orientacoes.declividadePercent(30f).toDouble(),
-            Orientacoes.declividadePercent(-30f).toDouble(), 0.01
+            Orientacoes.declividadePercent(30f)!!.toDouble(),
+            Orientacoes.declividadePercent(-30f)!!.toDouble(), 0.01
         )
     }
 
