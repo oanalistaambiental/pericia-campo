@@ -31,20 +31,72 @@ import java.util.Locale
  */
 object LaudoPdf {
 
+    /**
+     * Quebra o texto em linhas que cabem em [larguraMax], medindo com a fonte real.
+     *
+     * Quebra por espaco; palavra unica maior que a coluna (um caminho de arquivo, um hash) e
+     * partida por caractere, porque deixar vazar pela margem seria trocar um defeito por
+     * outro. Preserva as quebras que o proprio perito digitou.
+     */
+    internal fun quebrar(texto: String, p: Paint, larguraMax: Float): List<String> {
+        if (larguraMax <= 0f) return listOf(texto)
+        val saida = mutableListOf<String>()
+        for (paragrafo in texto.split("\n")) {
+            if (p.measureText(paragrafo) <= larguraMax) { saida += paragrafo; continue }
+            var atual = StringBuilder()
+            for (palavra in paragrafo.split(" ")) {
+                val tentativa = if (atual.isEmpty()) palavra else "$atual $palavra"
+                if (p.measureText(tentativa) <= larguraMax) {
+                    atual = StringBuilder(tentativa)
+                    continue
+                }
+                if (atual.isNotEmpty()) { saida += atual.toString(); atual = StringBuilder() }
+                if (p.measureText(palavra) <= larguraMax) {
+                    atual = StringBuilder(palavra)
+                } else {
+                    var pedaco = StringBuilder()
+                    for (ch in palavra) {
+                        if (p.measureText(pedaco.toString() + ch) > larguraMax && pedaco.isNotEmpty()) {
+                            saida += pedaco.toString(); pedaco = StringBuilder()
+                        }
+                        pedaco.append(ch)
+                    }
+                    atual = pedaco
+                }
+            }
+            if (atual.isNotEmpty()) saida += atual.toString()
+        }
+        return if (saida.isEmpty()) listOf("") else saida
+    }
+
+
     private const val LARGURA = 595   // A4 72dpi
     private const val ALTURA = 842
     private const val MARGEM = 40f
-    private val fmt = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR"))
+    private val fmt = ThreadLocal.withInitial {
+        SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR"))
+    }
 
     fun gerar(banco: Banco, sessao: Sessao, fotos: List<Foto>, destino: File): File {
         val doc = PdfDocument()
-        capa(doc, sessao, fotos)
-        fotos.forEachIndexed { i, f -> paginaFoto(doc, banco, f, i + 1, fotos.size) }
-        integridade(doc, sessao, fotos)
-        // Observacao: o numero de pagina do PdfDocument e apenas um indice interno; paginas
-        // que transbordam recebem indices adicionais e a ordem de escrita e preservada.
-        FileOutputStream(destino).use { doc.writeTo(it) }
-        doc.close()
+        // O `finally` nao e zelo: sem ele, um OutOfMemoryError decodificando uma foto de
+        // 50 MP, ou o armazenamento enchendo no meio do writeTo, deixava a memoria nativa do
+        // PdfDocument retida E um PDF pela metade no disco — arquivo que depois podia ser
+        // compartilhado como se fosse o laudo. Agora o parcial e apagado.
+        try {
+            capa(doc, sessao, fotos)
+            fotos.forEachIndexed { i, f -> paginaFoto(doc, banco, f, i + 1, fotos.size) }
+            integridade(doc, sessao, fotos)
+            // Observacao: o numero de pagina do PdfDocument e apenas um indice interno;
+            // paginas que transbordam recebem indices adicionais e a ordem de escrita e
+            // preservada.
+            FileOutputStream(destino).use { doc.writeTo(it) }
+        } catch (e: Throwable) {
+            runCatching { destino.delete() }
+            throw e
+        } finally {
+            runCatching { doc.close() }
+        }
         return destino
     }
 
@@ -67,7 +119,7 @@ object LaudoPdf {
         c.drawText("LAUDO FOTOGRÁFICO DE VISTORIA", MARGEM, y, titulo(18f)); y += 40f
         c.drawText(s.titulo, MARGEM, y, titulo(14f, false)); y += 28f
         s.processo?.let { c.drawText("Processo/Auto: $it", MARGEM, y, titulo(11f, false)); y += 20f }
-        c.drawText("Início: ${fmt.format(Date(s.criadaEm))}", MARGEM, y, titulo(11f, false)); y += 20f
+        c.drawText("Início: ${fmt.get()!!.format(Date(s.criadaEm))}", MARGEM, y, titulo(11f, false)); y += 20f
         c.drawText("Registros fotográficos: ${fotos.size}", MARGEM, y, titulo(11f, false)); y += 20f
         c.drawText("Datum de referência: SIRGAS 2000 (EPSG:4674)", MARGEM, y, titulo(11f, false)); y += 40f
 
@@ -112,7 +164,7 @@ object LaudoPdf {
 
         // BUG corrigido: as linhas abaixo eram desenhadas sem checar o fim da pagina, entao em
         // foto em retrato o hash e as ultimas restricoes sumiam do laudo, em silencio.
-        fun linha(texto: String, p: Paint, recuo: Float = 0f) {
+        fun linhaCrua(texto: String, p: Paint, recuo: Float = 0f) {
             if (y > ALTURA - MARGEM - 14f) {
                 doc.finishPage(pagina)
                 extras += 1
@@ -126,16 +178,32 @@ object LaudoPdf {
             y += 13f
         }
 
+        /**
+         * BUG corrigido: transbordo HORIZONTAL.
+         *
+         * O transbordo vertical ja era tratado (é o comentario acima), mas `drawText` desenha
+         * uma linha so e o que passa da largura da pagina simplesmente nao aparece — sem
+         * reticencias, sem aviso. Uma observacao de 170 caracteres, dessas que o perito
+         * escreve de verdade ("Corte raso de vegetacao nativa em estagio medio..."), saia
+         * cortada nos primeiros ~95 e o resto desaparecia do laudo. Agora quebra em quantas
+         * linhas precisar, medindo com a propria fonte.
+         */
+        fun linha(texto: String, p: Paint, recuo: Float = 0f) {
+            val disponivel = LARGURA - 2 * MARGEM - recuo
+            for (parte in quebrar(texto, p, disponivel)) linhaCrua(parte, p, recuo)
+        }
+
         val semPosicao = f.lat == 0.0 && f.lon == 0.0
         if (semPosicao) {
             linha("SEM POSIÇÃO GNSS NO MOMENTO DA CAPTURA", titulo(9f))
         } else {
             val utm = Utm.projetar(f.lat, f.lon)
             linha("UTM SIRGAS 2000: ${utm.formatado()}", titulo(9f, false))
-            linha("Geográfica: %.6f, %.6f".format(f.lat, f.lon), titulo(9f, false))
+            // Mesma razao da legenda: coordenada e dado tecnico e leva ponto decimal.
+            linha("Geográfica: %.6f, %.6f".format(Locale.US, f.lat, f.lon), titulo(9f, false))
             linha("Precisão do GNSS: ±%.0f m".format(f.precisaoM), titulo(9f, false))
         }
-        linha("Data/hora: ${fmt.format(Date(f.instante))}", titulo(9f, false))
+        linha("Data/hora: ${fmt.get()!!.format(Date(f.instante))}", titulo(9f, false))
         f.altitudeM?.let { linha("Altitude: %.0f m".format(it), titulo(9f, false)) }
         f.azimuteGraus?.let { az ->
             val elev = f.inclinacaoGraus?.let { ", elevação %.0f°".format(it) } ?: ""
@@ -150,7 +218,11 @@ object LaudoPdf {
             y += 6f
             linha("Indícios de restrição ambiental:", titulo(9f))
             restr.forEach { r ->
-                linha("• ${r.camada} (${r.fonte}) — ${legivel(r.situacao)}, %.0f m".format(r.distanciaM), titulo(8.5f, false), 8f)
+                linha(
+                    "• " + r.camada + " (" + r.fonte + ") — " + legivel(r.situacao) + ", " +
+                        "%.0f".format(Locale.US, r.distanciaM) + " m",
+                    titulo(8.5f, false), 8f
+                )
                 linha("  base de ${r.dataExtracao}, pacote ${r.pacoteVersao}, simplificação ${r.toleranciaM} m", mono(7.5f), 8f)
             }
         }
