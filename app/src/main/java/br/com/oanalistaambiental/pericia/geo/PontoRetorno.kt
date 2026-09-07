@@ -67,14 +67,31 @@ object PontoRetorno {
         lonAtual: Double,
         precisaoM: Float,
         azimuteAtual: Float?
+    ): Orientacao = orientar(alvo.lat, alvo.lon, alvo.azimuteGraus, latAtual, lonAtual, precisaoM, azimuteAtual)
+
+    /**
+     * Mesma orientacao para um alvo qualquer, nao so para uma foto anterior.
+     *
+     * Existe porque o perito tambem precisa chegar a uma coordenada que veio de fora — de um
+     * auto de infracao, de uma planta, de um memorial descritivo. Nesse caso nao ha
+     * enquadramento a reproduzir, so um ponto a alcancar, e [alvoAzimute] vem nulo.
+     */
+    fun orientar(
+        alvoLat: Double,
+        alvoLon: Double,
+        alvoAzimute: Float?,
+        latAtual: Double,
+        lonAtual: Double,
+        precisaoM: Float,
+        azimuteAtual: Float?
     ): Orientacao {
-        val (distancia, rumo) = distanciaERumo(latAtual, lonAtual, alvo.lat, alvo.lon)
+        val (distancia, rumo) = distanciaERumo(latAtual, lonAtual, alvoLat, alvoLon)
 
         val toleranciaChegada = maxOf(precisaoM, 5f)
         val chegou = distancia <= toleranciaChegada
 
-        val ajuste = if (azimuteAtual != null && alvo.azimuteGraus != null) {
-            var d = alvo.azimuteGraus - azimuteAtual
+        val ajuste = if (azimuteAtual != null && alvoAzimute != null) {
+            var d = alvoAzimute - azimuteAtual
             while (d > 180f) d -= 360f
             while (d < -180f) d += 360f
             d
