@@ -137,7 +137,10 @@ object LaudoPdf {
         }
         linha("Data/hora: ${fmt.format(Date(f.instante))}", titulo(9f, false))
         f.altitudeM?.let { linha("Altitude: %.0f m".format(it), titulo(9f, false)) }
-        f.azimuteGraus?.let { linha("Azimute da câmera: %.0f°".format(it), titulo(9f, false)) }
+        f.azimuteGraus?.let { az ->
+            val elev = f.inclinacaoGraus?.let { ", elevação %.0f°".format(it) } ?: ""
+            linha("Azimute da câmera: %.0f°%s".format(az, elev), titulo(9f, false))
+        }
         f.endereco?.let { linha("Endereço: $it", titulo(9f, false)) }
         f.tipoOcorrencia?.let { linha("Ocorrência: $it", titulo(9f, false)) }
         f.observacao?.takeIf { it.isNotBlank() }?.let { linha("Observação: $it", titulo(9f, false)) }
