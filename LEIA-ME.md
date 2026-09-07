@@ -8,11 +8,14 @@ App Android nativo em Kotlin. Nome provisório. Pacote `br.com.oanalistaambienta
 
 ### GitHub Actions (não instala nada)
 
-1. Repositório privado no GitHub, envie esta pasta.
+1. Envie **o conteúdo desta pasta para a raiz do repositório**, não a pasta inteira dentro de
+   outra. O `settings.gradle.kts`, o `build.gradle.kts` e a pasta `app/` têm que ficar no
+   primeiro nível — é lá que o workflow procura.
 2. **Atenção:** o upload por arrastar do navegador ignora pastas que começam com ponto, então
    a `.github` costuma ficar para trás. Se a aba **Actions** disser "Get started with GitHub
    Actions", clique em **"set up a workflow yourself"**, apague o exemplo, cole o conteúdo de
    `.github/workflows/build-apk.yml` deste projeto e salve com esse mesmo nome.
+   Nunca coloque o código do app dentro de `.github/` — aquela pasta é só do workflow.
 3. Aba **Actions** → aguarde o ✅ → baixe o artefato **`pericia-campo-apk`**.
 
 O workflow **roda os testes antes de compilar**. Se um teste quebrar, o APK não é gerado — é de
@@ -29,6 +32,10 @@ aplicativo. Não precisa de root nem de conta de desenvolvedor.
 
 Na primeira abertura, conceda **câmera** e **localização precisa**. Confira nas configurações do
 Android que a *precisão de localização* está ligada — sem ela o GNSS entrega posição grosseira.
+
+Só a **câmera** é obrigatória para o app abrir. Sem localização ele funciona e fotografa, mas
+mostra uma faixa vermelha permanente avisando que as fotos estão saindo sem coordenada — o que,
+num laudo, é a diferença entre prova e ilustração.
 
 ## Instalar o pacote de camadas
 
