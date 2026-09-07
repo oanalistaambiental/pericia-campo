@@ -3,8 +3,12 @@ name: Gerar APK
 on:
   push:
     branches: [ main, master ]
+  pull_request:
   workflow_dispatch:
 
+# O projeto Gradle fica na RAIZ do repositorio. A versao anterior deste arquivo procurava o
+# settings.gradle.kts com `find` e pegava o primeiro que achasse — que era o de uma copia
+# antiga guardada dentro de .github/workflows/. O APK saia do codigo errado.
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -20,9 +24,6 @@ jobs:
       - name: Preparar Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Aceitar licenças do SDK
-        run: yes | sdkmanager --licenses || true
-
       - name: Preparar Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -31,7 +32,7 @@ jobs:
       - name: Rodar os testes
         run: gradle testDebugUnitTest --no-daemon --stacktrace
 
-      - name: Compilar APK de teste
+      - name: Compilar APK de depuração
         run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: Publicar o APK
@@ -40,3 +41,11 @@ jobs:
           name: pericia-campo-apk
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
+
+      - name: Publicar relatórios (quando falhar)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorios-pericia-campo
+          path: app/build/reports/
+          if-no-files-found: ignore
