@@ -24,6 +24,14 @@ data class Foto(
     val azimuteGraus: Float?,
     val inclinacaoGraus: Float?,
     val instante: Long,
+    /**
+     * Quantos segundos a leitura de GNSS ja tinha quando o obturador disparou.
+     *
+     * Um laudo precisa poder responder "de quando e essa coordenada?". Zero ou poucos segundos
+     * e leitura ao vivo; dezenas de segundos e um ponto que ficou para tras. Null quando a
+     * foto nao tem coordenada.
+     */
+    val idadeFixSegundos: Long? = null,
     val tipoOcorrencia: String?,
     val observacao: String?,
     val enderecoPendente: Boolean = true,

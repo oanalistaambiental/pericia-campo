@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 1) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -34,6 +34,7 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 1)
                 lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL NOT NULL,
                 altitude_m REAL, azimute REAL, inclinacao REAL,
                 instante INTEGER NOT NULL,
+                idade_fix_s INTEGER,
                 tipo_ocorrencia TEXT, observacao TEXT,
                 endereco_pendente INTEGER NOT NULL DEFAULT 1, endereco TEXT,
                 FOREIGN KEY(sessao_id) REFERENCES sessao(id)
@@ -52,7 +53,13 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 1)
         db.execSQL("CREATE INDEX idx_restricao_foto ON restricao(foto_id)")
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) { /* v1 */ }
+    /**
+     * Migracao aditiva, nunca destrutiva: a prova ja gravada e intocavel. Coluna nova entra
+     * nula para as fotos antigas, e o laudo trata null como "idade nao registrada".
+     */
+    override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) {
+        if (old < 2) db.execSQL("ALTER TABLE foto ADD COLUMN idade_fix_s INTEGER")
+    }
 
     fun criarSessao(titulo: String, processo: String?): Long =
         writableDatabase.insert("sessao", null, ContentValues().apply {
@@ -84,6 +91,7 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 1)
             put("lat", f.lat); put("lon", f.lon); put("precisao_m", f.precisaoM)
             put("altitude_m", f.altitudeM); put("azimute", f.azimuteGraus)
             put("inclinacao", f.inclinacaoGraus); put("instante", f.instante)
+            put("idade_fix_s", f.idadeFixSegundos)
             put("tipo_ocorrencia", f.tipoOcorrencia); put("observacao", f.observacao)
             put("endereco_pendente", if (f.enderecoPendente) 1 else 0)
         })
@@ -91,21 +99,14 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 1)
     fun fotosDaSessao(sessaoId: Long): List<Foto> {
         val out = mutableListOf<Foto>()
         readableDatabase.rawQuery(
-            "SELECT id, sessao_id, arquivo_original, arquivo_legenda, sha256, lat, lon, precisao_m," +
-                " altitude_m, azimute, inclinacao, instante, tipo_ocorrencia, observacao," +
-                " endereco_pendente, endereco FROM foto WHERE sessao_id=? ORDER BY instante",
+            // ORDER BY instante, id — e nao so instante. A ordem das folhas da arvore de
+            // Merkle sai daqui. Se o Android sincronizar a hora pela rede no meio da vistoria
+            // e recuar o relogio, ou se duas fotos cairem no mesmo milissegundo, o SQLite nao
+            // garante desempate: a mesma sessao produziria raizes diferentes em leituras
+            // diferentes, sem nenhum arquivo ter mudado. O id e monotonico e resolve.
+            "SELECT $COLUNAS_FOTO FROM foto WHERE sessao_id=? ORDER BY instante, id",
             arrayOf(sessaoId.toString())
-        ).use { c ->
-            while (c.moveToNext()) out += Foto(
-                c.getLong(0), c.getLong(1), c.getString(2), c.getString(3), c.getString(4),
-                c.getDouble(5), c.getDouble(6), c.getFloat(7),
-                if (c.isNull(8)) null else c.getDouble(8),
-                if (c.isNull(9)) null else c.getFloat(9),
-                if (c.isNull(10)) null else c.getFloat(10),
-                c.getLong(11), c.getString(12), c.getString(13),
-                c.getInt(14) == 1, c.getString(15)
-            )
-        }
+        ).use { c -> while (c.moveToNext()) out += lerFoto(c) }
         return out
     }
 
@@ -165,9 +166,7 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 1)
     fun fotosComEnderecoPendente(limite: Int = 50): List<Foto> {
         val out = mutableListOf<Foto>()
         readableDatabase.rawQuery(
-            "SELECT id, sessao_id, arquivo_original, arquivo_legenda, sha256, lat, lon, precisao_m," +
-                " altitude_m, azimute, inclinacao, instante, tipo_ocorrencia, observacao," +
-                " endereco_pendente, endereco FROM foto WHERE endereco_pendente=1 AND lat<>0" +
+            "SELECT $COLUNAS_FOTO FROM foto WHERE endereco_pendente=1 AND (lat<>0 OR lon<>0)" +
                 " ORDER BY instante DESC LIMIT ?", arrayOf(limite.toString())
         ).use { c -> while (c.moveToNext()) out += lerFoto(c) }
         return out
@@ -175,9 +174,7 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 1)
 
     fun foto(id: Long): Foto? =
         readableDatabase.rawQuery(
-            "SELECT id, sessao_id, arquivo_original, arquivo_legenda, sha256, lat, lon, precisao_m," +
-                " altitude_m, azimute, inclinacao, instante, tipo_ocorrencia, observacao," +
-                " endereco_pendente, endereco FROM foto WHERE id=?", arrayOf(id.toString())
+            "SELECT $COLUNAS_FOTO FROM foto WHERE id=?", arrayOf(id.toString())
         ).use { if (it.moveToFirst()) lerFoto(it) else null }
 
     fun sessao(id: Long): Sessao? =
@@ -198,7 +195,22 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 1)
         if (c.isNull(8)) null else c.getDouble(8),
         if (c.isNull(9)) null else c.getFloat(9),
         if (c.isNull(10)) null else c.getFloat(10),
-        c.getLong(11), c.getString(12), c.getString(13),
-        c.getInt(14) == 1, c.getString(15)
+        c.getLong(11),
+        if (c.isNull(12)) null else c.getLong(12),
+        c.getString(13), c.getString(14),
+        c.getInt(15) == 1, c.getString(16)
     )
+
+    private companion object {
+        /**
+         * Uma lista so, usada pelas tres consultas e pelo leitor. Antes eram tres copias da
+         * mesma lista com os indices repetidos a mao: acrescentar uma coluna significava
+         * lembrar de mexer em quatro lugares, e esquecer um deles nao da erro de compilacao —
+         * da leitura errada em silencio.
+         */
+        const val COLUNAS_FOTO =
+            "id, sessao_id, arquivo_original, arquivo_legenda, sha256, lat, lon, precisao_m, " +
+                "altitude_m, azimute, inclinacao, instante, idade_fix_s, tipo_ocorrencia, " +
+                "observacao, endereco_pendente, endereco"
+    }
 }
