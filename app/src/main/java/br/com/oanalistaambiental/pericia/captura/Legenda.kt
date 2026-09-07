@@ -25,12 +25,30 @@ import java.util.Locale
  */
 object Legenda {
 
+    /** Maior lado da COPIA com legenda. O original nunca e redimensionado. */
+    private const val LADO_MAXIMO = 4000
+
     private val fmtData = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR"))
 
     fun gerar(original: File, destino: File, foto: Foto, sessaoTitulo: String): File {
-        // inMutable e necessario para que Canvas() possa desenhar sobre o bitmap sem uma
-        // segunda copia no caminho em que nao ha rotacao a aplicar.
-        val opcoes = BitmapFactory.Options().apply { inMutable = true }
+        // BUG corrigido: a imagem era decodificada em tamanho cheio e mutavel (ARGB_8888).
+        // Um sensor de 50 MP vira ~200 MB de bitmap, e ainda mais 200 MB quando ha rotacao a
+        // aplicar — OutOfMemoryError na hora de gravar a legenda, num aparelho de campo.
+        // A COPIA com legenda e a versao para leitura humana; o original, que e a prova, fica
+        // intocado e ja com hash. Entao a copia pode ser reduzida sem prejuizo nenhum.
+        val medida = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeFile(original.absolutePath, medida)
+        val maiorLado = maxOf(medida.outWidth, medida.outHeight)
+
+        var amostra = 1
+        while (maiorLado / amostra > LADO_MAXIMO) amostra *= 2
+
+        // inMutable permite que Canvas() desenhe sobre o bitmap sem uma segunda copia no
+        // caminho em que nao ha rotacao a aplicar.
+        val opcoes = BitmapFactory.Options().apply {
+            inMutable = true
+            inSampleSize = amostra
+        }
         val bruta = BitmapFactory.decodeFile(original.absolutePath, opcoes)
             ?: throw IllegalStateException("Não foi possível ler a imagem original")
 

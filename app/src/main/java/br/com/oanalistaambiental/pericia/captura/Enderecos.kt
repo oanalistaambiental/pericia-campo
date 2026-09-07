@@ -35,10 +35,12 @@ object Enderecos {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             suspendCancellableCoroutine { cont ->
                 geocoder.getFromLocation(lat, lon, 1, object : Geocoder.GeocodeListener {
+                    // O Geocoder pode chamar de volta depois de a corrotina ser cancelada, e
+                    // retomar duas vezes derruba o app. O runCatching absorve isso.
                     override fun onGeocode(enderecos: MutableList<android.location.Address>) {
-                        cont.resume(formatar(enderecos.firstOrNull()))
+                        runCatching { cont.resume(formatar(enderecos.firstOrNull())) }
                     }
-                    override fun onError(mensagem: String?) { cont.resume(null) }
+                    override fun onError(mensagem: String?) { runCatching { cont.resume(null) } }
                 })
             }
         } else {
