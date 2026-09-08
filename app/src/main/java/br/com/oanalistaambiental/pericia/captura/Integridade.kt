@@ -54,15 +54,28 @@ object Integridade {
         return nivel[0].joinToString("") { "%02x".format(it) }
     }
 
+    /**
+     * Um passo do caminho de prova: o hash do irmao E DE QUE LADO ele fica.
+     *
+     * O LADO NAO E DETALHE — sem ele a prova nao fecha. Quem confere precisa saber se
+     * concatena irmao+no ou no+irmao antes de aplicar o SHA-256; trocar a ordem da um hash
+     * completamente diferente. A versao anterior devolvia so a lista de hashes irmaos, o que
+     * tornava o caminho impossivel de verificar — e nao havia nenhuma funcao de verificacao no
+     * aplicativo, entao ninguem tropecava nisso. Era a promessa central do produto ("cada foto
+     * continua individualmente demonstravel pelo caminho ate a raiz") sem nada que a cumprisse.
+     */
+    data class Passo(val irmaoHex: String, val irmaoAEsquerda: Boolean)
+
     /** Caminho de prova de uma folha ate a raiz, para demonstrar UMA foto isoladamente. */
-    fun caminhoMerkle(hashesHex: List<String>, indice: Int): List<String> {
+    fun caminhoMerkle(hashesHex: List<String>, indice: Int): List<Passo> {
         if (indice !in hashesHex.indices) return emptyList()
         var nivel = hashesHex.map { hexParaBytes(it) }
         var pos = indice
-        val caminho = mutableListOf<String>()
+        val caminho = mutableListOf<Passo>()
         while (nivel.size > 1) {
+            // Nivel impar duplica o ultimo: ai o no e irmao de si mesmo, e o lado e a direita.
             val irmao = if (pos % 2 == 0) minOf(pos + 1, nivel.size - 1) else pos - 1
-            caminho += nivel[irmao].joinToString("") { "%02x".format(it) }
+            caminho += Passo(nivel[irmao].hex(), irmaoAEsquerda = irmao < pos)
             val proximo = mutableListOf<ByteArray>()
             var i = 0
             while (i < nivel.size) {
@@ -77,8 +90,46 @@ object Integridade {
         return caminho
     }
 
-    private fun hexParaBytes(hex: String): ByteArray =
-        ByteArray(hex.length / 2) { ((Character.digit(hex[it * 2], 16) shl 4) + Character.digit(hex[it * 2 + 1], 16)).toByte() }
+    /**
+     * Refaz o caminho e confere se chega na raiz. E o outro lado da prova.
+     *
+     * Sem esta funcao o caminho era um dado que ninguem sabia usar. Com ela, o perito (ou quem
+     * contesta o laudo) consegue demonstrar UMA foto sem precisar das outras da sessao: basta
+     * o hash da foto, o caminho gravado e a raiz carimbada.
+     */
+    fun verificarCaminho(folhaHex: String, caminho: List<Passo>, raizEsperadaHex: String): Boolean {
+        if (raizEsperadaHex.isBlank()) return false
+        var atual = runCatching { hexParaBytes(folhaHex) }.getOrNull() ?: return false
+        for (passo in caminho) {
+            val irmao = runCatching { hexParaBytes(passo.irmaoHex) }.getOrNull() ?: return false
+            val juntos = if (passo.irmaoAEsquerda) irmao + atual else atual + irmao
+            atual = MessageDigest.getInstance("SHA-256").digest(juntos)
+        }
+        return atual.hex().equals(raizEsperadaHex, ignoreCase = true)
+    }
+
+    private fun ByteArray.hex(): String = joinToString("") { "%02x".format(it) }
+
+    /**
+     * Hex para bytes, RECUSANDO o que nao for hex.
+     *
+     * `Character.digit` devolve -1 para caractere invalido, sem lancar nada. A versao anterior
+     * usava esse retorno direto na conta: um hash truncado ou corrompido no banco virava um
+     * array de bytes plausivel, a raiz saia com cara de raiz, e nada no aplicativo indicava
+     * que a prova estava construida sobre lixo. Numa ferramenta de cadeia de custodia isso e
+     * pior que falhar.
+     */
+    private fun hexParaBytes(hex: String): ByteArray {
+        require(hex.length % 2 == 0 && hex.isNotEmpty()) {
+            "hash com tamanho invalido (${hex.length} caracteres)"
+        }
+        return ByteArray(hex.length / 2) {
+            val alto = Character.digit(hex[it * 2], 16)
+            val baixo = Character.digit(hex[it * 2 + 1], 16)
+            require(alto >= 0 && baixo >= 0) { "hash com caractere que nao e hexadecimal" }
+            ((alto shl 4) + baixo).toByte()
+        }
+    }
 
     // ---- verificacao ----
 
