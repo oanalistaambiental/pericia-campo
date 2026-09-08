@@ -329,7 +329,12 @@ fun TelaDetalheSessao(
                 Rotulo("REGISTROS")
             }
 
-            items(fotos) { f -> LinhaFoto(vm, f, restricoes[f.id].orEmpty(), irParaCamera) }
+            items(fotos) { f ->
+                LinhaFoto(
+                    vm, sessao, !sessao.raizMerkle.isNullOrBlank(),
+                    f, restricoes[f.id].orEmpty(), irParaCamera
+                )
+            }
 
             item { Spacer(Modifier.height(24.dp)) }
         }
@@ -347,6 +352,8 @@ private fun Indicador(valor: String, rotulo: String, cor: Color) {
 @Composable
 private fun LinhaFoto(
     vm: CapturaViewModel,
+    sessao: Sessao,
+    sessaoSelada: Boolean,
     f: Foto,
     restricoes: List<br.com.oanalistaambiental.pericia.dados.RegistroRestricao>,
     irParaCamera: () -> Unit
@@ -382,6 +389,16 @@ private fun LinhaFoto(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Mono(f.sha256.take(12), Cores.textoFraco, 10)
             Spacer(Modifier.weight(1f))
+            // So aparece com a sessao selada: sem raiz nao ha prova individual a emitir, e um
+            // botao que sempre falha e pior que botao nenhum.
+            if (sessaoSelada) {
+                Text(
+                    "Prova desta foto",
+                    color = Cores.textoFraco, fontSize = 11.5.sp,
+                    modifier = Modifier.clickable { vm.exportarProvaDaFoto(sessao, f) }
+                )
+                Spacer(Modifier.width(14.dp))
+            }
             Text(
                 "Voltar a este ponto",
                 color = Cores.bomClaro, fontSize = 11.5.sp,

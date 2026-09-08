@@ -8,6 +8,7 @@ import br.com.oanalistaambiental.pericia.captura.EstadoCampo
 import br.com.oanalistaambiental.pericia.captura.ConferenciaSessao
 import br.com.oanalistaambiental.pericia.captura.Integridade
 import br.com.oanalistaambiental.pericia.captura.Legenda
+import br.com.oanalistaambiental.pericia.captura.ProvaFoto
 import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.Foto
 import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
@@ -511,6 +512,54 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 _mensagem.value = "Gerado: ${arquivo.name}"
             }.onFailure { _mensagem.value = "Falha ao exportar: ${it.message}" }
+        }
+    }
+
+    /**
+     * Exporta a prova de UMA fotografia, para juntar sozinha a um processo.
+     *
+     * O caminho de Merkle NAO fica guardado no banco: e derivado, e recalcula-lo aqui a partir
+     * dos hashes da sessao evita um campo que poderia envelhecer em relacao a arvore. A ordem
+     * das folhas vem de `fotosDaSessao` (por `instante, id`), a mesma usada no fechamento.
+     */
+    fun exportarProvaDaFoto(sessao: Sessao, foto: Foto) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val ctx = getApplication<Application>()
+            runCatching {
+                val fotos = banco.fotosDaSessao(sessao.id)
+                val indice = fotos.indexOfFirst { it.id == foto.id }
+                if (indice < 0) throw IllegalStateException("Registro não encontrado na sessão.")
+                val hashes = fotos.map { it.sha256 }
+                val arquivo = File(foto.arquivoOriginal)
+                val texto = ProvaFoto.gerar(
+                    tituloSessao = sessao.titulo,
+                    processo = sessao.processo,
+                    fechadaEm = sessao.fechadaEm,
+                    raizSelada = sessao.raizMerkle,
+                    comCarimbo = sessao.carimboTempo != null,
+                    indice = indice + 1,
+                    total = fotos.size,
+                    nomeArquivo = arquivo.name,
+                    hashGravado = foto.sha256,
+                    instanteCaptura = foto.instante,
+                    caminho = Integridade.caminhoMerkle(hashes, indice),
+                    hashAtual = if (arquivo.exists()) Integridade.sha256(arquivo) else null
+                )
+                val destino = File(pastaDaSessao(sessao.id), ProvaFoto.nomeSugerido(arquivo.name))
+                destino.writeText(texto)
+                // A prova acompanha a fotografia: entregar so o .txt obrigaria a outra parte a
+                // procurar a imagem, e entregar so a imagem nao prova nada.
+                val anexos = if (arquivo.exists()) listOf(arquivo, destino) else listOf(destino)
+                withContext(Dispatchers.Main) {
+                    Exportador.compartilhar(ctx, anexos, "Prova de integridade — ${arquivo.name}")
+                }
+                _mensagem.value = "Gerado: ${destino.name}"
+            }.onFailure {
+                _mensagem.value = when (it) {
+                    is ProvaFoto.SessaoNaoSelada -> it.message ?: "Vistoria não selada."
+                    else -> "Falha ao gerar a prova: ${it.message}"
+                }
+            }
         }
     }
 
