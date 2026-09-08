@@ -23,6 +23,12 @@ import java.io.File
  */
 object ConferenciaSessao {
 
+    private val HEX = Regex("[0-9a-fA-F]+")
+
+    /** Hash gravado que nao e hexadecimal de tamanho par nao pertence a arvore nenhuma. */
+    private fun hexValido(h: String): Boolean =
+        h.isNotEmpty() && h.length % 2 == 0 && HEX.matches(h)
+
     /** Uma foto como o banco a guarda: onde esta o arquivo e qual hash foi gravado na captura. */
     data class Folha(val arquivo: String, val hashGravado: String, val rotulo: String)
 
@@ -103,21 +109,19 @@ object ConferenciaSessao {
         val arvoreFecha = selada && raizSelada.equals(raizRecalculada, ignoreCase = true)
 
         val itens = folhas.mapIndexed { i, folha ->
-            val f = abrir(folha.arquivo)
+            // Um unico open e um unico hash por arquivo. Numa vistoria de 50 fotos de 8 MP,
+            // ler tudo duas vezes e a diferenca entre exportar o laudo e o usuario achar que
+            // o aplicativo travou.
+            val f = abrir(folha.arquivo)?.takeIf { it.exists() }
+            val hashAtual = f?.let { runCatching { Integridade.sha256(it) }.getOrNull() }
             val estado = when {
-                f == null || !f.exists() -> EstadoArquivo.AUSENTE
-                else -> {
-                    val atual = runCatching { Integridade.sha256(f) }.getOrNull()
-                    when {
-                        atual == null -> EstadoArquivo.AUSENTE
-                        atual.equals(folha.hashGravado, ignoreCase = true) -> EstadoArquivo.INTEGRO
-                        else -> EstadoArquivo.ALTERADO
-                    }
-                }
+                // Hash gravado invalido vem PRIMEIRO: sem ele nao ha contra o que comparar, e
+                // chamar isso de "ALTERADO" acusaria o arquivo por um defeito do banco.
+                !hexValido(folha.hashGravado) -> EstadoArquivo.HASH_INVALIDO
+                hashAtual == null -> EstadoArquivo.AUSENTE
+                hashAtual.equals(folha.hashGravado, ignoreCase = true) -> EstadoArquivo.INTEGRO
+                else -> EstadoArquivo.ALTERADO
             }
-            val hashAtual = if (estado == EstadoArquivo.INTEGRO || estado == EstadoArquivo.ALTERADO) {
-                runCatching { Integridade.sha256(abrir(folha.arquivo)!!) }.getOrNull()
-            } else null
 
             // A prova individual so faz sentido se a raiz selada existe E o hash gravado e
             // hexadecimal valido — hash corrompido nao pertence a arvore nenhuma.
