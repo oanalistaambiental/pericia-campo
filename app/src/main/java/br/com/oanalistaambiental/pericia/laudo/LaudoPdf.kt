@@ -10,6 +10,7 @@ import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.media.ExifInterface
+import br.com.oanalistaambiental.pericia.captura.ConferenciaSessao
 import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.Foto
 import br.com.oanalistaambiental.pericia.dados.Sessao
@@ -270,7 +271,11 @@ object LaudoPdf {
         listOf(
             "Cada arquivo original desta vistoria teve seu código hash SHA-256 calculado no",
             "instante da captura, antes de qualquer processamento. Conferir os códigos abaixo",
-            "contra os arquivos entregues demonstra que não houve alteração.",
+            "contra os arquivos entregues demonstra que o ARQUIVO não foi alterado.",
+            "",
+            "Essa é uma das duas perguntas. A outra é se o registro pertence ao conjunto que foi",
+            "selado ao encerrar a vistoria — respondida pela raiz de Merkle, e não pelo hash de",
+            "um arquivo isolado. As duas são conferidas separadamente logo abaixo.",
             "",
             "Como verificar (não é preciso ter o aplicativo):",
             "   Linux/macOS:  sha256sum ARQUIVO.jpg",
@@ -290,13 +295,65 @@ object LaudoPdf {
             c.drawText("Carimbo do tempo (RFC 3161) aplicado sobre a raiz.", MARGEM, y, titulo(9f)); y += 18f
         }
 
-        c.drawText("Arquivos e respectivos hashes:", MARGEM, y, titulo(9f)); y += 14f
+        // Conferencia FEITA AGORA, na geracao do laudo, e datada.
+        //
+        // O relatorio antigo listava os hashes e mandava o leitor conferir por conta propria.
+        // Isso continua valendo — uma prova que qualquer pessoa confere sem o app vale mais
+        // que uma que depende do app. Mas o laudo tambem precisa dizer o que o proprio
+        // aplicativo encontrou no momento em que o documento foi emitido: se um arquivo ja
+        // estava alterado na exportacao, quem recebe o PDF tem de saber disso pelo PDF, e nao
+        // descobrir sozinho rodando sha256sum em vinte arquivos.
+        val conf = ConferenciaSessao.conferir(
+            s.raizMerkle,
+            fotos.mapIndexed { i, f ->
+                ConferenciaSessao.Folha(f.arquivoOriginal, f.sha256, "Registro ${i + 1}")
+            }
+        )
+        c.drawText(
+            "Conferência automática em ${fmt.get()!!.format(Date())}:",
+            MARGEM, y, titulo(9f)
+        ); y += 13f
+        quebrar(conf.resumo(), titulo(9f, false), LARGURA - 2 * MARGEM).forEach {
+            c.drawText(it, MARGEM, y, titulo(9f, false)); y += 12f
+        }
+        y += 4f
+        c.drawText(
+            "ARQUIVOS: ${conf.arquivosIntegros} de ${conf.itens.size} conferem com o hash da captura.",
+            MARGEM + 10f, y, titulo(9f, false)
+        ); y += 12f
+        c.drawText(
+            when {
+                !conf.selada -> "ÁRVORE: sessão não foi encerrada — não há raiz selada."
+                conf.arvoreConfere -> "ÁRVORE: os ${conf.itens.size} registros fecham na raiz selada."
+                else -> "ÁRVORE: a raiz recalculada NÃO bate com a raiz selada."
+            },
+            MARGEM + 10f, y, titulo(9f, false)
+        ); y += 16f
+        quebrar(conf.RESSALVA_TEMPO, titulo(8.5f, false), LARGURA - 2 * MARGEM).forEach {
+            c.drawText(it, MARGEM, y, titulo(8.5f, false)); y += 11f
+        }
+        y += 10f
+
+        val estados = conf.itens.associateBy({ it.arquivo }, { it.estadoArquivo })
 
         // BUG corrigido: a lista era cortada em silencio quando a sessao tinha muitas fotos.
         // Agora o relatorio pagina, e nenhum hash fica de fora do laudo.
         var pagina = p
         var canvas = c
         var numero = fotos.size + 2
+
+        // O bloco de conferencia acima tem altura variavel (o resumo muda de tamanho conforme
+        // o que foi encontrado). Se ele empurrou o cursor para perto do rodape, a lista comeca
+        // em pagina nova — escrever por cima da margem seria a mesma falha silenciosa que a
+        // paginacao da lista ja corrigiu uma vez.
+        if (y > ALTURA - MARGEM - 60f) {
+            doc.finishPage(pagina)
+            numero += 1
+            pagina = novaPagina(doc, numero)
+            canvas = pagina.canvas
+            y = MARGEM + 14f
+        }
+        canvas.drawText("Arquivos e respectivos hashes:", MARGEM, y, titulo(9f)); y += 14f
         fotos.forEach { f ->
             if (y > ALTURA - MARGEM - 24f) {
                 doc.finishPage(pagina)
@@ -307,7 +364,15 @@ object LaudoPdf {
                 canvas.drawText("Relatório de integridade (continuação)", MARGEM, y, titulo(10f))
                 y += 20f
             }
-            canvas.drawText(File(f.arquivoOriginal).name, MARGEM, y, mono(7.5f)); y += 10f
+            // O estado vai ao lado do nome: uma lista de hashes sem dizer quais bateram
+            // obriga o leitor a refazer a conferencia inteira para achar o problema.
+            val marca = when (estados[f.arquivoOriginal]) {
+                ConferenciaSessao.EstadoArquivo.INTEGRO -> "confere"
+                ConferenciaSessao.EstadoArquivo.ALTERADO -> "ALTERADO"
+                ConferenciaSessao.EstadoArquivo.AUSENTE -> "AUSENTE"
+                else -> "não conferido"
+            }
+            canvas.drawText("${File(f.arquivoOriginal).name}  [$marca]", MARGEM, y, mono(7.5f)); y += 10f
             canvas.drawText(f.sha256, MARGEM + 10f, y, mono(7f)); y += 14f
         }
         doc.finishPage(pagina)
