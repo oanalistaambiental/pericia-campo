@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.oanalistaambiental.pericia.captura.ConferenciaSessao
 import br.com.oanalistaambiental.pericia.captura.Integridade
 import br.com.oanalistaambiental.pericia.dados.Foto
 import br.com.oanalistaambiental.pericia.dados.Sessao
@@ -132,6 +133,7 @@ fun TelaDetalheSessao(
     val fotos by vm.fotosDaSessao.collectAsState()
     val restricoes by vm.restricoesPorFoto.collectAsState()
     var conferencia by remember { mutableStateOf<List<Integridade.Conferencia>?>(null) }
+    var conferenciaCompleta by remember { mutableStateOf<ConferenciaSessao.Resultado?>(null) }
 
     LaunchedEffect(sessao.id) { vm.carregarFotos(sessao.id) }
 
@@ -190,7 +192,12 @@ fun TelaDetalheSessao(
                         BotaoLargo("Fechar sessão e selar integridade") { vm.fecharSessao(sessao) }
                     }
                     BotaoLargo("Conferir arquivos agora") {
-                        vm.conferirIntegridade(sessao.id) { conferencia = it }
+                        vm.conferirIntegridade(sessao.id) { conferencia = it; conferenciaCompleta = null }
+                    }
+                    // Conferencia completa: arquivo E arvore. Sao perguntas diferentes, e a
+                    // de cima sozinha nao pega foto acrescentada depois do fechamento.
+                    BotaoLargo("Conferir a prova completa (arquivo e árvore)") {
+                        vm.conferirSessaoCompleta(sessao.id) { conferenciaCompleta = it; conferencia = null }
                     }
                 }
 
@@ -210,6 +217,65 @@ fun TelaDetalheSessao(
                             color = if (sessao.carimboTempo == null) Cores.atencaoClaro else Cores.bomClaro,
                             fontSize = 10.5.sp, lineHeight = 14.sp
                         )
+                    }
+                }
+
+                conferenciaCompleta?.let { r ->
+                    val tudoBem = r.arvoreConfere && r.arquivosComProblema == 0
+                    Column(
+                        Modifier.padding(horizontal = 16.dp).fillMaxWidth()
+                            .background(if (tudoBem) Cores.bom else Cores.alerta, RoundedCornerShape(4.dp))
+                            .padding(12.dp)
+                    ) {
+                        Text(r.resumo(), color = Color.White, fontSize = 12.5.sp,
+                            lineHeight = 17.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(10.dp))
+                        // As duas perguntas ficam SEPARADAS na tela, e nao fundidas num
+                        // unico "ok" — e a distincao que sustenta o laudo.
+                        Text(
+                            "ARQUIVOS: ${r.arquivosIntegros} de ${r.itens.size} conferem com o " +
+                                "hash gravado na captura.",
+                            color = Color.White, fontSize = 11.5.sp, lineHeight = 16.sp
+                        )
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            when {
+                                !r.selada -> "ÁRVORE: sessão ainda aberta, sem raiz selada."
+                                r.arvoreConfere ->
+                                    "ÁRVORE: os ${r.itens.size} registros fecham na raiz selada."
+                                else ->
+                                    "ÁRVORE: a raiz recalculada é ${r.raizRecalculada.take(16)}… e " +
+                                        "não bate com a selada."
+                            },
+                            color = Color.White, fontSize = 11.5.sp, lineHeight = 16.sp
+                        )
+                        val forasteiros = r.itens.filter { !it.pertenceAArvore }
+                        if (r.selada && forasteiros.isNotEmpty() && r.arvoreConfere) {
+                            Spacer(Modifier.height(3.dp))
+                            Text(
+                                "${forasteiros.size} registro(s) não fecham na raiz.",
+                                color = Color.White, fontSize = 11.5.sp, lineHeight = 16.sp
+                            )
+                        }
+                        val problemas = r.itens.filter {
+                            it.estadoArquivo != ConferenciaSessao.EstadoArquivo.INTEGRO
+                        }
+                        if (problemas.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            problemas.take(8).forEach {
+                                Text(
+                                    "• ${it.rotulo}: ${it.estadoArquivo.name.lowercase()}",
+                                    color = Color.White, fontSize = 11.sp, lineHeight = 15.sp
+                                )
+                            }
+                            if (problemas.size > 8) {
+                                Text("• e mais ${problemas.size - 8}…",
+                                    color = Color.White, fontSize = 11.sp)
+                            }
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        Text(r.RESSALVA_TEMPO, color = Color(0xE6FFFFFF),
+                            fontSize = 10.5.sp, lineHeight = 14.sp)
                     }
                 }
 

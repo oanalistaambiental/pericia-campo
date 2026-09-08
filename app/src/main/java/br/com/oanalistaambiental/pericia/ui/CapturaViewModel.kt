@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.oanalistaambiental.pericia.captura.Enderecos
 import br.com.oanalistaambiental.pericia.captura.EstadoCampo
+import br.com.oanalistaambiental.pericia.captura.ConferenciaSessao
 import br.com.oanalistaambiental.pericia.captura.Integridade
 import br.com.oanalistaambiental.pericia.captura.Legenda
 import br.com.oanalistaambiental.pericia.dados.Banco
@@ -458,6 +459,33 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             val fotos = banco.fotosDaSessao(sessaoId)
             val r = Integridade.conferir(fotos.map { it.arquivoOriginal to it.sha256 })
+            withContext(Dispatchers.Main) { aoTerminar(r) }
+        }
+    }
+
+    /**
+     * Conferencia COMPLETA: arquivo, hash e arvore.
+     *
+     * A conferencia acima responde so "o arquivo mudou?". Esta responde tambem "este registro
+     * pertence ao conjunto que foi selado?" — a pergunta que pega foto acrescentada ao banco
+     * depois do fechamento da sessao, caso em que todos os arquivos batem com seus hashes e
+     * mesmo assim o conjunto nao e o que foi carimbado.
+     *
+     * A ordem das folhas vem de `fotosDaSessao`, que ordena por `instante, id`. Essa ordem NAO
+     * pode mudar entre o fechamento e a conferencia: a arvore depende dela.
+     */
+    fun conferirSessaoCompleta(sessaoId: Long, aoTerminar: (ConferenciaSessao.Resultado) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val sessao = banco.sessao(sessaoId)
+            val fotos = banco.fotosDaSessao(sessaoId)
+            val folhas = fotos.mapIndexed { i, f ->
+                ConferenciaSessao.Folha(
+                    arquivo = f.arquivoOriginal,
+                    hashGravado = f.sha256,
+                    rotulo = "Registro ${i + 1}"
+                )
+            }
+            val r = ConferenciaSessao.conferir(sessao?.raizMerkle, folhas)
             withContext(Dispatchers.Main) { aoTerminar(r) }
         }
     }
