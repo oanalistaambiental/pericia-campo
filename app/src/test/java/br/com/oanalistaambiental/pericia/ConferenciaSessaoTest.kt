@@ -143,6 +143,10 @@ class ConferenciaSessaoTest {
         assertFalse(r.arvoreConfere)
         assertEquals("", r.raizRecalculada)
         assertEquals(2, r.itens.size)
+        // O defeito é do banco, não do arquivo: chamar isso de ALTERADO acusaria a foto
+        // por um hash que nunca foi hash.
+        assertEquals(ConferenciaSessao.EstadoArquivo.HASH_INVALIDO, r.itens[1].estadoArquivo)
+        assertEquals(ConferenciaSessao.EstadoArquivo.INTEGRO, r.itens[0].estadoArquivo)
     }
 
     @Test
