@@ -99,13 +99,24 @@ object Integridade {
      */
     fun verificarCaminho(folhaHex: String, caminho: List<Passo>, raizEsperadaHex: String): Boolean {
         if (raizEsperadaHex.isBlank()) return false
-        var atual = runCatching { hexParaBytes(folhaHex) }.getOrNull() ?: return false
+        var atual = folhaHex
         for (passo in caminho) {
-            val irmao = runCatching { hexParaBytes(passo.irmaoHex) }.getOrNull() ?: return false
-            val juntos = if (passo.irmaoAEsquerda) irmao + atual else atual + irmao
-            atual = MessageDigest.getInstance("SHA-256").digest(juntos)
+            atual = runCatching { aplicar(atual, passo) }.getOrNull() ?: return false
         }
-        return atual.hex().equals(raizEsperadaHex, ignoreCase = true)
+        return atual.equals(raizEsperadaHex, ignoreCase = true)
+    }
+
+    /**
+     * Um passo do caminho: junta o valor corrente com o irmao, na ordem certa, e devolve o
+     * hash do no pai. Publico porque quem MOSTRA a prova precisa refazer os mesmos passos que
+     * quem a VERIFICA — se fossem duas implementacoes, uma poderia divergir da outra sem que
+     * nenhum teste notasse.
+     */
+    fun aplicar(atualHex: String, passo: Passo): String {
+        val atual = hexParaBytes(atualHex)
+        val irmao = hexParaBytes(passo.irmaoHex)
+        val juntos = if (passo.irmaoAEsquerda) irmao + atual else atual + irmao
+        return MessageDigest.getInstance("SHA-256").digest(juntos).hex()
     }
 
     private fun ByteArray.hex(): String = joinToString("") { "%02x".format(it) }
