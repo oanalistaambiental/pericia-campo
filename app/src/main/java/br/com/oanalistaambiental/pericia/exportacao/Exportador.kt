@@ -230,6 +230,9 @@ object Exportador {
         "pdf" -> "application/pdf"
         "csv" -> "text/csv"
         "kmz" -> "application/vnd.google-earth.kmz"
+        // Sem isto a prova de integridade saia como "*/*", e varios aplicativos de e-mail
+        // e mensagem recusam anexo de tipo desconhecido — o documento existia e nao chegava.
+        "txt" -> "text/plain"
         "jpg", "jpeg" -> "image/jpeg"
         else -> "*/*"
     }
