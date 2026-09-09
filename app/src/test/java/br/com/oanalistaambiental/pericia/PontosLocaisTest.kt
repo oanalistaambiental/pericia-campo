@@ -33,8 +33,8 @@ class PontosLocaisTest {
 
     @Test
     fun `passo de escala nunca ultrapassa a largura maxima em pixels`() {
-        // 1 pixel por metro: um passo de 50 m so cabe se a largura maxima for >= 50 px.
-        assertEquals(20.0, EscalaMapa.passoMetros(metrosPorPixel = 1.0, larguraMaximaPx = 40.0), 0.0)
+        // 1 pixel por metro: o maior passo redondo que cabe em 40 px e 25 (50 ja passa de 40).
+        assertEquals(25.0, EscalaMapa.passoMetros(metrosPorPixel = 1.0, larguraMaximaPx = 40.0), 0.0)
         assertEquals(50.0, EscalaMapa.passoMetros(metrosPorPixel = 1.0, larguraMaximaPx = 60.0), 0.0)
     }
 
