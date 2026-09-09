@@ -113,9 +113,21 @@ class ProvaFotoTest {
 
     @Test
     fun `arquivo ilegivel nao vira acusacao`() {
+        // Argumentos NOMEADOS: a versão posicional quebrou assim que um parâmetro novo entrou
+        // no meio da assinatura, e quebrou compilando errado, não com erro claro.
         val doc = ProvaFoto.gerar(
-            "V", null, null, Integridade.raizMerkle(listOf(h("a"))), false,
-            1, 1, "a.jpg", h("a"), 0L, emptyList(), hashAtual = null
+            tituloSessao = "V",
+            processo = null,
+            fechadaEm = null,
+            raizSelada = Integridade.raizMerkle(listOf(h("a"))),
+            comCarimbo = false,
+            indice = 1,
+            total = 1,
+            nomeArquivo = "a.jpg",
+            hashGravado = h("a"),
+            instanteCaptura = 0L,
+            caminho = emptyList(),
+            hashAtual = null
         )
         assertTrue(doc.contains("Não foi possível ler o arquivo"))
         assertTrue(doc.contains("(nenhum — a vistoria tem um único registro"))
@@ -178,6 +190,42 @@ class ProvaFotoTest {
         // E não aparece onde não deve.
         assertTrue("par e sem duplicação não deve trazer a nota",
             !documento(8, 3).contains("número ímpar de elementos"))
+    }
+
+    /**
+     * O carimbo do tempo é o que datar a prova — e o documento tem de dizer com todas as
+     * letras se a Autoridade foi declarada credenciada ou não. Um selo sem essa distinção dá
+     * a impressão de fé pública que ele pode não ter.
+     */
+    @Test
+    fun `a prova traz o instante e a origem do carimbo`() {
+        val hashes = List(4) { h("foto$it") }
+        fun doc(credenciada: Boolean) = ProvaFoto.gerar(
+            tituloSessao = "V",
+            processo = null,
+            fechadaEm = null,
+            raizSelada = Integridade.raizMerkle(hashes),
+            comCarimbo = true,
+            carimboInstante = 1_788_830_625_000L,   // 08/09/2026 01:23:45 UTC
+            carimboAutoridade = "ACT Exemplo",
+            carimboCredenciado = credenciada,
+            indice = 1,
+            total = 4,
+            nomeArquivo = "a.jpg",
+            hashGravado = hashes[0],
+            instanteCaptura = 0L,
+            caminho = Integridade.caminhoMerkle(hashes, 0),
+            hashAtual = hashes[0]
+        )
+        val comFe = doc(true)
+        assertTrue("o instante sai em UTC, como a Autoridade declarou",
+            comFe.contains("08/09/2026 01:23:45 UTC"))
+        assertTrue(comFe.contains("ACT Exemplo"))
+        assertTrue(comFe.contains("credenciada na ICP-Brasil"))
+
+        val semFe = doc(false)
+        assertTrue(semFe.contains("NÃO declarada credenciada"))
+        assertTrue("precisa dizer o que falta, não só que falta", semFe.contains("fé pública"))
     }
 
     @Test
