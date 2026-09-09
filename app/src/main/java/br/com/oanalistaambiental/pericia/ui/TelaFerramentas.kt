@@ -23,83 +23,12 @@ import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.Utm
 
 /** Menu de ferramentas — o que existe fora do ato de fotografar. */
-@Composable
-fun TelaFerramentas(
-    vm: CapturaViewModel,
-    irParaBussola: () -> Unit,
-    irParaClinometro: () -> Unit,
-    irParaMedicao: () -> Unit,
-    irParaCoordenada: () -> Unit,
-    irParaConfiguracoes: () -> Unit,
-    irParaSessoes: () -> Unit,
-    voltar: () -> Unit
-) {
-    val alvo by vm.alvo.collectAsState()
-    val vertices by vm.vertices.collectAsState()
-
-    Column(
-        Modifier.fillMaxSize().background(Cores.fundo)
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-    ) {
-        Cabecalho("Ferramentas", voltar)
-        LazyColumn(Modifier.weight(1f)) {
-            item {
-                Rotulo("REGISTRO")
-                Item("Sessões de vistoria", "Agrupar fotos, exportar laudo, conferir integridade", irParaSessoes)
-
-                Rotulo("MEDIR")
-                Item(
-                    "Medir área por caminhamento",
-                    if (vertices.isEmpty()) "Ande o perímetro marcando os cantos; o app calcula a área"
-                    else "Em andamento — ${vertices.size} vértice(s) marcado(s)",
-                    irParaMedicao
-                )
-                Item("Clinômetro", "Declividade de talude ou rampa, em graus e em porcentagem", irParaClinometro)
-                Item("Bússola e altímetro", "Leitura de campo sem precisar fotografar", irParaBussola)
-
-                Rotulo("NAVEGAR")
-                Item(
-                    "Ir para uma coordenada",
-                    "Cole a coordenada de um auto, planta ou memorial e caminhe até ela",
-                    irParaCoordenada
-                )
-                if (alvo != null) {
-                    Item("Cancelar guia ativo", alvo!!.rotulo) { vm.limparAlvo() }
-                }
-
-                Rotulo("MANUTENÇÃO")
-                Item(
-                    "Completar endereços pendentes",
-                    "Usa a conexão atual para resolver os endereços das fotos feitas offline"
-                ) { vm.resolverEnderecos() }
-                Item("Configurações e pacotes", "Datum, folga de aviso, camadas instaladas", irParaConfiguracoes)
-                Spacer(Modifier.height(24.dp))
-            }
-        }
-    }
-}
-
-@Composable
-private fun Item(titulo: String, descricao: String, aoClicar: () -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().clickable { aoClicar() }
-            .padding(horizontal = 16.dp, vertical = 16.dp)
-    ) {
-        Text(titulo, color = Cores.texto, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold)
-        Spacer(Modifier.height(3.dp))
-        Text(descricao, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp)
-    }
-    HorizontalDivider(color = Cores.linha)
-}
-
-/**
- * Bussola e altimetro autonomos.
- *
- * BUG corrigido: o ponteiro anterior era um caractere "▲" com `rotate()` aplicado sobre ele
- * mesmo. Rotacionar um simbolo em torno do proprio centro nao o faz orbitar o mostrador — ele
- * apenas girava no lugar, sem apontar para lugar nenhum. Trocado pela fita de rumo, que e o
- * que se usa em navegacao e ja esta na tela da camera.
+/*
+ * A antiga TelaFerramentas foi substituida pela gaveta (ferramentas/TelaGaveta.kt),
+ * que se monta a partir do Registro em vez de listar as ferramentas a mao. Este arquivo
+ * segue sendo a casa das TELAS de cada ferramenta.
  */
+
 @Composable
 fun TelaBussola(vm: CapturaViewModel, voltar: () -> Unit) {
     val p by vm.estadoCampo.posicao.collectAsState()
