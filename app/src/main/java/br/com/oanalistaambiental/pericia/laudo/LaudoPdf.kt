@@ -10,6 +10,7 @@ import android.graphics.Rect
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.media.ExifInterface
+import br.com.oanalistaambiental.pericia.carimbo.CarimboTempo
 import br.com.oanalistaambiental.pericia.captura.ConferenciaSessao
 import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.Foto
@@ -74,6 +75,13 @@ object LaudoPdf {
     private const val LARGURA = 595   // A4 72dpi
     private const val ALTURA = 842
     private const val MARGEM = 40f
+    /** O carimbo e mostrado em UTC, como a Autoridade o declarou — nao no fuso do aparelho. */
+    private val fmtUtc = ThreadLocal.withInitial {
+        SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR")).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }
+    }
+
     private val fmt = ThreadLocal.withInitial {
         SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR"))
     }
@@ -291,8 +299,38 @@ object LaudoPdf {
             c.drawText("Raiz de Merkle da sessão:", MARGEM, y, titulo(9f)); y += 12f
             c.drawText(it, MARGEM, y, mono(7f)); y += 18f
         }
-        s.carimboTempo?.let {
-            c.drawText("Carimbo do tempo (RFC 3161) aplicado sobre a raiz.", MARGEM, y, titulo(9f)); y += 18f
+        // Escreve texto corrido dentro da margem, quebrando na largura util. As funcoes
+        // `escrever`/`cinza` existem no OUTRO gerador de PDF deste projeto, nao aqui — a
+        // primeira versao deste bloco as chamou por engano e so o CI teria reclamado.
+        fun paragrafo(texto: String, tamanho: Float = 9f, recuo: Float = 0f) {
+            quebrar(texto, titulo(tamanho, false), LARGURA - 2 * MARGEM - recuo).forEach {
+                c.drawText(it, MARGEM + recuo, y, titulo(tamanho, false)); y += tamanho + 4f
+            }
+        }
+
+        if (s.carimboTempo == null) {
+            paragrafo(
+                "Carimbo do tempo (RFC 3161): NÃO aplicado. Sem ele, o conjunto está provado " +
+                    "contra alteração, mas não datado por terceiro."
+            )
+            y += 8f
+        } else {
+            c.drawText("Carimbo do tempo (RFC 3161) aplicado sobre a raiz:", MARGEM, y, titulo(9f)); y += 13f
+            s.carimboInstante?.let {
+                paragrafo("Instante declarado pela Autoridade: ${fmtUtc.get()!!.format(Date(it))} UTC.", recuo = 8f)
+            }
+            paragrafo("Autoridade: ${s.carimboAutoridade ?: "não registrada"}.", recuo = 8f)
+            paragrafo(
+                if (s.carimboCredenciado)
+                    "Declarada, por quem a configurou, como credenciada na ICP-Brasil."
+                else
+                    "ATENÇÃO: esta Autoridade NÃO foi declarada credenciada na ICP-Brasil. O " +
+                        "carimbo serve como controle, mas não tem a fé pública que um processo " +
+                        "costuma exigir.",
+                recuo = 8f
+            )
+            paragrafo(CarimboTempo.RESSALVA_VALIDACAO, tamanho = 8.5f, recuo = 8f)
+            y += 8f
         }
 
         // Conferencia FEITA AGORA, na geracao do laudo, e datada.
