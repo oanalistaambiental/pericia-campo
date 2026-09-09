@@ -41,21 +41,29 @@ fun TelaBussola(vm: CapturaViewModel, voltar: () -> Unit) {
     ) {
         Cabecalho("Bússola e altímetro", voltar)
         SeloPrecisao(p)
-        FitaBussola(o)
 
         Column(
-            Modifier.fillMaxWidth().padding(top = 24.dp),
+            Modifier.fillMaxWidth().padding(top = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            BussolaCircular(o.azimuteGraus)
+            Spacer(Modifier.height(14.dp))
             Text(
                 o.azimuteGraus?.let { "%.0f°".format(it) } ?: "—",
-                color = Cores.texto, fontSize = 56.sp, fontWeight = FontWeight.Bold
+                color = Cores.texto, fontSize = 40.sp, fontWeight = FontWeight.Bold
             )
             Text(
                 o.azimuteGraus?.let { "${Orientacoes.rosa(it)} · direção da câmera" }
                     ?: "aponte a câmera para o horizonte",
                 color = Cores.textoFraco, fontSize = 13.sp
             )
+            if (o.precisaoBussola.precisaCalibrar) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "calibrar: faça um 8 no ar",
+                    color = Cores.atencaoClaro, fontSize = 12.sp, fontWeight = FontWeight.SemiBold
+                )
+            }
 
             Spacer(Modifier.height(26.dp))
 
