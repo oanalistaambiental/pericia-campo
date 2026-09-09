@@ -125,6 +125,28 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     private val arquivoPacote: File
         get() = File(getApplication<Application>().getExternalFilesDir(null), "pacotes/mg-base.gpkg")
 
+    /**
+     * Pacote de EXEMPLO, ficticio, empacotado dentro do proprio APK
+     * (`assets/pacotes/exemplo.gpkg`, gerado por `ferramentas/gerar-exemplo.py`).
+     *
+     * Existe para quem acabou de instalar o app ver COMO o alerta de restricao funciona, sem
+     * precisar rodar `montar-pacote.sh` primeiro. Nao e preciso marcar isso em codigo aqui: o
+     * proprio pacote se declara ficticio em `pericia_pacote.versao` ("exemplo") e em
+     * `pericia_camadas.nome`/`fonte`, os mesmos campos que a tela de configuracoes ja mostra e
+     * que vao para qualquer alerta gerado a partir dele — nunca pode ser confundido com dado
+     * real do IDE-Sisema.
+     */
+    private fun copiarExemploSeNecessario(): File {
+        val destino = File(getApplication<Application>().filesDir, "pacotes/exemplo.gpkg")
+        if (!destino.exists()) {
+            destino.parentFile?.mkdirs()
+            getApplication<Application>().assets.open("pacotes/exemplo.gpkg").use { entrada ->
+                destino.outputStream().use { saida -> entrada.copyTo(saida) }
+            }
+        }
+        return destino
+    }
+
     init {
         recarregar()
         // O GNSS NAO e iniciado aqui: sem permissao a chamada e recusada em silencio e nada
@@ -144,12 +166,11 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     private fun abrirPacote() {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
-                if (arquivoPacote.exists()) {
-                    val c = ConsultaRestricao.abrir(arquivoPacote)
-                    consulta = c
-                    _camadas.value = c.camadasInstaladas()
-                    _versaoPacote.value = c.versaoDoPacote()
-                }
+                val arquivo = if (arquivoPacote.exists()) arquivoPacote else copiarExemploSeNecessario()
+                val c = ConsultaRestricao.abrir(arquivo)
+                consulta = c
+                _camadas.value = c.camadasInstaladas()
+                _versaoPacote.value = c.versaoDoPacote()
             }.onFailure {
                 _mensagem.value = "Pacote de camadas ilegível: ${it.message}"
             }

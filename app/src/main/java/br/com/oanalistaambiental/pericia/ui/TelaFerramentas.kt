@@ -537,12 +537,15 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                         Modifier.padding(16.dp).fillMaxWidth()
                             .background(Cores.superficie, RoundedCornerShape(4.dp)).padding(14.dp)
                     ) {
-                        Text("Nenhum pacote instalado", color = Cores.atencaoClaro, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                        Text("Pacote ilegível", color = Cores.atencaoClaro, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(6.dp))
                         Text(
-                            "O app funciona normalmente sem ele — câmera, GNSS, legenda, hash, " +
-                                "sessões, medição e laudo. Só o alerta de restrição fica desligado.\n\n" +
-                                "Para ligar, gere o arquivo com ferramentas/montar-pacote.sh e copie para:",
+                            "O app tenta abrir o pacote instalado e, na falta dele, o exemplo " +
+                                "empacotado — nenhum dos dois abriu. O app funciona normalmente " +
+                                "assim mesmo: câmera, GNSS, legenda, hash, sessões, medição e " +
+                                "laudo. Só o alerta de restrição fica desligado.\n\n" +
+                                "Para instalar o pacote oficial, gere o arquivo com " +
+                                "ferramentas/montar-pacote.sh e copie para:",
                             color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
                         )
                         Spacer(Modifier.height(8.dp))
@@ -550,6 +553,25 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                     }
                 } else {
                     Column(Modifier.padding(horizontal = 16.dp)) {
+                        if (versao == "exemplo") {
+                            Column(
+                                Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                                    .background(Cores.atencao, RoundedCornerShape(6.dp)).padding(12.dp)
+                            ) {
+                                Text(
+                                    "EXEMPLO EMPACOTADO — NÃO É DADO DO IDE-SISEMA",
+                                    color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Bold
+                                )
+                                Spacer(Modifier.height(4.dp))
+                                Text(
+                                    "Nenhum pacote oficial foi instalado, então o app carregou este " +
+                                        "exemplo fictício só para mostrar como o alerta de restrição " +
+                                        "funciona. Gere o pacote real com ferramentas/montar-pacote.sh " +
+                                        "antes de usar em campo.",
+                                    color = Color(0xE6FFFFFF), fontSize = 11.5.sp, lineHeight = 16.sp
+                                )
+                            }
+                        }
                         Text(
                             "Versão ${versao ?: "—"} · ${camadas.size} camadas",
                             color = Cores.bomClaro, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold
