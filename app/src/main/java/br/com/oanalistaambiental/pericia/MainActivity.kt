@@ -34,6 +34,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.oanalistaambiental.pericia.dados.Sessao
+import br.com.oanalistaambiental.pericia.ferramentas.Recurso
+import br.com.oanalistaambiental.pericia.ferramentas.Registro
+import br.com.oanalistaambiental.pericia.ferramentas.Navegacao
+import br.com.oanalistaambiental.pericia.ferramentas.TelaGaveta
 import br.com.oanalistaambiental.pericia.ui.*
 import kotlinx.coroutines.delay
 
@@ -57,7 +61,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-private enum class Rota { CAMERA, SESSOES, DETALHE, FERRAMENTAS, BUSSOLA, CLINOMETRO, MEDICAO, COORDENADA, CONFIGURACOES }
+/**
+ * A GAVETA e o inicio. A camera deixou de ser a tela de abertura.
+ *
+ * As ferramentas que viviam aqui como rotas fixas (bussola, clinometro, medicao, coordenada,
+ * configuracoes) sairam do enum: agora vem do [Registro], e sao abertas por id. Acrescentar
+ * ferramenta parou de exigir mexer neste arquivo, que era o objetivo.
+ */
+private enum class Rota { GAVETA, CAMERA, SESSOES, DETALHE, FERRAMENTA }
 
 @Composable
 private fun App() {
@@ -67,7 +78,9 @@ private fun App() {
      * `rememberSaveable`, nao `remember`. Com `remember`, girar o aparelho recriava a Activity
      * e jogava o perito de volta na camera no meio do que estivesse fazendo.
      */
-    var rota by rememberSaveable { mutableStateOf(Rota.CAMERA) }
+    var rota by rememberSaveable { mutableStateOf(Rota.GAVETA) }
+    /** Id da ferramenta aberta, quando [rota] e FERRAMENTA. */
+    var ferramentaId by rememberSaveable { mutableStateOf<String?>(null) }
 
     /**
      * Guarda o ID, nao o objeto.
@@ -111,7 +124,15 @@ private fun App() {
         Manifest.permission.ACCESS_COARSE_LOCATION
     )
 
-    LaunchedEffect(Unit) { if (!cameraOk || !localOk) pedir.launch(permissoes) }
+    // Antes o pedido saltava na abertura, antes de o usuario ter feito nada. Agora ele
+    // acompanha a ferramenta escolhida: quem abre a camera ou uma ferramenta de GNSS e que
+    // ve a caixa de permissao, e ai ela tem contexto.
+    LaunchedEffect(rota, ferramentaId) {
+        val precisaCamera = rota == Rota.CAMERA
+        val precisaLocal = rota == Rota.CAMERA || rota == Rota.SESSOES ||
+            ferramentaId?.let { id -> Registro.porId(id)?.exige?.contains(Recurso.GNSS) } == true
+        if ((precisaCamera && !cameraOk) || (precisaLocal && !localOk)) pedir.launch(permissoes)
+    }
 
     /**
      * BUG corrigido: quem concedia a permissao pelas Configuracoes do Android voltava para um
@@ -151,7 +172,14 @@ private fun App() {
      * permissoes, sem conseguir fotografar nada. Agora so a camera e obrigatoria: sem
      * localizacao o app funciona e avisa, em letras grandes, que a foto sai sem coordenada.
      */
-    if (!cameraOk) {
+    /**
+     * A permissao de camera deixou de barrar a ENTRADA do aplicativo.
+     *
+     * Antes este bloco ficava antes de tudo: sem camera, nao se via nada. Fazia sentido num
+     * aplicativo que era uma camera; num kit de ferramentas, prendia na porta quem so queria a
+     * bussola ou o conversor de coordenadas. Agora so a ferramenta que EXIGE camera pede.
+     */
+    if (rota == Rota.CAMERA && !cameraOk) {
         TelaPermissoes(jaPediu) { pedir.launch(permissoes) }
         return
     }
@@ -182,13 +210,13 @@ private fun App() {
      * quarenta minutos caminhando um perimetro, 26 vertices marcados, e o app fechava sem
      * pergunta nenhuma. Agora o Voltar navega, e so sai do app quando ja esta na camera.
      */
-    BackHandler(enabled = rota != Rota.CAMERA) {
+    BackHandler(enabled = rota != Rota.GAVETA) {
         rota = when (rota) {
             Rota.DETALHE -> Rota.SESSOES
-            Rota.SESSOES, Rota.FERRAMENTAS -> Rota.CAMERA
-            Rota.BUSSOLA, Rota.CLINOMETRO, Rota.MEDICAO,
-            Rota.COORDENADA, Rota.CONFIGURACOES -> Rota.FERRAMENTAS
-            Rota.CAMERA -> Rota.CAMERA
+            Rota.SESSOES, Rota.CAMERA -> Rota.GAVETA
+            // A ferramenta trata o proprio Voltar interno; quando ela chama `voltar`, cai aqui.
+            Rota.FERRAMENTA -> { ferramentaId = null; Rota.GAVETA }
+            Rota.GAVETA -> Rota.GAVETA
         }
     }
 
@@ -215,15 +243,30 @@ private fun App() {
 
     Box(Modifier.fillMaxSize()) {
         when (rota) {
+            Rota.GAVETA -> TelaGaveta(
+                // A gaveta so PERGUNTA o que ja esta concedido, para avisar antes de abrir.
+                // Ela nao dispara pedido nenhum: quem pede e a ferramenta, ao ser aberta.
+                disponivel = { recurso ->
+                    when (recurso) {
+                        Recurso.CAMERA -> cameraOk
+                        Recurso.GNSS -> localOk
+                        Recurso.REDE -> true
+                        Recurso.PACOTE_CAMADAS -> vm.camadas.value.isNotEmpty()
+                    }
+                },
+                irParaCamera = { rota = Rota.CAMERA },
+                irParaVistorias = { rota = Rota.SESSOES },
+                abrir = { id -> ferramentaId = id; rota = Rota.FERRAMENTA }
+            )
             Rota.CAMERA -> TelaCamera(
                 vm,
                 irParaSessoes = { rota = Rota.SESSOES },
-                irParaFerramentas = { rota = Rota.FERRAMENTAS }
+                irParaFerramentas = { rota = Rota.GAVETA }
             )
             Rota.SESSOES -> TelaSessoes(
                 vm,
                 aoAbrir = { sessaoAbertaId = it.id; rota = Rota.DETALHE },
-                voltar = { rota = Rota.CAMERA }
+                voltar = { rota = Rota.GAVETA }
             )
             Rota.DETALHE -> sessaoAberta?.let {
                 TelaDetalheSessao(
@@ -232,25 +275,21 @@ private fun App() {
                     voltar = { rota = Rota.SESSOES }
                 )
             } ?: LaunchedEffect(Unit) { rota = Rota.SESSOES }
-            Rota.FERRAMENTAS -> TelaFerramentas(
-                vm,
-                irParaBussola = { rota = Rota.BUSSOLA },
-                irParaClinometro = { rota = Rota.CLINOMETRO },
-                irParaMedicao = { rota = Rota.MEDICAO },
-                irParaCoordenada = { rota = Rota.COORDENADA },
-                irParaConfiguracoes = { rota = Rota.CONFIGURACOES },
-                irParaSessoes = { rota = Rota.SESSOES },
-                voltar = { rota = Rota.CAMERA }
-            )
-            Rota.BUSSOLA -> TelaBussola(vm) { rota = Rota.FERRAMENTAS }
-            Rota.CLINOMETRO -> TelaClinometro(vm) { rota = Rota.FERRAMENTAS }
-            Rota.MEDICAO -> TelaMedicao(vm) { rota = Rota.FERRAMENTAS }
-            Rota.COORDENADA -> TelaIrParaCoordenada(
-                vm,
-                aoDefinir = { rota = Rota.CAMERA },
-                voltar = { rota = Rota.FERRAMENTAS }
-            )
-            Rota.CONFIGURACOES -> TelaConfiguracoes(vm) { rota = Rota.FERRAMENTAS }
+            Rota.FERRAMENTA -> {
+                val f = ferramentaId?.let { Registro.porId(it) }
+                if (f == null) {
+                    // Id que nao existe mais (registro mudou entre versoes, estado restaurado
+                    // de uma instalacao anterior): volta para a gaveta em vez de tela em branco.
+                    LaunchedEffect(Unit) { ferramentaId = null; rota = Rota.GAVETA }
+                } else {
+                    f.tela(
+                        Navegacao(
+                            voltar = { ferramentaId = null; rota = Rota.GAVETA },
+                            abrir = { id -> ferramentaId = id }
+                        )
+                    )
+                }
+            }
         }
 
         if (!localOk) {
