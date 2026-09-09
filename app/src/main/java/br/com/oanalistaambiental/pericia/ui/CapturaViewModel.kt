@@ -5,6 +5,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.oanalistaambiental.pericia.captura.Enderecos
 import br.com.oanalistaambiental.pericia.captura.EstadoCampo
+import br.com.oanalistaambiental.pericia.carimbo.CarimboTempo
+import br.com.oanalistaambiental.pericia.carimbo.ClienteTsa
 import br.com.oanalistaambiental.pericia.captura.ConferenciaSessao
 import br.com.oanalistaambiental.pericia.captura.Integridade
 import br.com.oanalistaambiental.pericia.captura.Legenda
@@ -28,6 +30,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.Date
 
 class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
@@ -515,6 +518,80 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // ------------------------------------------------------------- carimbo do tempo
+
+    /**
+     * Endereco da Autoridade de Carimbo do Tempo, e a declaracao de credenciamento.
+     *
+     * Fica em StateFlow porque a tela precisa mostrar QUAL autoridade sera usada e se ela foi
+     * marcada como credenciada — um carimbo cuja origem o usuario nao ve na hora de pedir e
+     * um carimbo que ele nao consegue defender depois.
+     */
+    private val _tsaUrl = MutableStateFlow(ClienteTsa.URL_PADRAO)
+    val tsaUrl: StateFlow<String> = _tsaUrl
+
+    private val _tsaCredenciada = MutableStateFlow(ClienteTsa.PADRAO_E_CREDENCIADA)
+    val tsaCredenciada: StateFlow<Boolean> = _tsaCredenciada
+
+    fun configurarTsa(url: String, credenciada: Boolean) {
+        _tsaUrl.value = url.trim()
+        _tsaCredenciada.value = credenciada
+    }
+
+    private val _carimbando = MutableStateFlow(false)
+    val carimbando: StateFlow<Boolean> = _carimbando
+
+    /**
+     * Pede o carimbo do tempo sobre a raiz da sessao.
+     *
+     * So faz sentido depois de fechada: a raiz e o que se carimba. E o carimbo recebido so e
+     * gravado se se referir a ESTA raiz e ao numero aleatorio deste pedido — ver
+     * [CarimboTempo.conferirResposta]. Um selo que carimba outro hash seria pior que nenhum.
+     */
+    fun carimbarSessao(sessao: Sessao) {
+        val raiz = sessao.raizMerkle
+        if (raiz.isNullOrBlank()) {
+            _mensagem.value = "Feche a sessão antes: o carimbo é aplicado sobre a raiz."
+            return
+        }
+        if (sessao.carimboTempo != null) {
+            _mensagem.value = "Esta vistoria já tem carimbo do tempo."
+            return
+        }
+        if (_carimbando.value) return
+        _carimbando.value = true
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                val url = _tsaUrl.value
+                val pedido = CarimboTempo.pedido(raiz)
+                val resposta = ClienteTsa.enviar(url, pedido.bytes)
+                val carimbo = CarimboTempo.conferirResposta(
+                    resposta, pedido,
+                    autoridade = if (url == ClienteTsa.URL_PADRAO) ClienteTsa.NOME_PADRAO else url,
+                    credenciadaIcpBrasil = _tsaCredenciada.value
+                )
+                banco.atualizarCarimbo(
+                    sessao.id, carimbo.tokenBase64, carimbo.instante,
+                    carimbo.autoridade, carimbo.credenciadaIcpBrasil
+                )
+                carimbo
+            }.onSuccess { c ->
+                recarregar()
+                _mensagem.value = "Carimbo aplicado: ${fmtCarimbo.format(Date(c.instante))} (UTC " +
+                    "declarado pela Autoridade)." +
+                    if (!c.credenciadaIcpBrasil) " Autoridade NÃO credenciada na ICP-Brasil." else ""
+            }.onFailure {
+                // A mensagem da recusa e a informacao util: diz se foi rede, se a Autoridade
+                // negou, ou se o carimbo se referia a outro hash.
+                _mensagem.value = it.message ?: "Não foi possível obter o carimbo do tempo."
+            }
+            _carimbando.value = false
+        }
+    }
+
+    private val fmtCarimbo = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm:ss", java.util.Locale("pt", "BR"))
+        .apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
+
     /**
      * Exporta a prova de UMA fotografia, para juntar sozinha a um processo.
      *
@@ -537,6 +614,9 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                     fechadaEm = sessao.fechadaEm,
                     raizSelada = sessao.raizMerkle,
                     comCarimbo = sessao.carimboTempo != null,
+                    carimboInstante = sessao.carimboInstante,
+                    carimboAutoridade = sessao.carimboAutoridade,
+                    carimboCredenciado = sessao.carimboCredenciado,
                     indice = indice + 1,
                     total = fotos.size,
                     nomeArquivo = arquivo.name,

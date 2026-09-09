@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.oanalistaambiental.pericia.carimbo.CarimboTempo
 import br.com.oanalistaambiental.pericia.captura.ConferenciaSessao
 import br.com.oanalistaambiental.pericia.captura.Integridade
 import br.com.oanalistaambiental.pericia.dados.Foto
@@ -27,6 +28,15 @@ import java.util.Date
 import java.util.Locale
 
 private val fmt = SimpleDateFormat("dd/MM/yy HH:mm", Locale("pt", "BR"))
+
+/**
+ * O instante do carimbo e mostrado em UTC, como a Autoridade o declarou.
+ *
+ * Converter para o fuso do aparelho seria reescrever o dado com o relogio local — justamente
+ * o relogio que o carimbo existe para nao depender.
+ */
+private val fmtUtc = SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR"))
+    .apply { timeZone = java.util.TimeZone.getTimeZone("UTC") }
 
 @Composable
 fun TelaSessoes(
@@ -134,6 +144,9 @@ fun TelaDetalheSessao(
     val restricoes by vm.restricoesPorFoto.collectAsState()
     var conferencia by remember { mutableStateOf<List<Integridade.Conferencia>?>(null) }
     var conferenciaCompleta by remember { mutableStateOf<ConferenciaSessao.Resultado?>(null) }
+    val carimbando by vm.carimbando.collectAsState()
+    val tsaUrl by vm.tsaUrl.collectAsState()
+    val tsaCredenciada by vm.tsaCredenciada.collectAsState()
 
     LaunchedEffect(sessao.id) { vm.carregarFotos(sessao.id) }
 
@@ -210,13 +223,53 @@ fun TelaDetalheSessao(
                         Spacer(Modifier.height(5.dp))
                         Mono(raiz.chunked(32).joinToString("\n"), Cores.texto, 10)
                         Spacer(Modifier.height(6.dp))
-                        Text(
-                            if (sessao.carimboTempo == null)
-                                "Carimbo do tempo pendente — o hash prova que nada mudou, o carimbo prova desde quando."
-                            else "Carimbo do tempo aplicado sobre a raiz.",
-                            color = if (sessao.carimboTempo == null) Cores.atencaoClaro else Cores.bomClaro,
-                            fontSize = 10.5.sp, lineHeight = 14.sp
-                        )
+                        if (sessao.carimboTempo == null) {
+                            Text(
+                                "Carimbo do tempo pendente — o hash prova que nada mudou, o carimbo prova desde quando.",
+                                color = Cores.atencaoClaro, fontSize = 10.5.sp, lineHeight = 14.sp
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                if (carimbando) "Falando com a Autoridade…"
+                                else "Aplicar carimbo do tempo (RFC 3161)",
+                                color = if (carimbando) Cores.textoFraco else Cores.bomClaro,
+                                fontSize = 12.sp,
+                                modifier = Modifier.clickable(enabled = !carimbando) {
+                                    vm.carimbarSessao(sessao)
+                                }
+                            )
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                "Autoridade: $tsaUrl" +
+                                    if (tsaCredenciada) " (declarada credenciada na ICP-Brasil)"
+                                    else " — NÃO credenciada na ICP-Brasil",
+                                color = if (tsaCredenciada) Cores.textoFraco else Cores.atencaoClaro,
+                                fontSize = 10.sp, lineHeight = 14.sp
+                            )
+                        } else {
+                            Text(
+                                "Carimbo do tempo aplicado sobre a raiz" +
+                                    (sessao.carimboInstante?.let {
+                                        " em ${fmtUtc.format(Date(it))} UTC, declarado pela Autoridade"
+                                    } ?: "") + ".",
+                                color = Cores.bomClaro, fontSize = 10.5.sp, lineHeight = 14.sp
+                            )
+                            sessao.carimboAutoridade?.let {
+                                Spacer(Modifier.height(3.dp))
+                                Text(
+                                    "Autoridade: $it" +
+                                        if (sessao.carimboCredenciado) " (declarada credenciada na ICP-Brasil)"
+                                        else " — NÃO credenciada na ICP-Brasil",
+                                    color = if (sessao.carimboCredenciado) Cores.textoFraco else Cores.atencaoClaro,
+                                    fontSize = 10.sp, lineHeight = 14.sp
+                                )
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(
+                                CarimboTempo.RESSALVA_VALIDACAO,
+                                color = Cores.textoFraco, fontSize = 10.sp, lineHeight = 14.sp
+                            )
+                        }
                     }
                 }
 
