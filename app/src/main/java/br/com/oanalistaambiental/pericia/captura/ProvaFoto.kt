@@ -31,6 +31,13 @@ object ProvaFoto {
         SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR"))
     }
 
+    /** O instante do carimbo sai em UTC, como veio da Autoridade. */
+    private val utc = ThreadLocal.withInitial {
+        SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR")).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }
+    }
+
     /**
      * @param hashAtual hash do arquivo AGORA, quando foi possivel calcular; null se o arquivo
      *   nao esta mais acessivel. Serve para dizer se o arquivo em maos e mesmo aquele — que e
@@ -42,6 +49,12 @@ object ProvaFoto {
         fechadaEm: Long?,
         raizSelada: String?,
         comCarimbo: Boolean,
+        /** Instante declarado pela Autoridade, quando ha carimbo. */
+        carimboInstante: Long? = null,
+        /** Autoridade que carimbou, como configurada. */
+        carimboAutoridade: String? = null,
+        /** Declarado por quem configurou — nao ha como o aplicativo descobrir isso sozinho. */
+        carimboCredenciado: Boolean = false,
         indice: Int,
         total: Int,
         nomeArquivo: String,
@@ -98,10 +111,26 @@ object ProvaFoto {
         l("Não demonstra QUANDO o cálculo foi feito. O relógio do aparelho é ajustável pelo")
         l("próprio usuário. Quem data com fé pública é o carimbo do tempo (RFC 3161) de")
         l("Autoridade credenciada na ICP-Brasil, aplicado sobre a raiz.")
-        l(
-            if (comCarimbo) "Nesta vistoria o carimbo do tempo FOI aplicado sobre a raiz."
-            else "Nesta vistoria o carimbo do tempo AINDA NÃO foi aplicado sobre a raiz."
-        )
+        if (!comCarimbo) {
+            l("Nesta vistoria o carimbo do tempo AINDA NÃO foi aplicado sobre a raiz.")
+        } else {
+            l("Nesta vistoria o carimbo do tempo FOI aplicado sobre a raiz:")
+            carimboInstante?.let {
+                // Em UTC, como a Autoridade declarou. Converter para o fuso do aparelho seria
+                // reescrever o dado com o relogio que o carimbo existe para nao depender.
+                l("  instante declarado pela Autoridade: ${utc.get()!!.format(Date(it))} UTC")
+            }
+            l("  Autoridade: ${carimboAutoridade ?: "não registrada"}")
+            l(
+                if (carimboCredenciado)
+                    "  declarada, por quem a configurou, como credenciada na ICP-Brasil"
+                else
+                    "  ATENÇÃO: NÃO declarada credenciada na ICP-Brasil — o carimbo serve como"
+            )
+            if (!carimboCredenciado) {
+                l("  controle, mas não tem a fé pública que um processo costuma exigir")
+            }
+        }
         l()
         l("ESTADO DO ARQUIVO ENTREGUE")
         l("-".repeat(72))
