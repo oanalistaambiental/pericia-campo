@@ -22,6 +22,8 @@ class Ferramenta(
     /** Uma linha, lida na gaveta antes de abrir. */
     val resumo: String,
     val grupo: Grupo,
+    /** O botao da grade nao tem "sem icone", do mesmo jeito que nao tem "sem limite". */
+    val icone: IconeGaveta,
     /** O que a ferramenta NAO faz. Aparece na gaveta e dentro dela. */
     val limite: String,
     val exige: Set<Recurso> = emptySet(),

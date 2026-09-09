@@ -29,6 +29,7 @@ object Registro {
             nome = "Bússola",
             resumo = "Azimute para onde a câmera aponta, com rosa dos ventos.",
             grupo = Grupo.CAMPO,
+            icone = IconeGaveta.BUSSOLA,
             limite = "O azimute vem do magnetômetro do aparelho: metal, veículo, cerca e " +
                 "estrutura de concreto armado desviam a leitura, e o sensor precisa de " +
                 "calibração. Confira em campo aberto antes de usar em laudo.",
@@ -39,6 +40,7 @@ object Registro {
             nome = "Clinômetro e declividade",
             resumo = "Inclinação de talude e rampa, em graus e em porcentagem.",
             grupo = Grupo.CAMPO,
+            icone = IconeGaveta.CLINOMETRO,
             limite = "Mede o plano das costas do aparelho, não o do terreno: o resultado é o " +
                 "da superfície onde ele está encostado. Acima de 80° a declividade em " +
                 "porcentagem deixa de ser informada, porque a tangente explode e o número " +
@@ -50,6 +52,7 @@ object Registro {
             nome = "Medição de área e distância",
             resumo = "Perímetro caminhado, com a incerteza declarada.",
             grupo = Grupo.CAMPO,
+            icone = IconeGaveta.REGUA,
             exige = setOf(Recurso.GNSS),
             limite = "A área herda a precisão do GNSS de cada vértice, e a incerteza vem " +
                 "junto do resultado. Não substitui levantamento topográfico nem memorial " +
@@ -61,6 +64,7 @@ object Registro {
             nome = "Ir para uma coordenada",
             resumo = "Converte entre UTM, graus decimais e GMS, e guia até o ponto.",
             grupo = Grupo.CAMPO,
+            icone = IconeGaveta.ALVO,
             exige = setOf(Recurso.GNSS),
             limite = "Guia por rumo e distância em linha reta — não é navegação por rota e " +
                 "não conhece estrada, cerca nem barreira do terreno.",
@@ -71,6 +75,7 @@ object Registro {
             nome = "Enquadramento — DN COPAM 217/2017",
             resumo = "Porte, classe, critério locacional e modalidade, com memória de cálculo.",
             grupo = Grupo.ENQUADRAR,
+            icone = IconeGaveta.ENQUADRAMENTO,
             limite = "É SIMULAÇÃO de ferramenta independente, sem vínculo com o SISEMA. Não " +
                 "substitui o enquadramento do órgão ambiental e não vincula a Administração " +
                 "Pública. A modalidade definitiva é a da Unidade Regional.",
@@ -81,6 +86,7 @@ object Registro {
             nome = "Camadas e ajustes",
             resumo = "Pacote de camadas do IDE-Sisema, versão e procedência.",
             grupo = Grupo.APOIO,
+            icone = IconeGaveta.CAMADAS,
             limite = "As camadas são um retrato baixado numa data, não a base viva do órgão. " +
                 "A data de extração aparece no laudo justamente porque importa.",
             tela = { nav -> TelaConfiguracoes(vmCaptura(), nav.voltar) }
