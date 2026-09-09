@@ -16,10 +16,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.oanalistaambiental.pericia.captura.Orientacoes
 import br.com.oanalistaambiental.pericia.geo.Medicao
+import br.com.oanalistaambiental.pericia.geo.PontosLocais
 import br.com.oanalistaambiental.pericia.geo.Utm
 
 /** Menu de ferramentas — o que existe fora do ato de fotografar. */
@@ -225,6 +227,23 @@ fun TelaMedicao(vm: CapturaViewModel, voltar: () -> Unit) {
             )
         }
 
+        // Mapa ao vivo: o poligono se formando, vertice a vertice, em escala — nao so o
+        // numero da area. O ultimo vertice marcado vem destacado, para se ver onde se esta.
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+            val pontosMapa = remember(vertices) {
+                if (vertices.isEmpty()) emptyList() else {
+                    val locais = PontosLocais.relativos(vertices.map { it.lat to it.lon })
+                    locais.mapIndexed { i, local ->
+                        PontoMapa(local, Cores.bomClaro, destaque = i == locais.lastIndex)
+                    }
+                }
+            }
+            MapaEscala(
+                pontosMapa, fecharPoligono = (pol?.vertices?.size ?: 0) >= 3,
+                vazio = "O polígono aparece aqui conforme os vértices são marcados"
+            )
+        }
+
         if (pol != null && pol!!.vertices.size >= 3 && !pol!!.confiavel()) {
             AvisoRestricao(
                 "A incerteza passa de 20% da área. Para laudo, espere o GNSS melhorar e refaça, " +
@@ -323,11 +342,19 @@ fun TelaMedicao(vm: CapturaViewModel, voltar: () -> Unit) {
     }
 }
 
-/** Navegar ate uma coordenada que veio de fora — auto de infracao, planta, memorial. */
+/**
+ * Navegar ate uma coordenada que veio de fora — auto de infracao, planta, memorial.
+ *
+ * Duas fases na mesma tela. Antes de definir, um campo de texto e o formato reconhecido. Depois
+ * de definir, a MESMA bussola redonda da ferramenta de bussola (com a marca do rumo-alvo) e um
+ * mapinha em escala com os dois pontos — nao so a fita da bussola da tela de camera, que exigia
+ * trocar de ferramenta so para ver a distancia encolhendo.
+ */
 @Composable
-fun TelaIrParaCoordenada(vm: CapturaViewModel, aoDefinir: () -> Unit, voltar: () -> Unit) {
+fun TelaIrParaCoordenada(vm: CapturaViewModel, voltar: () -> Unit) {
     var texto by remember { mutableStateOf("") }
     val lida = remember(texto) { Medicao.interpretar(texto) }
+    val alvo by vm.alvo.collectAsState()
 
     Column(
         Modifier.fillMaxSize().background(Cores.fundo)
@@ -335,62 +362,131 @@ fun TelaIrParaCoordenada(vm: CapturaViewModel, aoDefinir: () -> Unit, voltar: ()
     ) {
         Cabecalho("Ir para uma coordenada", voltar)
 
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            OutlinedTextField(
-                value = texto,
-                onValueChange = { texto = it },
-                label = { Text("Cole ou digite a coordenada") },
-                modifier = Modifier.fillMaxWidth()
-            )
-            Spacer(Modifier.height(12.dp))
+        val a = alvo
+        if (a == null) {
+            Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                OutlinedTextField(
+                    value = texto,
+                    onValueChange = { texto = it },
+                    label = { Text("Cole ou digite a coordenada") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
 
-            when {
-                texto.isBlank() -> Text(
-                    "Aceita os três formatos que aparecem de verdade:\n\n" +
-                        "  -19.9167, -43.9345\n" +
-                        "  19°55'00\"S 43°56'04\"W\n" +
-                        "  23S 611520E 7797383N",
-                    color = Cores.textoFraco, fontSize = 12.sp, lineHeight = 20.sp
-                )
-                lida == null -> Text(
-                    "Não reconheci esse formato. Confira se os dois valores estão presentes e " +
-                        "se o separador é vírgula ou espaço.",
-                    color = Cores.atencaoClaro, fontSize = 12.sp, lineHeight = 18.sp
-                )
-                else -> {
-                    Column(
-                        Modifier.fillMaxWidth()
-                            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(14.dp)
-                    ) {
-                        Text("LIDO COMO ${lida.formato.uppercase()}", color = Cores.textoFraco,
-                            fontSize = 10.sp, letterSpacing = 1.sp)
-                        Spacer(Modifier.height(8.dp))
-                        Mono("%.6f, %.6f".format(lida.lat, lida.lon), Cores.texto, 13)
-                        Spacer(Modifier.height(4.dp))
-                        Mono(Utm.projetar(lida.lat, lida.lon).formatado(), Cores.textoFraco, 11)
-                        Spacer(Modifier.height(4.dp))
-                        Mono(Medicao.formatarGms(lida.lat, lida.lon), Cores.textoFraco, 11)
-                    }
-                    lida.aviso?.let {
-                        Spacer(Modifier.height(10.dp))
-                        Text(it, color = Cores.atencaoClaro, fontSize = 12.sp, lineHeight = 18.sp)
-                    }
-                    Spacer(Modifier.height(16.dp))
-                    BotaoLargo("Guiar até este ponto", principal = true) {
-                        vm.definirAlvoCoordenada(lida.lat, lida.lon, "Coordenada informada")
-                        aoDefinir()
+                when {
+                    texto.isBlank() -> Text(
+                        "Aceita os três formatos que aparecem de verdade:\n\n" +
+                            "  -19.9167, -43.9345\n" +
+                            "  19°55'00\"S 43°56'04\"W\n" +
+                            "  23S 611520E 7797383N",
+                        color = Cores.textoFraco, fontSize = 12.sp, lineHeight = 20.sp
+                    )
+                    lida == null -> Text(
+                        "Não reconheci esse formato. Confira se os dois valores estão presentes e " +
+                            "se o separador é vírgula ou espaço.",
+                        color = Cores.atencaoClaro, fontSize = 12.sp, lineHeight = 18.sp
+                    )
+                    else -> {
+                        Column(
+                            Modifier.fillMaxWidth()
+                                .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(14.dp)
+                        ) {
+                            Text("LIDO COMO ${lida.formato.uppercase()}", color = Cores.textoFraco,
+                                fontSize = 10.sp, letterSpacing = 1.sp)
+                            Spacer(Modifier.height(8.dp))
+                            Mono("%.6f, %.6f".format(lida.lat, lida.lon), Cores.texto, 13)
+                            Spacer(Modifier.height(4.dp))
+                            Mono(Utm.projetar(lida.lat, lida.lon).formatado(), Cores.textoFraco, 11)
+                            Spacer(Modifier.height(4.dp))
+                            Mono(Medicao.formatarGms(lida.lat, lida.lon), Cores.textoFraco, 11)
+                        }
+                        lida.aviso?.let {
+                            Spacer(Modifier.height(10.dp))
+                            Text(it, color = Cores.atencaoClaro, fontSize = 12.sp, lineHeight = 18.sp)
+                        }
+                        Spacer(Modifier.height(16.dp))
+                        BotaoLargo("Guiar até este ponto", principal = true) {
+                            vm.definirAlvoCoordenada(lida.lat, lida.lon, "Coordenada informada")
+                        }
                     }
                 }
             }
+
+            Ajuda(
+                "O que o guia faz e o que não faz",
+                "Ele mostra distância em linha reta e o rumo, na bússola desta tela e na fita da " +
+                    "tela de câmera. Não traça rota nem desvia de obstáculo: a leitura é de " +
+                    "bússola, como se faz com uma carta na mão. Quando você chega dentro da " +
+                    "precisão do GNSS, o app avisa."
+            )
+        } else {
+            GuiaAteCoordenada(vm, a, aoTrocar = { vm.limparAlvo(); texto = "" })
+        }
+    }
+}
+
+/** Fase de guia, depois que uma coordenada foi definida: bússola, distância e mapa em escala. */
+@Composable
+private fun GuiaAteCoordenada(vm: CapturaViewModel, alvo: CapturaViewModel.Alvo, aoTrocar: () -> Unit) {
+    val p by vm.estadoCampo.posicao.collectAsState()
+    val o by vm.estadoCampo.orientacao.collectAsState()
+    val guia by vm.guia.collectAsState()
+
+    SeloPrecisao(p)
+
+    Column(
+        Modifier.fillMaxWidth().padding(top = 18.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        BussolaCircular(o.azimuteGraus, alvoGraus = guia?.rumoGraus)
+        Spacer(Modifier.height(10.dp))
+        Text(
+            guia?.let { "%.0f m".format(it.distanciaM) } ?: "—",
+            color = if (guia?.chegou == true) Cores.bomClaro else Cores.texto,
+            fontSize = 36.sp, fontWeight = FontWeight.Bold
+        )
+        Text(
+            when {
+                guia == null -> "aguardando GNSS"
+                guia!!.chegou -> "você chegou — dentro da precisão do GNSS"
+                else -> "rumo %.0f° até ${alvo.rotulo}".format(guia!!.rumoGraus)
+            },
+            color = Cores.textoFraco, fontSize = 12.5.sp, textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 24.dp)
+        )
+
+        Spacer(Modifier.height(18.dp))
+
+        val lat = p.lat
+        val lon = p.lon
+        val pontosMapa = if (lat != null && lon != null) {
+            val locais = PontosLocais.relativos(listOf(lat to lon, alvo.lat to alvo.lon))
+            listOf(
+                PontoMapa(locais[0], Cores.bomClaro, rotulo = "você", destaque = true),
+                PontoMapa(locais[1], Cores.alertaClaro, rotulo = alvo.rotulo)
+            )
+        } else emptyList()
+
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            MapaEscala(
+                pontosMapa, tracejado = true,
+                vazio = "Aguardando posição para desenhar o mapa"
+            )
+        }
+
+        Spacer(Modifier.height(16.dp))
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            BotaoLargo("Definir outra coordenada", aoClicar = aoTrocar)
         }
 
         Ajuda(
             "O que o guia faz e o que não faz",
-            "Ele mostra distância em linha reta e o rumo, e marca o alvo na fita da bússola da " +
-                "tela de câmera. Não traça rota nem desvia de obstáculo: a leitura é de bússola, " +
-                "como se faz com uma carta na mão. Quando você chega dentro da precisão do GNSS, " +
-                "o app avisa."
+            "Ele mostra distância em linha reta e o rumo, na bússola e no mapinha acima. Não " +
+                "traça rota nem desvia de obstáculo: a leitura é de bússola, como se faz com uma " +
+                "carta na mão. Quando você chega dentro da precisão do GNSS, o app avisa.",
+            modifier = Modifier.padding(top = 8.dp)
         )
+        Spacer(Modifier.height(24.dp))
     }
 }
 

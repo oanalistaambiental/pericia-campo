@@ -68,7 +68,7 @@ object Registro {
             exige = setOf(Recurso.GNSS),
             limite = "Guia por rumo e distância em linha reta — não é navegação por rota e " +
                 "não conhece estrada, cerca nem barreira do terreno.",
-            tela = { nav -> TelaIrParaCoordenada(vmCaptura(), aoDefinir = nav.voltar, voltar = nav.voltar) }
+            tela = { nav -> TelaIrParaCoordenada(vmCaptura(), voltar = nav.voltar) }
         ),
         Ferramenta(
             id = "enquadramento",
