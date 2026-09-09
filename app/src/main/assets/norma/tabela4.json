@@ -1,0 +1,129 @@
+{
+  "titulo": "Tabela 4 — Critérios locacionais de enquadramento",
+  "base_legal": "DN COPAM 217/2017, Art. 6º, §1º a §3º, e Tabela 4 do Anexo Único",
+  "conferido": true,
+  "regra": "Peso 0 quando nenhum critério incide (§2º). Havendo mais de um, prevalece o de MAIOR peso (§3º) — os pesos não se somam.",
+  "criterios": [
+    {
+      "id": "uc_protecao_integral",
+      "peso": 2,
+      "texto": "Localização prevista em Unidade de Conservação de Proteção Integral, nas hipóteses previstas em Lei",
+      "camada": "areas_protegidas",
+      "automatico": true,
+      "filtro": {
+        "campos": [
+          "grupo",
+          "grupo_uc",
+          "grupouc",
+          "categoria",
+          "cat_uc",
+          "categoria_uc",
+          "tipo",
+          "classe"
+        ],
+        "contem": [
+          "protecao integral"
+        ],
+        "naoContem": [],
+        "naoIgual": []
+      },
+      "nota": "Só vale para UC do grupo de Proteção Integral. O app lê o grupo/categoria da feição; quando o pacote não traz esse atributo, o critério é marcado como A CONFERIR em vez de aplicado em silêncio."
+    },
+    {
+      "id": "supressao_area_prioritaria",
+      "peso": 2,
+      "texto": "Supressão de vegetação nativa em áreas prioritárias para conservação, considerada de importância biológica \"extrema\" ou \"especial\", exceto árvores isoladas",
+      "camada": "areas_prioritarias",
+      "automatico": false,
+      "nota": "Depende de haver supressão no projeto — não se resolve só pela localização."
+    },
+    {
+      "id": "supressao_vegetacao",
+      "peso": 1,
+      "texto": "Supressão de vegetação nativa, exceto árvores isoladas",
+      "camada": null,
+      "automatico": false,
+      "nota": "Característica do projeto, não do ponto. Só o empreendedor sabe."
+    },
+    {
+      "id": "zona_amortecimento",
+      "peso": 1,
+      "texto": "Localização prevista em zona de amortecimento de Unidade de Conservação de Proteção Integral, ou na faixa de 3 km do seu entorno quando não houver zona de amortecimento estabelecida por Plano de Manejo; excluídas as áreas urbanas",
+      "camada": "zonas_amortecimento",
+      "automatico": true
+    },
+    {
+      "id": "uc_uso_sustentavel",
+      "peso": 1,
+      "texto": "Localização prevista em Unidade de Conservação de Uso Sustentável, exceto APA",
+      "camada": "areas_protegidas",
+      "automatico": true,
+      "nota": "APA está excluída deste critério pela própria Tabela 4. O app filtra pela categoria da UC; sem esse atributo no pacote, marca como A CONFERIR.",
+      "filtro": {
+        "campos": [
+          "grupo",
+          "grupo_uc",
+          "grupouc",
+          "categoria",
+          "cat_uc",
+          "categoria_uc",
+          "tipo",
+          "classe"
+        ],
+        "contem": [
+          "uso sustentavel"
+        ],
+        "naoContem": [
+          "area de protecao ambiental",
+          "area protecao ambiental"
+        ],
+        "naoIgual": [
+          "apa"
+        ]
+      }
+    },
+    {
+      "id": "reserva_biosfera",
+      "peso": 1,
+      "texto": "Localização prevista em Reserva da Biosfera, excluídas as áreas urbanas",
+      "camada": "reservas_biosfera",
+      "automatico": true
+    },
+    {
+      "id": "corredor_ecologico",
+      "peso": 1,
+      "texto": "Localização prevista em Corredor Ecológico formalmente instituído, conforme previsão legal",
+      "camada": "corredores_ecologicos",
+      "automatico": true
+    },
+    {
+      "id": "sitio_ramsar",
+      "peso": 2,
+      "texto": "Localização prevista em áreas designadas como Sítios Ramsar",
+      "camada": "sitios_ramsar",
+      "automatico": true
+    },
+    {
+      "id": "drenagem_classe_especial",
+      "peso": 1,
+      "texto": "Localização prevista em área de drenagem a montante de trecho de curso d'água enquadrado em classe especial",
+      "camada": "drenagem_classe_especial",
+      "automatico": true
+    },
+    {
+      "id": "conflito_hidrico",
+      "peso": 1,
+      "texto": "Captação de água superficial em Área de Conflito por uso de recursos hídricos",
+      "camada": "conflito_recursos_hidricos",
+      "automatico": false,
+      "nota": "Só incide se houver captação superficial no projeto."
+    },
+    {
+      "id": "cavidades",
+      "peso": 1,
+      "texto": "Localização prevista em área de alto ou muito alto grau de potencialidade de ocorrência de cavidades, conforme dados oficiais do CECAV-ICMBio",
+      "camada": "influencia_cavidades",
+      "automatico": true
+    }
+  ]
+}

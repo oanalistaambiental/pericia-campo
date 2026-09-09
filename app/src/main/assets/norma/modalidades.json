@@ -1,0 +1,109 @@
+{
+  "titulo": "Modalidades, prazos e estudos",
+  "base_legal": "Decreto Estadual 47.383/2018 (arts. 14, 15, 22 e 37) e DN COPAM 217/2017 (art. 8º)",
+  "conferido": true,
+  "regras_gerais": {
+    "prazo_analise_dias": 180,
+    "prazo_analise_texto": "Até 6 meses da formalização do processo até a conclusão (Decreto 47.383/2018, art. 22).",
+    "prazo_analise_eia_dias": 365,
+    "prazo_analise_eia_texto": "Até 12 meses quando houver EIA-Rima ou audiência pública (Decreto 47.383/2018, art. 22).",
+    "renovacao_antecedencia_dias": 120,
+    "renovacao_texto": "A renovação deve ser requerida com antecedência mínima de 120 dias da expiração. Requerida no prazo, a licença fica automaticamente prorrogada até a manifestação definitiva do órgão ambiental (Decreto 47.383/2018, art. 37).",
+    "observacao_prazo": "O Decreto 47.383/2018 não fixa prazo de análise diferente por modalidade: o prazo é o geral, e o que o altera é a existência de EIA-Rima ou audiência pública."
+  },
+  "modalidades": [
+    {
+      "sigla": "LAS/Cadastro",
+      "nome": "Licenciamento Ambiental Simplificado — modalidade Cadastro",
+      "descricao": "Fase única. O empreendedor fornece as informações da atividade por meio de cadastro eletrônico.",
+      "licencas": [
+        "Licença Ambiental Simplificada"
+      ],
+      "etapas": 1,
+      "estudos": [
+        "Cadastro eletrônico — sem estudo ambiental próprio previsto no Decreto"
+      ],
+      "validade_anos": 10,
+      "validade_texto": "10 anos (Decreto 47.383/2018, art. 15).",
+      "audiencia_publica": false
+    },
+    {
+      "sigla": "LAS/RAS",
+      "nome": "Licenciamento Ambiental Simplificado — modalidade RAS",
+      "descricao": "Fase única, mediante Relatório Ambiental Simplificado.",
+      "licencas": [
+        "Licença Ambiental Simplificada"
+      ],
+      "etapas": 1,
+      "estudos": [
+        "Relatório Ambiental Simplificado — RAS (Decreto 47.383/2018, art. 14)"
+      ],
+      "validade_anos": 10,
+      "validade_texto": "10 anos (Decreto 47.383/2018, art. 15).",
+      "audiencia_publica": false
+    },
+    {
+      "sigla": "LAC1",
+      "nome": "Licenciamento Ambiental Concomitante em uma fase",
+      "descricao": "Análise das etapas de viabilidade ambiental, instalação e operação em fase única, com expedição concomitante das licenças.",
+      "licencas": [
+        "LP",
+        "LI",
+        "LO"
+      ],
+      "etapas": 1,
+      "estudos": [
+        "RCA/PCA — Relatório de Controle Ambiental e Plano de Controle Ambiental"
+      ],
+      "validade_anos": 10,
+      "validade_texto": "10 anos, por se tratar de licença concomitante à LO (Decreto 47.383/2018, art. 15).",
+      "audiencia_publica": false
+    },
+    {
+      "sigla": "LAC2",
+      "nome": "Licenciamento Ambiental Concomitante em duas fases",
+      "descricao": "Duas etapas: análise conjunta de viabilidade e instalação e depois a operação, ou viabilidade isolada e depois instalação e operação em conjunto.",
+      "licencas": [
+        "LP+LI e depois LO",
+        "ou LP e depois LI+LO"
+      ],
+      "etapas": 2,
+      "estudos": [
+        "RCA/PCA — Relatório de Controle Ambiental e Plano de Controle Ambiental"
+      ],
+      "validade_anos": 10,
+      "validade_texto": "A etapa concomitante à LO vale 10 anos; a etapa LP+LI vale 6 anos (Decreto 47.383/2018, art. 15).",
+      "audiencia_publica": false,
+      "validade_por_licenca": {
+        "LP+LI": 6,
+        "LO": 10,
+        "LP": 5,
+        "LI+LO": 10
+      }
+    },
+    {
+      "sigla": "LAT",
+      "nome": "Licenciamento Ambiental Trifásico",
+      "descricao": "LP, LI e LO concedidas em etapas sucessivas.",
+      "licencas": [
+        "LP",
+        "LI",
+        "LO"
+      ],
+      "etapas": 3,
+      "estudos": [
+        "EIA/RIMA quando houver significativo impacto ambiental (Decreto 47.383/2018, art. 27)",
+        "RCA/PCA nos demais casos"
+      ],
+      "validade_anos": 10,
+      "validade_texto": "LP 5 anos, LI 6 anos, LO 10 anos (Decreto 47.383/2018, art. 15).",
+      "validade_por_licenca": {
+        "LP": 5,
+        "LI": 6,
+        "LO": 10
+      },
+      "audiencia_publica": true,
+      "audiencia_texto": "Havendo EIA-Rima, cabe audiência pública, e o prazo de análise passa a 12 meses."
+    }
+  ]
+}

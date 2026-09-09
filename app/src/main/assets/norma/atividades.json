@@ -1,0 +1,4112 @@
+{
+  "titulo": "Listagem de Atividades — Anexo Único da DN COPAM 217/2017",
+  "cobertura": "228 atividades — Listagens A a G completas, extraídas do texto oficial consolidado (DN 217/2017 com as alterações até a DN 246/2022). Atividades revogadas não entram.",
+  "base_legal": "DN COPAM 217/2017, Art. 4º e Anexo Único",
+  "fonte": "https://www.siam.mg.gov.br/sla/download.pdf?idNorma=45558",
+  "extraido_em": "2026-09-07",
+  "como_completar": "Use ferramentas/importar-anexo.py para converter uma planilha do Anexo Único oficial e substituir este arquivo.",
+  "nota_fronteira": "A DN 217 NÃO usa uma convenção única de fronteira. Em 185 das 226 atividades numéricas a faixa Pequeno é definida com \"<\" (o valor exatamente igual ao limite já é MÉDIO) e nas demais com \"≤\" (o valor igual ao limite ainda é PEQUENO). Por isso cada atividade carrega os campos limitePExclusivo e limiteMExclusivo lidos individualmente do texto oficial — não existe padrão que se possa assumir.",
+  "legenda_conferencia": {
+    "oficial": "extraído do texto oficial consolidado da DN 217 em 07/09/2026, campo a campo",
+    "cruzado": "coincidiu exatamente entre duas cópias independentes",
+    "unico": "lido de uma cópia só — confira antes de usar em processo",
+    "divergente": "a própria norma tem lacuna, sobreposição ou piso nesta faixa — veja a nota"
+  },
+  "atividades": [
+    {
+      "codigo": "A-01-01-5",
+      "descricao": "Lavra subterrânea pegmatitos e gemas",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Bruta",
+      "unidade": "m³/ano",
+      "limiteP": 1200.0,
+      "limiteM": 12000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-01-03-1",
+      "descricao": "Lavra subterrânea exceto pegmatitos e gemas",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Bruta",
+      "unidade": "t/ano",
+      "limiteP": 100000.0,
+      "limiteM": 500000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-02-01-1",
+      "descricao": "Lavra a céu aberto - Minerais metálicos, exceto minério de ferro",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Bruta",
+      "unidade": "t/ano",
+      "limiteP": 50000.0,
+      "limiteM": 500000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-02-03-8",
+      "descricao": "Lavra a céu aberto - Minério de ferro",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Bruta",
+      "unidade": "t/ano",
+      "limiteP": 300000.0,
+      "limiteM": 1500000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-02-06-2",
+      "descricao": "Lavra a céu aberto - Rochas ornamentais e de revestimento",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Bruta",
+      "unidade": "m 3 /ano",
+      "limiteP": 6000.0,
+      "limiteM": 9000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-02-07-0",
+      "descricao": "Lavra a céu aberto — minerais não metálicos, exceto rochas ornamentais",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Bruta",
+      "unidade": "t/ano",
+      "limiteP": 50000.0,
+      "limiteM": 500000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-02-09-7",
+      "descricao": "Extração de rocha para produção de britas",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Bruta",
+      "unidade": "t/ano",
+      "limiteP": 30000.0,
+      "limiteM": 200000.0,
+      "conferencia": "oficial",
+      "unidadeAlternativa": "m³/ano",
+      "limitePAlt": 12000.0,
+      "limiteMAlt": 80000.0
+    },
+    {
+      "codigo": "A-02-10-0",
+      "descricao": "Lavra em aluvião, exceto areia e cascalho",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Bruta",
+      "unidade": "m³/ano",
+      "limiteP": 12000.0,
+      "limiteM": 100000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-03-01-8",
+      "descricao": "Extração de areia e cascalho para utilização imediata na construção civil",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Bruta",
+      "unidade": "m³/ano",
+      "limiteP": 10000.0,
+      "limiteM": 50000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "A-03-01-9",
+      "descricao": "Extração de cascalho, rocha para britas e areia fora da calha, para obras viárias",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área da jazida",
+      "unidade": "ha",
+      "limiteP": 3.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-03-02-6",
+      "descricao": "Extração de argila usada na fabricação de cerâmica vermelha",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Bruta",
+      "unidade": "t/ano",
+      "limiteP": 12000.0,
+      "limiteM": 50000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-04-01-4",
+      "descricao": "Extração de água mineral ou potável de mesa",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Vazão Captada",
+      "unidade": "litros /ano",
+      "limiteP": 6000000.0,
+      "limiteM": 15000000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-05-01-0",
+      "descricao": "Unidade de Tratamento de Minerais - UTM, com tratamento a seco",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 300000.0,
+      "limiteM": 1500000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-05-02-0",
+      "descricao": "Unidade de Tratamento de Minerais - UTM, com tratamento a úmido",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 300000.0,
+      "limiteM": 1500000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-05-03-7",
+      "descricao": "Barragem de contenção de resíduos ou rejeitos da mineração",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "categorico",
+      "parametro": "Categoria da barragem (DN COPAM 62/2002)",
+      "categorias": [
+        {
+          "rotulo": "Classe I",
+          "porte": "P"
+        },
+        {
+          "rotulo": "Classe II",
+          "porte": "M"
+        },
+        {
+          "rotulo": "Classe III",
+          "porte": "G"
+        }
+      ],
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-05-04-5",
+      "descricao": "Pilhas de rejeito/estéril",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 40.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-05-04-6",
+      "descricao": "Pilha de rejeito/estéril de rochas ornamentais e de revestimento",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-05-04-7",
+      "descricao": "Pilhas de rejeito/estéril - Minério de ferro",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 40.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-05-05-3",
+      "descricao": "Estrada para transporte de minério ou estéril, externa aos limites do empreendimento",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 5.0,
+      "limiteM": 10.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-05-06-2",
+      "descricao": "Disposição de estéril ou rejeito inerte e não inerte em cava de mina",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "volume da cava",
+      "unidade": "m3",
+      "limiteP": 20000000.0,
+      "limiteM": 40000000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-05-08-4",
+      "descricao": "Reaproveitamento de bens minerais metálicos dispostos em pilha de estéril",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "material de reaproveitamento",
+      "unidade": "t/ano",
+      "limiteP": 2000000.0,
+      "limiteM": 7000000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-05-09-5",
+      "descricao": "Reaproveitamento de bens minerais dispostos em barragem",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "material de reaproveitamento",
+      "unidade": "m³/ano",
+      "limiteP": 2000000.0,
+      "limiteM": 7000000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-06-01-1",
+      "descricao": "Prospecção de gás natural ou de petróleo (sísmica)",
+      "pp": {
+        "ar": "P",
+        "agua": "P",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "área de cobertura",
+      "unidade": "km 2",
+      "limiteP": 30.0,
+      "limiteM": 200.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-06-05-1",
+      "descricao": "Perfuração de poços exploratórios em jazida de petróleo e gás natural",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "número de poços exploratórios",
+      "unidade": "poços",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "A-06-06-1",
+      "descricao": "Produção de petróleo e gás natural em jazida convencional",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "número de poços de produção",
+      "unidade": "poços",
+      "limiteP": 15.0,
+      "limiteM": 25.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "B-01-02-3",
+      "descricao": "Fabricação de cal virgem",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 7300.0,
+      "limiteM": 30000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-01-03-1",
+      "descricao": "Fabricação de cerâmica vermelha (telhas, tijolos e outros artigos de barro cozido), inclusive com utilização de até 10% dos resíduos “pó de balão” ou “lama de alto-forno” à base seca, em substituição de percentual equivalente na carga de argila",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Matéria Prima Processada",
+      "unidade": "t/ano",
+      "limiteP": 12000.0,
+      "limiteM": 50000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"2.400 t/ano < Matéria Prima Processada < 12.000 t/ano\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 2400.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "B-01-04-1",
+      "descricao": "Fabricação de material cerâmico",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Matéria Prima Processada",
+      "unidade": "t/ano",
+      "limiteP": 4000.0,
+      "limiteM": 20000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-01-05-8",
+      "descricao": "Fabricação de cimento",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "M",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 200000.0,
+      "limiteM": 1000000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-01-07-4",
+      "descricao": "Fabricação de peças, ornatos e estruturas de amianto",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-01-08-2",
+      "descricao": "Fabricação e elaboração de vidro e cristal, inclusive a partir de reciclagem",
+      "pp": {
+        "ar": "G",
+        "agua": "P",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 2000.0,
+      "limiteM": 40000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"340 t/ano < Capacidade Instalada < 2.000 t/ano\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 340.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "B-01-09-0",
+      "descricao": "Aparelhamento, beneficiamento, preparação e transformação de minerais não metálicos, não instalados na área da planta de extração",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true,
+      "pisoFaixa": 0.04,
+      "pisoExclusivo": false
+    },
+    {
+      "codigo": "B-02-01-1",
+      "descricao": "Siderurgia e elaboração de produtos siderúrgicos com redução de minérios, inclusive ferro-gusa",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "M",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 50.0,
+      "limiteM": 500.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-02-01-2",
+      "descricao": "Sinterização de minério de ferro e outros resíduos siderúrgicos",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 200.0,
+      "limiteM": 1000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-03-01-8",
+      "descricao": "Produção de aço ligado em qualquer forma, com ou sem redução de minérios, com fusão",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 50.0,
+      "limiteM": 500.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-03-02-6",
+      "descricao": "Produção de tubos de ferro e aço e/ou de laminados e trefilados de qualquer tipo de aço, com tratamento químico superficial",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "M",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 100.0,
+      "limiteM": 500.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-03-03-4",
+      "descricao": "Produção de tubos de ferro e aço e/ou de laminados e trefilados de qualquer tipo de aço, sem tratamento químico superficial",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 100.0,
+      "limiteM": 500.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-03-04-2",
+      "descricao": "Produção de ligas metálicas (ferroligas), silício metálico e outras ligas a base de silício",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 5.0,
+      "limiteM": 30.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-03-07-7",
+      "descricao": "Produção de fundidos de ferro e aço, sem tratamento químico superficial, inclusive a partir de reciclagem",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 30.0,
+      "limiteM": 120.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-03-08-5",
+      "descricao": "Produção de fundidos de ferro e aço, com tratamento químico superficial, inclusive a partir de reciclagem",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "P",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 30.0,
+      "limiteM": 120.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-03-09-3",
+      "descricao": "Produção de forjados, arames e relaminados de aço",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 30000.0,
+      "limiteM": 400000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-04-01-4",
+      "descricao": "Metalurgia dos metais não-ferrosos em formas primárias, inclusive metais preciosos",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 10.0,
+      "limiteM": 50.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-04-02-2",
+      "descricao": "Produção de laminados de metais e de ligas de metais não-ferrosos e/ou relaminação de metais não-ferrosos, inclusive ligas",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 25.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-04-04-9",
+      "descricao": "Produção de fundidos de metais não-ferrosos, inclusive ligas, com tratamento químico superficial e/ou galvanotécnico, inclusive a partir de reciclagem",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "M",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 1.0,
+      "limiteM": 7.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-04-05-7",
+      "descricao": "Produção de fundidos de metais não-ferrosos, inclusive ligas, sem tratamento químico superficial e/ou galvanotécnico, inclusive a partir de reciclagem",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 1.0,
+      "limiteM": 7.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-04-06-5",
+      "descricao": "Produção de fios e arames de metais e de ligas de metais não-ferrosos, inclusive fios, cabos e condutores elétricos, com fusão, em todas as suas modalidades",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-04-07-3",
+      "descricao": "Produção de fios e arames de metais e de ligas de metais não-ferrosos, inclusive fios, cabos e condutores elétricos, sem fusão, em todas as suas modalidades",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-05-01-0",
+      "descricao": "Produção de soldas e ânodos",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-05-02-9",
+      "descricao": "Metalurgia do pó, inclusive peças moldadas",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-05-03-7",
+      "descricao": "Fabricação de estruturas metálicas e artefatos de trefilados de ferro, aço e de metais não-ferrosos, com tratamento químico superficial, exceto móveis",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "M",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 3.0,
+      "limiteM": 10.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-05-04-5",
+      "descricao": "Fabricação de estruturas metálicas e artefatos de trefilados de ferro, aço e de metais não-ferrosos, sem tratamento químico superficial, exceto móveis",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 3.0,
+      "limiteM": 10.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true,
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": false
+    },
+    {
+      "codigo": "B-05-05-3",
+      "descricao": "Estamparia, funilaria e latoaria com tratamento químico superficial, exceto oficinas automotivas",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 3.0,
+      "limiteM": 10.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,1 ha < Área útil < 3 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.1,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "B-05-08-8",
+      "descricao": "Fabricação de armas de fogo, munições e projéteis",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "M",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 10.0,
+      "limiteM": 50.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-06-01-7",
+      "descricao": "Tratamento térmico (têmpera) ou tratamento termoquímico",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 3.0,
+      "limiteM": 10.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-06-02-5",
+      "descricao": "Serviço galvanotécnico",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 0.1,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-06-03-3",
+      "descricao": "Jateamento e pintura",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 3.0,
+      "limiteM": 10.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,1 ha < Área útil < 3 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.1,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "B-07-01-3",
+      "descricao": "Fabricação de máquinas em geral e implementos agrícolas, bem como suas peças e acessórios metálicos",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "M",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 50.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true,
+      "pisoFaixa": 0.1,
+      "pisoExclusivo": false
+    },
+    {
+      "codigo": "B-08-01-1",
+      "descricao": "Fabricação de eletrodomésticos e/ou componentes eletroeletrônicos, inclusive lâmpadas",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-08-02-8",
+      "descricao": "Fabricação de pilhas, baterias e acumuladores",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-09-01-6",
+      "descricao": "Construção de embarcações e estruturas flutuantes e fabricação de suas peças e acessórios",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 10.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-09-05-9",
+      "descricao": "Fabricação de peças e acessórios para veículos automotores e/ou ferroviários, exceto embarcações e estruturas flutuantes",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 10.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-10-01-3",
+      "descricao": "Fabricação de madeira laminada ou chapas de madeira aglomerada, prensada ou compensada, revestida ou não revestida",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Nominal",
+      "unidade": "m²/ano",
+      "limiteP": 10000.0,
+      "limiteM": 50000.0,
+      "conferencia": "oficial",
+      "pisoFaixa": 1500.0,
+      "pisoExclusivo": false
+    },
+    {
+      "codigo": "B-10-02-2",
+      "descricao": "Fabricação de móveis de madeira, e/ou seus derivados, com pintura e/ou verniz",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Consumo/ano de madeira e/ou painéis",
+      "unidade": "m³",
+      "limiteP": 3000.0,
+      "limiteM": 8000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "B-10-03-0",
+      "descricao": "Fabricação de móveis estofados ou de colchões, com fabricação de espuma",
+      "pp": {
+        "ar": "G",
+        "agua": "P",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Construída",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 2.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "B-10-07-0",
+      "descricao": "Tratamento químico para preservação de madeira",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Nominal",
+      "unidade": "m3/ano",
+      "limiteP": 50000.0,
+      "limiteM": 150000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "C-01-01-5",
+      "descricao": "Fabricação de celulose e/ou pasta mecânica",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 10.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-01-03-1",
+      "descricao": "Fabricação de papelão, papel, cartolina, cartão e polpa moldada, utilizando celulose e/ou papel reciclado como matéria-prima",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 20.0,
+      "limiteM": 80.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,5 t/dia < Capacidade Instalada < 20 t/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.5,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "C-01-07-4",
+      "descricao": "Fabricação de artigos diversos de fibra prensada ou isolante inclusive peças e acessórios para máquinas e veículos",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,5 ha < Área útil < 2 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.5,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "C-02-01-1",
+      "descricao": "Beneficiamento de borracha natural",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-02-02-1",
+      "descricao": "Fabricação de pneumáticos, câmaras-de-ar e de material para recondicionamento de pneumáticos",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-02-03-8",
+      "descricao": "Recauchutagem de pneumáticos",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 0.3,
+      "limiteM": 0.6,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-02-04-6",
+      "descricao": "Fabricação de artefatos de borracha, exceto pneumáticos, câmaras-de-ar e de material para recondicionamento de pneumáticos",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-03-01-8",
+      "descricao": "Secagem e salga de couros e peles",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-03-02-6",
+      "descricao": "Fabricação de wet-blue e/ou de couro por processo completo, a partir de peles até o couro acabado, com curtimento ao cromo, seus derivados ou tanino sintético",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Nominal",
+      "unidade": "m²/dia",
+      "limiteP": 380.0,
+      "limiteM": 4400.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true,
+      "unidadeAlternativa": "un./dia",
+      "limitePAlt": 100.0,
+      "limiteMAlt": 1160.0
+    },
+    {
+      "codigo": "C-03-03-4",
+      "descricao": "Fabricação de couro por processo completo, a partir de peles até o couro acabado, com curtimento exclusivamente ao tanino vegetal",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Nominal",
+      "unidade": "m²/dia",
+      "limiteP": 380.0,
+      "limiteM": 4400.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true,
+      "unidadeAlternativa": "un./dia",
+      "limitePAlt": 100.0,
+      "limiteMAlt": 1160.0
+    },
+    {
+      "codigo": "C-03-05-0",
+      "descricao": "Fabricação de couro semiacabado e/ou acabado, não associada ao curtimento",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Nominal",
+      "unidade": "m²/dia",
+      "limiteP": 380.0,
+      "limiteM": 5200.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true,
+      "unidadeAlternativa": "un./dia",
+      "limitePAlt": 100.0,
+      "limiteMAlt": 1370.0
+    },
+    {
+      "codigo": "C-04-01-4",
+      "descricao": "Produção de substâncias químicas e de produtos químicos inorgânicos, orgânicos, organo-inorgânicos, exceto produtos derivados do processamento do petróleo, de rochas oleígenas, do carvão-de-pedra e da madeira",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 4.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-02-2",
+      "descricao": "Refino de petróleo",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "m³/dia",
+      "limiteP": 10000.0,
+      "limiteM": 25000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-03-0",
+      "descricao": "Fabricação de produtos petroquímicos básicos a partir de nafta e/ou gás natural",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 30000.0,
+      "limiteM": 75000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-04-9",
+      "descricao": "Fabricação de resinas termoplásticas a partir de produtos petroquímicos básicos",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 12000.0,
+      "limiteM": 25000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-05-8",
+      "descricao": "Fabricação de biodiesel",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade instalada",
+      "unidade": "m³/dia",
+      "limiteP": 70.0,
+      "limiteM": 120.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-06-5",
+      "descricao": "Fabricação de resinas e de fibras e fios artificiais e sintéticos e de borracha e látex sintéticos",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-08-1",
+      "descricao": "Fabricação de explosivos, detonantes, munição para caça e desporto e fósforo de segurança e/ou fabricação de pólvora e artigos pirotécnicos",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Construída",
+      "unidade": "ha",
+      "limiteP": 0.1,
+      "limiteM": 0.5,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-09-1",
+      "descricao": "Produção de óleos, gorduras e ceras em bruto, de óleos essenciais, corantes vegetais e animais e outros produtos da destilação da madeira, exceto refinação de óleos e gorduras alimentares",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 3.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-10-3",
+      "descricao": "Fabricação de aromatizantes e corantes de origem mineral ou sintéticos e/ou sabões e detergentes e/ou preparados para limpeza e polimento",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 3.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,1 ha < Área útil < 1 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.1,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "C-04-13-8",
+      "descricao": "Fabricação de produtos domissanitários, exceto sabões e detergentes",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 3.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,1 ha < Área útil < 1 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.1,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "C-04-14-6",
+      "descricao": "Fabricação de agrotóxicos e afins",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 3.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-15-4",
+      "descricao": "Fabricação de tintas, esmaltes, lacas, vernizes, impermeabilizantes, solventes e secantes",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-16-2",
+      "descricao": "Fabricação de ácido sulfúrico a partir de enxofre elementar, inclusive quando associada à produção de fertilizantes",
+      "pp": {
+        "ar": "G",
+        "agua": "P",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 300000.0,
+      "limiteM": 700000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-17-0",
+      "descricao": "Fabricação de ácido fosfórico",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 150000.0,
+      "limiteM": 400000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-18-9",
+      "descricao": "Fabricação de produtos intermediários para fins fertilizantes (uréia, nitratos de amônio (NA e CAN), fosfatos de amônio (DAP e MAP) e fosfatos (SSP e TSP)",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 150000.0,
+      "limiteM": 350000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-19-7",
+      "descricao": "Formulação de adubos e fertilizantes",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 70000.0,
+      "limiteM": 200000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-20-0",
+      "descricao": "Fabricação de ácido sulfúrico não associada a enxofre elementar",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ano",
+      "limiteP": 90000.0,
+      "limiteM": 150000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-04-21-9",
+      "descricao": "Fabricação de outros produtos químicos não especificados ou não classificados",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true,
+      "limiteMExclusivo": true,
+      "nota": "ATENÇÃO — lacuna de redação da própria DN 217. As três faixas desta atividade foram escritas com desigualdade estrita: \"Área útil < 2 ha : Pequeno\", \"2 ha < Área Útil < 5 ha : Médio\", \"Área útil > 5 ha : Grande\". Exatamente 2 ha e exatamente 5 ha não pertencem a faixa nenhuma. A atividade imediatamente anterior no texto oficial fecha suas faixas corretamente (\"90.000 ≤ Capacidade ≤ 150.000\"), então isto é falha pontual, não convenção. Neste aplicativo esses dois valores param a simulação e mostram as duas leituras, em vez de escolher um lado em silêncio.",
+      "valoresSemFaixa": [
+        2.0,
+        5.0
+      ]
+    },
+    {
+      "codigo": "C-05-01-0",
+      "descricao": "Fabricação de produtos para diagnósticos com sangue e hemoderivados, farmoquímicos (matéria-prima e princípios ativos), vacinas, produtos biológicos e /ou aqueles provenientes de organismos geneticamente modificados",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área construída",
+      "unidade": "ha",
+      "limiteP": 0.25,
+      "limiteM": 1.5,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-06-01-7",
+      "descricao": "Fabricação de produtos de perfumaria e cosméticos",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área construída",
+      "unidade": "ha",
+      "limiteP": 0.25,
+      "limiteM": 1.5,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-07-01-3",
+      "descricao": "Moldagem de termoplástico não organoclorado",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 5.0,
+      "limiteM": 20.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"1 t/dia < Capacidade Instalada < 5 t/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "C-07-05-6",
+      "descricao": "Moldagem de termoplástico organoclorado, sem a utilização de matéria-prima reciclada ou com a utilização de matéria-prima reciclada a seco",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 5.0,
+      "limiteM": 20.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"1 t/dia < Capacidade Instalada < 5 t/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "C-07-06-4",
+      "descricao": "Moldagem de termofixo ou endurente",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 3.0,
+      "limiteM": 20.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,5 t/dia < Capacidade Instalada < 3 t/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.5,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "C-08-01-1",
+      "descricao": "Beneficiamento de fibras têxteis naturais e artificiais e/ou recuperação de resíduos têxteis",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 3.0,
+      "limiteM": 6.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,2 ha < Área útil < 3 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.2,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "C-08-07-9",
+      "descricao": "Fiação e/ou tecelagem, exceto tricô e crochê",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 5.0,
+      "limiteM": 17.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,2 t/dia < Capacidade Instalada < 5 t/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.2,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "C-08-09-1",
+      "descricao": "Acabamento de fios e/ou tecidos planos ou tubulares",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 6.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-09-03-2",
+      "descricao": "Confecção de calçados de couro",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-10-01-4",
+      "descricao": "Usinas de produção de concreto comum",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção",
+      "unidade": "m3/h",
+      "limiteP": 9.0,
+      "limiteM": 85.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-10-02-2",
+      "descricao": "Usinas de produção de concreto asfáltico",
+      "pp": {
+        "ar": "G",
+        "agua": "P",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Nominal",
+      "unidade": "t/h",
+      "limiteP": 60.0,
+      "limiteM": 100.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "C-10-05-7",
+      "descricao": "Fabricação de instrumentos e material ótico",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 0.5,
+      "limiteM": 5.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,05 ha < Área útil < 0,5 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.05,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-01-5",
+      "descricao": "Torrefação e moagem de grãos",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t de produto/dia",
+      "limiteP": 3.0,
+      "limiteM": 7.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,1 t de produto/dia < Capacidade Instalada < 3 t de produto/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.1,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-01-6",
+      "descricao": "Industrialização da mandioca para a produção de farinhas e polvilho",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia matéria-prima",
+      "limiteP": 30.0,
+      "limiteM": 300.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno como \"2 t/dia < Capacidade Instalada < 30 t/dia\". Abaixo de 2 t/dia não há faixa prevista nesta listagem.",
+      "pisoFaixa": 2.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-02-3",
+      "descricao": "Abate de animais de pequeno porte (aves, coelhos, rãs, etc.)",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "cabeças/dia",
+      "limiteP": 20000.0,
+      "limiteM": 100000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"300 cabeças/dia < Capacidade Instalada < 20.000 cabeças/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 300.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-02-4",
+      "descricao": "Abate de animais de médio porte (suínos, ovinos, caprinos, etc)",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "cabeças/dia",
+      "limiteP": 180.0,
+      "limiteM": 1200.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"6 cabeças/dia < Capacidade Instalada < 180 cabeças/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 6.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-02-5",
+      "descricao": "Abate de animais de grande porte (bovinos, eqüinos, bubalinos, muares,etc)",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "cabeças /dia",
+      "limiteP": 60.0,
+      "limiteM": 500.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"2 cabeças/dia < Capacidade Instalada < 60 cabeças /dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 2.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-02-6",
+      "descricao": "Preparação do pescado",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t de pescado/dia",
+      "limiteP": 5.0,
+      "limiteM": 50.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"1 t de pescado/dia < Capacidade Instalada < 5 t de pescado/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-04-1",
+      "descricao": "Industrialização da carne, inclusive desossa, charqueada e preparação de conservas",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t de produto/dia",
+      "limiteP": 15.0,
+      "limiteM": 50.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"1 t/dia < Capacidade Instalada < 15 t de produto/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-05-8",
+      "descricao": "Processamento de subprodutos de origem animal para produção de sebo, óleos e farinha",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t matéria prima/dia",
+      "limiteP": 10.0,
+      "limiteM": 80.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,5 t matéria prima/dia < Capacidade Instalada <10 t matéria prima/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.5,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-06-1",
+      "descricao": "Fabricação de produtos de laticínios, exceto envase de leite fluido",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "l de leite/dia",
+      "limiteP": 30000.0,
+      "limiteM": 120000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"500 l de leite/dia < Capacidade Instalada < 30.000 l de leite/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 500.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-07-4",
+      "descricao": "Resfriamento e distribuição de leite em instalações industriais e/ou envase de leite fluido",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "ℓ /dia",
+      "limiteP": 90000.0,
+      "limiteM": 180000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"5.000 ℓ /dia < Capacidade Instalada < 90.000 ℓ /dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 5000.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-07-5",
+      "descricao": "Secagem e/ou concentração de produtos alimentícios, inclusive leite e soro de leite",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "ℓ /dia",
+      "limiteP": 15000.0,
+      "limiteM": 480000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "D-01-08-2",
+      "descricao": "Fabricação de açúcar e/ou destilação de álcool Pot. poluidor/degradador: Ar: G Água: G Solo: M Geral: G Porte: Capacidade Instalada < 5.000 t de matéria-prima/dia : Pequeno 5.000 t de matéria prima/dia ≤ Capacidade Instalada ≤ 12.000 t de matéria prima/dia : Médio Capacidade Instalada > 12.000 t matéria-prima/dia : Grande",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "M",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t de matéria-prima/dia",
+      "limiteP": 5000.0,
+      "limiteM": 12000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "D-01-08-3",
+      "descricao": "Destilação de frações da produção de cachaça (cabeça e cauda) para produção de álcool combustível",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "ℓ/dia",
+      "limiteP": 800.0,
+      "limiteM": 2000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"300 ℓ/dia < Capacidade Instalada < 800 ℓ/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 300.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-09-0",
+      "descricao": "Refinação e preparação de óleos e gorduras vegetais, produção de manteiga de cacau e de gorduras de origem animal destinadas à alimentação",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t de matéria-prima/dia",
+      "limiteP": 100.0,
+      "limiteM": 1000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"10 t de matéria-prima/dia < Capacidade Instalada < 100 t de matéria-prima/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 10.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-11-2",
+      "descricao": "Fabricação de fermentos e leveduras",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "D-01-12-0",
+      "descricao": "Fabricação de vinagre, conservas e condimentos",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "D-01-13-9",
+      "descricao": "Formulação industrial de rações balanceadas e de alimentos preparados para animais, inclusive moagem de grãos, com finalidade comercial",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t de produto/dia",
+      "limiteP": 60.0,
+      "limiteM": 250.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"5 t de produto/dia < Capacidade Instalada < 60 t de produto/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 5.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-01-14-7",
+      "descricao": "Fabricação industrial de massas, biscoitos, salgados, chocolates, pães, doces, suplementos alimentares e ingredientes para indústria alimentícia",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true,
+      "pisoFaixa": 0.5,
+      "pisoExclusivo": false
+    },
+    {
+      "codigo": "D-02-02-1",
+      "descricao": "Fabricação de aguardente",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "ℓ de produto /dia",
+      "limiteP": 800.0,
+      "limiteM": 2000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"300 ℓ de produto /dia < Capacidade Instalada < 800 ℓ de produto /dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 300.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-02-04-6",
+      "descricao": "Fabricação de cervejas, chopes e maltes",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "ℓ de produto /dia",
+      "limiteP": 20000.0,
+      "limiteM": 1000000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"2.000 ℓ de produto /dia < Capacidade Instalada < 20.000 ℓ de produto /dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 2000.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-02-05-4",
+      "descricao": "Fabricação de sucos",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "ℓ de produto/dia",
+      "limiteP": 10000.0,
+      "limiteM": 200000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"5.000ℓ de produto /dia < Capacidade Instalada < 10.000ℓ de produto/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 5000.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-02-06-2",
+      "descricao": "Fabricação de licores e outras bebidas alcoólicas",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 5.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,05 ha < Área útil < 2 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.05,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-02-07-0",
+      "descricao": "Fabricação de refrigerantes (inclusive quando associada à extração de água mineral) e de outras bebidas não alcóolicas, exceto sucos",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "ℓ de produto/dia",
+      "limiteP": 50000.0,
+      "limiteM": 400000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"10.000 ℓ de produto /dia < Capacidade Instalada < 50.000 ℓ de produto/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 10000.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "D-03-01-8",
+      "descricao": "Preparação de fumo, fabricação de cigarros, charutos e cigarrilhas",
+      "pp": {
+        "ar": "G",
+        "agua": "P",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,02 ha < Área Útil < 1 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.02,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-01-01-5",
+      "descricao": "Implantação ou duplicação de rodovias ou contornos rodoviários",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 50.0,
+      "limiteM": 100.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"10 km < Extensão < 50 km\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 10.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-01-03-1",
+      "descricao": "Pavimentação e/ou melhoramentos de rodovias",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 50.0,
+      "limiteM": 100.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno como \"10 km < Extensão < 50 km\". Abaixo de 10 km não há faixa prevista nesta listagem.",
+      "pisoFaixa": 10.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-01-04-1",
+      "descricao": "Ferrovias",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 30.0,
+      "limiteM": 50.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"10 km < Extensão < 30 km\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 10.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-01-05-8",
+      "descricao": "Trens metropolitanos de superfície",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 10.0,
+      "limiteM": 30.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-01-05-9",
+      "descricao": "Trens metropolitanos subterrâneos",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 10.0,
+      "limiteM": 30.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-01-06-6",
+      "descricao": "Portos fluviais",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área total",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 15.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-01-07-4",
+      "descricao": "Canais para navegação",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 10.0,
+      "limiteM": 50.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-01-08-2",
+      "descricao": "Abertura de barras e embocaduras",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 10.0,
+      "limiteM": 30.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-01-09-0",
+      "descricao": "Aeroportos",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade anual de movimentação de passageiros",
+      "unidade": "passageiros/ano",
+      "limiteP": 600000.0,
+      "limiteM": 6000000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-01-10-4",
+      "descricao": "Dutos para transporte e distribuição de gás natural, exceto malha de distribuição",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 20.0,
+      "limiteM": 100.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"3 km < Extensão < 20 km\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 3.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-01-11-2",
+      "descricao": "Dutos para transporte e distribuição de gás, exceto gás natural ou malha de distribuição",
+      "pp": {
+        "ar": "G",
+        "agua": "P",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 10.0,
+      "limiteM": 50.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"1 km < Extensão < 10 km\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-01-12-0",
+      "descricao": "Dutos para transporte de produtos químicos e oleodutos",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 20.0,
+      "limiteM": 100.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"1 km < Extensão < 20 km\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-01-13-9",
+      "descricao": "Mineroduto ou rejeitoduto externo aos limites de empreendimentos minerários",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "Km",
+      "limiteP": 5.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-01-14-7",
+      "descricao": "Terminal de minério",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 30.0,
+      "limiteM": 80.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-01-15-5",
+      "descricao": "Terminal de produtos químicos e petroquímicos",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade de armazenagem",
+      "unidade": "m 3",
+      "limiteP": 4000.0,
+      "limiteM": 10000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-01-15-6",
+      "descricao": "Terminal de armazenamento de gás natural",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade de armazenagem",
+      "unidade": "m 3",
+      "limiteP": 2000000.0,
+      "limiteM": 10000000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "E-01-15-7",
+      "descricao": "Terminal de armazenamento de petróleo",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade de armazenagem",
+      "unidade": "m 3",
+      "limiteP": 15000.0,
+      "limiteM": 50000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-01-18-1",
+      "descricao": "Correia transportadora externa aos limites de empreendimentos minerários",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "Km",
+      "limiteP": 5.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-02-01-1",
+      "descricao": "Sistemas de geração de energia hidrelétrica, exceto Central Geradora Hidrelétrica – CGH",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "MW",
+      "limiteP": 30.0,
+      "limiteM": 100.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"5MW < Capacidade Instalada < 30MW\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 5.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-02-01-2",
+      "descricao": "Central Geradora Hidrelétrica – CGH",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Volume do reservatório",
+      "unidade": "m 3",
+      "limiteP": 5000.0,
+      "limiteM": 10000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "E-02-02-1",
+      "descricao": "Sistema de geração de energia termoelétrica, utilizando combustível fóssil",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "MW",
+      "limiteP": 10.0,
+      "limiteM": 100.0,
+      "conferencia": "oficial",
+      "pisoFaixa": 0.5,
+      "pisoExclusivo": false
+    },
+    {
+      "codigo": "E-02-02-2",
+      "descricao": "Sistema de geração de energia termelétrica utilizando combustível não fóssil",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "MW",
+      "limiteP": 10.0,
+      "limiteM": 100.0,
+      "conferencia": "oficial",
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": false
+    },
+    {
+      "codigo": "E-02-03-8",
+      "descricao": ": Linhas de transmissão de energia elétrica",
+      "pp": {
+        "ar": "P",
+        "agua": "P",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 10.0,
+      "limiteM": 50.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"4 km < Extensão < 10 km\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 4.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-02-05-4",
+      "descricao": "Usina eólica",
+      "pp": {
+        "ar": "P",
+        "agua": "P",
+        "solo": "M",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "MW",
+      "limiteP": 10.0,
+      "limiteM": 150.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "E-02-06-2",
+      "descricao": "Usina solar fotovoltaica",
+      "pp": {
+        "ar": "P",
+        "agua": "P",
+        "solo": "M",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "potência nominal do inversor",
+      "unidade": "MW",
+      "limiteP": 10.0,
+      "limiteM": 80.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "E-02-06-3",
+      "descricao": "Usina solar heliotérmica",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "MW",
+      "limiteP": 5.0,
+      "limiteM": 60.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-03-01-8",
+      "descricao": "Barragem de acumulação de água para abastecimento público, industrial e na mineração ou para perenização",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Inundada",
+      "unidade": "ha",
+      "limiteP": 150.0,
+      "limiteM": 500.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"10 ha < Área Inundada < 150 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 10.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-03-02-6",
+      "descricao": "Canalização e/ou retificação de curso d’água",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "Km",
+      "limiteP": 2.0,
+      "limiteM": 20.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,1 km < Extensão < 2 Km\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.1,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-03-04-2",
+      "descricao": "Estação de tratamento de água para abastecimento",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Vazão de Água Tratada",
+      "unidade": "ℓ/s",
+      "limiteP": 100.0,
+      "limiteM": 500.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"20 ℓ/s < Vazão de Água Tratada < 100 ℓ/s\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 20.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-03-05-0",
+      "descricao": "Interceptores, Emissários, Elevatórias e Reversão de Esgoto",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Vazão Máxima Prevista",
+      "unidade": "ℓ/s",
+      "limiteP": 250.0,
+      "limiteM": 500.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"100 ℓ/s < Vazão Máxima Prevista < 250 ℓ/s\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 100.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-03-06-9",
+      "descricao": "Estação de tratamento de esgoto sanitário [5]",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Vazão Média Prevista",
+      "unidade": "ℓ/s",
+      "limiteP": 50.0,
+      "limiteM": 100.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,5 ℓ/s < Vazão Média Prevista < 50 ℓ/s\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.5,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-03-07-8",
+      "descricao": "Estação de transbordo de resíduos sólidos urbanos",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Quantidade Operada de RSU",
+      "unidade": "t/dia",
+      "limiteP": 60.0,
+      "limiteM": 1000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-03-07-9",
+      "descricao": "Unidade de triagem de recicláveis e/ou de tratamento de resíduos orgânicos originados de resíduos sólidos urbanos. Pot. poluidor/degradador: Ar: M Água: G Solo: M Geral: M Porte: Quantidade operada de RSU < 20 t/dia : Pequeno 20 t/ dia ≤ Quantidade operada de RSU ≤ 250 t/dia : Médio Quantidade operada de RSU > 250 t/dia : Grande | E-03-07-11 Outras formas de destinação de resíduos sólidos urbanos não listadas ou não classificadas",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Quantidade operada de RSU",
+      "unidade": "t/dia",
+      "limiteP": 20.0,
+      "limiteM": 250.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-04-01-4",
+      "descricao": "Loteamento do solo urbano, exceto distritos industriais e similares",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Total",
+      "unidade": "ha",
+      "limiteP": 50.0,
+      "limiteM": 100.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"15 ha < Área Total < 50 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 15.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-04-02-2",
+      "descricao": "Distrito industrial e zona estritamente industrial, comercial ou logística",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Total",
+      "unidade": "ha",
+      "limiteP": 25.0,
+      "limiteM": 100.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-05-01-1",
+      "descricao": "Barragens ou bacias de amortecimento de cheias",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área alagada ao nível máximo de cheia",
+      "unidade": "ha",
+      "limiteP": 10.0,
+      "limiteM": 50.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-05-02-9",
+      "descricao": "Diques de contenção de cheias de corpo d’água",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 20.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,1 ha < Área útil < 2 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.1,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-05-03-7",
+      "descricao": "Dragagem para desassoreamento de corpos d’água",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Volume de Dragagem",
+      "unidade": "m³",
+      "limiteP": 100000.0,
+      "limiteM": 500000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"50.000 m³ < Volume de Dragagem < 100.000 m³\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 50000.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "E-05-04-5",
+      "descricao": "Transposição de águas entre bacias",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Vazão média prevista",
+      "unidade": "m³/s",
+      "limiteP": 2.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-05-06-0",
+      "descricao": "Parques cemitérios",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "E-05-06-1",
+      "descricao": "Crematório",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade instalada",
+      "unidade": "Kg/dia",
+      "limiteP": 300.0,
+      "limiteM": 3500.0,
+      "conferencia": "oficial",
+      "limiteMExclusivo": true
+    },
+    {
+      "codigo": "E-05-07-0",
+      "descricao": "Atividades e empreendimentos residenciais multifamiliar, comerciais ou industriais previstos no art. 4º-B, da Lei Estadual 15.979 de 2006, desde que sujeitos ao licenciamento ambiental estadual nos termos da Deliberação Normativa Copam nº 222, de 23 de maio de 2018 [6]",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 2.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,5 < Área útil < 1,0 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.5,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "F-01-01-5",
+      "descricao": "Central de recebimento, armazenamento temporário, triagem ou transbordo de sucata metálica, papel, papelão, plásticos ou vidro para reciclagem, não contaminados com óleos, graxas, agrotóxicos ou produtos químicos (Código excluído pela Deliberação Normativa Copam nº 240, de 29 de janeiro de 2021)",
+      "pp": {
+        "ar": "P",
+        "agua": "P",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Útil",
+      "unidade": "ha",
+      "limiteP": 0.5,
+      "limiteM": 5.0,
+      "conferencia": "divergente",
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,2 ha < Área Útil ≤ 0,5 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.2,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "F-01-01-6",
+      "descricao": "Central de recebimento, armazenamento, triagem e/ou transbordo de sucata metálica, papel, papelão, plásticos ou vidro para reciclagem, contaminados com óleos, graxas ou produtos químicos, exceto agrotóxicos",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "área útil",
+      "unidade": "ha",
+      "limiteP": 0.1,
+      "limiteM": 2.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-01-01-7",
+      "descricao": "Central de recebimento, armazenamento, triagem e/ou transbordo de embalagens plásticas usadas de óleos lubrificantes com ou sem sistema de picotagem ou outro processo de cominuição, e/ou filtros de óleo lubrificante",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "área útil",
+      "unidade": "ha",
+      "limiteP": 0.5,
+      "limiteM": 1.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-01-08-1",
+      "descricao": "Centrais e postos de recebimento de embalagens de agrotóxicos e afins, vazias ou contendo resíduos",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 0.5,
+      "limiteM": 1.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-01-09-1",
+      "descricao": "Central de recebimento, armazenamento, triagem e/ou transbordo de lâmpadas fluorescentes, de vapor de sódio, vapor de mercúrio, outros vapores metálicos, de luz mista e lâmpadas especiais que contenham mercúrio",
+      "pp": {
+        "ar": "P",
+        "agua": "P",
+        "solo": "M",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "nº de peças armazenadas",
+      "unidade": "un",
+      "limiteP": 3000.0,
+      "limiteM": 30000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-01-09-2",
+      "descricao": "Central de recebimento, armazenamento, triagem e/ou transbordo de pilhas e baterias; ou baterias automotivas",
+      "pp": {
+        "ar": "P",
+        "agua": "P",
+        "solo": "M",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "área útil",
+      "unidade": "ha",
+      "limiteP": 0.5,
+      "limiteM": 1.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-01-09-3",
+      "descricao": "Central de recebimento, armazenamento, triagem e/ou transbordo de resíduos eletroeletrônicos com a separação de componentes que implique exposição de resíduos perigosos",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "área útil",
+      "unidade": "ha",
+      "limiteP": 0.5,
+      "limiteM": 1.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-01-09-4",
+      "descricao": "Central de recebimento, armazenamento, triagem e/ou transbordo de resíduos eletroeletrônicos, sem a separação de componentes, que não implique exposição de resíduos perigosos",
+      "pp": {
+        "ar": "P",
+        "agua": "P",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "área útil",
+      "unidade": "ha",
+      "limiteP": 0.5,
+      "limiteM": 1.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-01-09-5",
+      "descricao": "Central de recebimento, armazenamento, triagem e/ou transbordo de outros resíduos não listados ou não classificados",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "área útil",
+      "unidade": "ha",
+      "limiteP": 0.5,
+      "limiteM": 1.0,
+      "conferencia": "divergente",
+      "nota": "ATENÇÃO — sobreposição na redação da norma: o texto diz \"área útil ≤ 0,5 ha : Pequeno\" e \"0,5 ha ≤ área útil ≤ 1 ha : Médio\". Um valor de exatamente 0,5 ha cai nas duas faixas. Confira o caso concreto com a unidade regional."
+    },
+    {
+      "codigo": "F-01-10-1",
+      "descricao": "Central de armazenamento temporário e/ou transferência de resíduos Classe I perigosos",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "capacidade instalada",
+      "unidade": "m³/dia",
+      "limiteP": 10.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-01-10-2",
+      "descricao": "Unidade de Transferência de Resíduos de Serviços de Saúde (UTRSS)",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade de Recebimento",
+      "unidade": "m³/dia",
+      "limiteP": 5.0,
+      "limiteM": 15.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-02-01-1",
+      "descricao": "Transporte rodoviário de produtos e resíduos perigosos",
+      "pp": {
+        "ar": "P",
+        "agua": "P",
+        "solo": "P",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Número de veículos",
+      "unidade": "veículos",
+      "limiteP": 10.0,
+      "limiteM": 50.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-01-0",
+      "descricao": "Reciclagem de plásticos com a utilização de processo de reciclagem a seco",
+      "pp": {
+        "ar": "P",
+        "agua": "P",
+        "solo": "M",
+        "geral": "P"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ dia",
+      "limiteP": 5.0,
+      "limiteM": 30.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"1 t/ dia < Capacidade Instalada< 5 t/ dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "F-05-02-9",
+      "descricao": "Reciclagem de plásticos com a utilização de processo de reciclagem a base de lavagem com água",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ dia",
+      "limiteP": 5.0,
+      "limiteM": 30.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"1 t/ dia < Capacidade Instalada< 5 t/ dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "F-05-03-7",
+      "descricao": "Reciclagem de embalagens de agrotóxicos",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/ dia",
+      "limiteP": 5.0,
+      "limiteM": 30.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-04-5",
+      "descricao": "Reciclagem de pilhas, baterias e acumuladores",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 10.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-05-3",
+      "descricao": "Compostagem de resíduos industriais",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 2.0,
+      "limiteM": 10.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-06-1",
+      "descricao": "Reciclagem de lâmpadas",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Número de peças processadas",
+      "unidade": "un./dia",
+      "limiteP": 3000.0,
+      "limiteM": 30000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-07-1",
+      "descricao": "Reciclagem ou regeneração de outros resíduos classe 2 (não-perigosos) não especificados",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 5.0,
+      "limiteM": 30.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-07-2",
+      "descricao": "Reciclagem ou regeneração de outros resíduos classe 1 (perigosos) não especificados",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 5.0,
+      "limiteM": 20.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-09-6",
+      "descricao": "Rerrefino de óleos lubrificantes usados",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "m³/dia",
+      "limiteP": 20.0,
+      "limiteM": 100.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-10-2",
+      "descricao": "Reciclagem de eletroeletrônicos contendo clorofluorcarbonetos (CFC) ou hidroclorofluorcarbonos (HCFCs) em sua composição",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 5.0,
+      "limiteM": 30.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-10-7",
+      "descricao": "Reciclagem de eletroeletrônicos contendo resíduos perigosos classe I",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/dia",
+      "limiteP": 1.5,
+      "limiteM": 15.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-11-8",
+      "descricao": "Aterro para resíduos perigosos - classe I",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-12-6",
+      "descricao": "Aterro para resíduos não perigosos – Classe II-A e II-B, exceto resíduos sólidos urbanos e resíduos da construção civil",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-13-4",
+      "descricao": "Tratamento térmico de resíduos tais como incineração, pirólise, gaseificação e plasma",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t/h",
+      "limiteP": 0.5,
+      "limiteM": 2.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-13-5",
+      "descricao": "Disposição final de resíduos de serviços de saúde (Grupos A4, B sólido não perigoso, E sem contaminação biológica, Grupo D, e Grupos A1, A2 e E com contaminação biológica submetidos a tratamento prévio) em aterro sanitário, aterro para resíduos não perigosos – classe II A, ou célula de disposição especial",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "CAF",
+      "unidade": "t",
+      "limiteP": 110000.0,
+      "limiteM": 2700000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-13-7",
+      "descricao": "Tratamento de resíduos de serviços de saúde (Grupos A e E com contaminação biológica), visando a redução ou eliminação da carga microbiana, tais como desinfecção química, autoclave ou micro-ondas",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Quantidade operada",
+      "unidade": "t/dia",
+      "limiteP": 1.0,
+      "limiteM": 50.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-14-1",
+      "descricao": "Unidade de mistura e pré-condicionamento de resíduos para coprocessamento em fornos de clínquer",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade instalada",
+      "unidade": "t/dia",
+      "limiteP": 60.0,
+      "limiteM": 500.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-14-2",
+      "descricao": "Coprocessamento de resíduos em forno de clínquer",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade do forno de clínquer a ser utilizado",
+      "unidade": "t/ano",
+      "limiteP": 200000.0,
+      "limiteM": 1000000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-15-0",
+      "descricao": "Outras formas de destinação de resíduos não listadas ou não classificadas",
+      "pp": {
+        "ar": "G",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 1.0,
+      "limiteM": 5.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-05-16-0",
+      "descricao": "Descaracterização de veículos",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "veículos/dia",
+      "limiteP": 40.0,
+      "limiteM": 400.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "F-05-17-0",
+      "descricao": "Processamento ou reciclagem de sucata",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "t /dia",
+      "limiteP": 100.0,
+      "limiteM": 1000.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "F-05-18-0",
+      "descricao": "Aterro de resíduos da construção civil (classe “A”), exceto aterro para armazenamento/disposição de solo proveniente de obras de terraplanagem previsto em projeto aprovado da ocupação",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade de Recebimento",
+      "unidade": "m³/dia",
+      "limiteP": 150.0,
+      "limiteM": 450.0,
+      "conferencia": "oficial",
+      "limiteMExclusivo": true
+    },
+    {
+      "codigo": "F-05-18-1",
+      "descricao": "Áreas de triagem, transbordo e armazenamento transitório e/ou reciclagem de resíduos da construção civil e volumosos",
+      "pp": {
+        "ar": "M",
+        "agua": "P",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade de Recebimento",
+      "unidade": "m³/dia",
+      "limiteP": 100.0,
+      "limiteM": 300.0,
+      "conferencia": "oficial",
+      "limiteMExclusivo": true
+    },
+    {
+      "codigo": "F-05-19-0",
+      "descricao": "Barragem de contenção de resíduos industriais",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "categorico",
+      "parametro": "Categoria da barragem (DN COPAM 62/2002)",
+      "categorias": [
+        {
+          "rotulo": "Classe I",
+          "porte": "P"
+        },
+        {
+          "rotulo": "Classe II",
+          "porte": "M"
+        },
+        {
+          "rotulo": "Classe III",
+          "porte": "G"
+        }
+      ],
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "F-06-01-7",
+      "descricao": "Postos revendedores, postos ou pontos de abastecimento, instalações de sistemas retalhistas, postos flutuantes de combustíveis e postos revendedores de combustíveis de aviação",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade de Armazenamento",
+      "unidade": "m³",
+      "limiteP": 90.0,
+      "limiteM": 150.0,
+      "conferencia": "oficial"
+    },
+    {
+      "codigo": "F-06-02-5",
+      "descricao": "Lavanderias industriais para tingimento e/ou amaciamento e/ou outros acabamentos químicos e/ou lavagem a seco que utilizem solventes orgânicos",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "kg/dia",
+      "limiteP": 500.0,
+      "limiteM": 1500.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"100 kg/dia < Capacidade Instalada < 500 kg/di\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 100.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "F-06-03-3",
+      "descricao": "Serigrafia",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Construída",
+      "unidade": "ha",
+      "limiteP": 0.1,
+      "limiteM": 0.3,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-06-04-6",
+      "descricao": "Base de armazenamento e distribuição de lubrificantes, combustíveis líquidos derivados de petróleo, álcool combustível e outros combustíveis automotivos",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade de Armazenagem",
+      "unidade": "m³",
+      "limiteP": 250.0,
+      "limiteM": 3000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-06-05-4",
+      "descricao": "Base de armazenamento e distribuição dos seguintes solventes: I - rafinados de pirólise; II - rafinados de reforma; III - solventes C9/C9 diidrogenados; IV - correntes C9; V - correntes C6-C8; VI - correntes C10; VII - tolueno; VIII - reformados pesados; IX - xilenos mistos; X - outros alquilbenzenos; XI - benzeno; XII - hexanos; XIII - outros solventes alifáticos; IV - aguarrás mineral",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade de Armazenagem",
+      "unidade": "m³",
+      "limiteP": 150.0,
+      "limiteM": 300.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"30 m³ < Capacidade de Armazenagem < 150 m³\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 30.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "F-06-06-2",
+      "descricao": "Base de envasamento de Gás Liquefeito de Petróleo – GLP",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade de Armazenagem",
+      "unidade": "m³",
+      "limiteP": 120.0,
+      "limiteM": 240.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "F-06-07-0",
+      "descricao": "Unidades de compressão e distribuição de Gás Natural Comprimido – GNC a granel",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Volume comprimido",
+      "unidade": "m³/dia",
+      "limiteP": 10000.0,
+      "limiteM": 20000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
+      "codigo": "G-01-01-5",
+      "descricao": "Horticultura (floricultura, olericultura, fruticultura anual, viveiricultura e cultura de ervas medicinais e aromáticas)",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 80.0,
+      "limiteM": 200.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"5 ha < Área útil < 80 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 5.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-01-03-1",
+      "descricao": "Culturas anuais, semiperenes e perenes, silvicultura e cultivos agrossilvipastoris, exceto horticultura",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área útil",
+      "unidade": "ha",
+      "limiteP": 600.0,
+      "limiteM": 1000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "limiteMExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"200 ha < Área útil < 600 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 200.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-02-02-1",
+      "descricao": "Avicultura",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Número de cabeças",
+      "unidade": "cabeças",
+      "limiteP": 150000.0,
+      "limiteM": 300000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"20.000 < Número de cabeças < 150.000\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 20000.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-02-04-6",
+      "descricao": "Suinocultura",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "número de cabeças",
+      "unidade": "cabeças",
+      "limiteP": 2000.0,
+      "limiteM": 10000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"200 <número de cabeças < 2.000\". Abaixo desse valor não há faixa prevista nesta listagem."
+    },
+    {
+      "codigo": "G-02-07-0",
+      "descricao": "Criação de bovinos, bubalinos, equinos, muares, ovinos e caprinos, em regime extensivo",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área de pastagem",
+      "unidade": "ha",
+      "limiteP": 600.0,
+      "limiteM": 1000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "limiteMExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"200 ha < Área de pastagem < 600 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 200.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-02-08-9",
+      "descricao": "Criação de bovinos, bubalinos, equinos, muares, ovinos e caprinos, em regime de confinamento",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Número de cabeças",
+      "unidade": "cabeças",
+      "limiteP": 1000.0,
+      "limiteM": 2000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"500 < Número de cabeças < 1.000\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 500.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-02-12-7",
+      "descricao": "Aquicultura e/ou unidade de pesca esportiva tipo pesque-pague, exceto tanque-rede",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Inundada",
+      "unidade": "ha",
+      "limiteP": 5.0,
+      "limiteM": 50.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"2,0 ha < Área Inundada < 5,0 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 2.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-02-13-5",
+      "descricao": "Aquicultura em tanque-rede",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "P",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Volume Útil",
+      "unidade": "m³",
+      "limiteP": 1000.0,
+      "limiteM": 5000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"500 m³ < Volume Útil < 1.000 m³\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 500.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-03-03-4",
+      "descricao": "Produção de carvão vegetal oriunda de floresta plantada",
+      "pp": {
+        "ar": "G",
+        "agua": "P",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Nominal",
+      "unidade": "mdc/ano",
+      "limiteP": 75000.0,
+      "limiteM": 100000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"50.000 mdc/ano < Produção Nominal < 75.000 mdc/ano\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 50000.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-03-04-2",
+      "descricao": "Produção de carvão vegetal de origem nativa/aproveitamento do rendimento lenhoso",
+      "pp": {
+        "ar": "G",
+        "agua": "P",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Nominal",
+      "unidade": "mdc/ano",
+      "limiteP": 5000.0,
+      "limiteM": 25000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"500 mdc/ano < Produção Nominal < 5.000 mdc/ano\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 500.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-04-01-4",
+      "descricao": "Beneficiamento primário de produtos agrícolas: limpeza, lavagem, secagem, despolpamento, descascamento, classificação e/ou tratamento de sementes",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Produção Nominal",
+      "unidade": "t/ano",
+      "limiteP": 60000.0,
+      "limiteM": 600000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"6.000 t/ano < Produção Nominal < 60.000 t/ano\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 6000.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-05-02-0",
+      "descricao": "Barragem de irrigação ou de perenização para agricultura",
+      "pp": {
+        "ar": "P",
+        "agua": "G",
+        "solo": "G",
+        "geral": "G"
+      },
+      "tipo": "numerico",
+      "parametro": "Área Inundada",
+      "unidade": "ha",
+      "limiteP": 150.0,
+      "limiteM": 500.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"10 ha < Área Inundada < 150 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 10.0,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "G-05-04-3",
+      "descricao": "Canais de irrigação",
+      "pp": {
+        "ar": "M",
+        "agua": "M",
+        "solo": "G",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Extensão",
+      "unidade": "km",
+      "limiteP": 10.0,
+      "limiteM": 30.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"3 km < Extensão < 10 km\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 3.0,
+      "pisoExclusivo": true
+    }
+  ]
+}

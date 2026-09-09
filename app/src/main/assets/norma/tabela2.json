@@ -1,0 +1,16 @@
+{
+  "titulo": "Tabela 2 — Classe do empreendimento, por porte e potencial poluidor/degradador geral",
+  "base_legal": "DN COPAM 217/2017, Art. 5º e Tabela 2 do Anexo Único",
+  "conferido": true,
+  "eixos": {
+    "linhas": "Porte do Empreendimento",
+    "colunas": "Potencial poluidor/degradador geral da atividade"
+  },
+  "observacao": "Potencial poluidor pequeno resulta em classe 1 qualquer que seja o porte. Isso não é erro: a DN 217 foi uma norma de simplificação, e o potencial poluidor pesa mais que o porte.",
+  "chave": "porte+potencial",
+  "classes": {
+    "PP": 1, "PM": 2, "PG": 4,
+    "MP": 1, "MM": 3, "MG": 5,
+    "GP": 1, "GM": 4, "GG": 6
+  }
+}

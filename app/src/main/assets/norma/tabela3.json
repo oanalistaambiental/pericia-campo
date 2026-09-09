@@ -1,0 +1,14 @@
+{
+  "titulo": "Tabela 3 — Modalidade de licenciamento, por classe e critério locacional",
+  "base_legal": "DN COPAM 217/2017, Art. 6º e Tabela 3 do Anexo Único",
+  "conferido": true,
+  "chave": "classe+fatorLocacional",
+  "modalidades": {
+    "1|0": "LAS/Cadastro", "1|1": "LAS/Cadastro", "1|2": "LAS/RAS",
+    "2|0": "LAS/Cadastro", "2|1": "LAS/RAS",      "2|2": "LAC1",
+    "3|0": "LAS/RAS",      "3|1": "LAC1",         "3|2": "LAC2",
+    "4|0": "LAC1",         "4|1": "LAC2",         "4|2": "LAC2",
+    "5|0": "LAC2",         "5|1": "LAC2",         "5|2": "LAT",
+    "6|0": "LAC2",         "6|1": "LAT",          "6|2": "LAT"
+  }
+}
