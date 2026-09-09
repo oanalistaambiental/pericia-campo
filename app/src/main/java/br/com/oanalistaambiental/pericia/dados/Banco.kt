@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 2) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 3) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -22,7 +22,10 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 2)
                 criada_em INTEGER NOT NULL,
                 fechada_em INTEGER,
                 raiz_merkle TEXT,
-                carimbo_tempo TEXT
+                carimbo_tempo TEXT,
+                carimbo_instante INTEGER,
+                carimbo_autoridade TEXT,
+                carimbo_credenciado INTEGER NOT NULL DEFAULT 0
             )""")
         db.execSQL("""
             CREATE TABLE foto (
@@ -59,6 +62,11 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 2)
      */
     override fun onUpgrade(db: SQLiteDatabase, old: Int, new: Int) {
         if (old < 2) db.execSQL("ALTER TABLE foto ADD COLUMN idade_fix_s INTEGER")
+        if (old < 3) {
+            db.execSQL("ALTER TABLE sessao ADD COLUMN carimbo_instante INTEGER")
+            db.execSQL("ALTER TABLE sessao ADD COLUMN carimbo_autoridade TEXT")
+            db.execSQL("ALTER TABLE sessao ADD COLUMN carimbo_credenciado INTEGER NOT NULL DEFAULT 0")
+        }
     }
 
     fun criarSessao(titulo: String, processo: String?): Long =
@@ -70,14 +78,9 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 2)
     fun sessoes(): List<Sessao> {
         val out = mutableListOf<Sessao>()
         readableDatabase.rawQuery("""
-            SELECT s.id, s.titulo, s.processo, s.criada_em, s.fechada_em, s.raiz_merkle,
-                   s.carimbo_tempo, (SELECT COUNT(*) FROM foto f WHERE f.sessao_id = s.id)
+            SELECT $COLUNAS_SESSAO
             FROM sessao s ORDER BY s.criada_em DESC""", null).use { c ->
-            while (c.moveToNext()) out += Sessao(
-                c.getLong(0), c.getString(1), c.getString(2), c.getLong(3),
-                if (c.isNull(4)) null else c.getLong(4),
-                c.getString(5), c.getString(6), c.getInt(7)
-            )
+            while (c.moveToNext()) out += lerSessao(c)
         }
         return out
     }
@@ -157,9 +160,24 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 2)
         }, "id=?", arrayOf(fotoId.toString()))
     }
 
-    fun atualizarCarimbo(sessaoId: Long, token: String) {
-        writableDatabase.update("sessao", ContentValues().apply { put("carimbo_tempo", token) },
-            "id=?", arrayOf(sessaoId.toString()))
+    /**
+     * Grava o carimbo INTEIRO de uma vez: token, instante declarado, autoridade e se ela foi
+     * marcada como credenciada. Gravar so o token deixaria o laudo com um selo sem data e sem
+     * origem — que e quase a mesma coisa que nao ter selo.
+     */
+    fun atualizarCarimbo(
+        sessaoId: Long,
+        token: String,
+        instante: Long,
+        autoridade: String,
+        credenciada: Boolean
+    ) {
+        writableDatabase.update("sessao", ContentValues().apply {
+            put("carimbo_tempo", token)
+            put("carimbo_instante", instante)
+            put("carimbo_autoridade", autoridade)
+            put("carimbo_credenciado", if (credenciada) 1 else 0)
+        }, "id=?", arrayOf(sessaoId.toString()))
     }
 
     /** Fotos sem endereco resolvido — a fila que completa quando houver conexao. */
@@ -179,15 +197,25 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 2)
 
     fun sessao(id: Long): Sessao? =
         readableDatabase.rawQuery("""
-            SELECT s.id, s.titulo, s.processo, s.criada_em, s.fechada_em, s.raiz_merkle,
-                   s.carimbo_tempo, (SELECT COUNT(*) FROM foto f WHERE f.sessao_id = s.id)
+            SELECT $COLUNAS_SESSAO
             FROM sessao s WHERE s.id=?""", arrayOf(id.toString())).use {
-            if (it.moveToFirst()) Sessao(
-                it.getLong(0), it.getString(1), it.getString(2), it.getLong(3),
-                if (it.isNull(4)) null else it.getLong(4),
-                it.getString(5), it.getString(6), it.getInt(7)
-            ) else null
+            if (it.moveToFirst()) lerSessao(it) else null
         }
+
+    /** Argumentos NOMEADOS: campo novo no meio da data class nao pode reatribuir colunas. */
+    private fun lerSessao(c: android.database.Cursor) = Sessao(
+        id = c.getLong(0),
+        titulo = c.getString(1),
+        processo = c.getString(2),
+        criadaEm = c.getLong(3),
+        fechadaEm = if (c.isNull(4)) null else c.getLong(4),
+        raizMerkle = c.getString(5),
+        carimboTempo = c.getString(6),
+        carimboInstante = if (c.isNull(7)) null else c.getLong(7),
+        carimboAutoridade = c.getString(8),
+        carimboCredenciado = c.getInt(9) == 1,
+        qtdFotos = c.getInt(10)
+    )
 
     private fun lerFoto(c: android.database.Cursor) = Foto(
         c.getLong(0), c.getLong(1), c.getString(2), c.getString(3), c.getString(4),
@@ -208,6 +236,12 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 2)
          * lembrar de mexer em quatro lugares, e esquecer um deles nao da erro de compilacao —
          * da leitura errada em silencio.
          */
+        const val COLUNAS_SESSAO =
+            "s.id, s.titulo, s.processo, s.criada_em, s.fechada_em, s.raiz_merkle, " +
+                "s.carimbo_tempo, s.carimbo_instante, s.carimbo_autoridade, " +
+                "s.carimbo_credenciado, " +
+                "(SELECT COUNT(*) FROM foto f WHERE f.sessao_id = s.id)"
+
         const val COLUNAS_FOTO =
             "id, sessao_id, arquivo_original, arquivo_legenda, sha256, lat, lon, precisao_m, " +
                 "altitude_m, azimute, inclinacao, instante, idade_fix_s, tipo_ocorrencia, " +

@@ -8,7 +8,27 @@ data class Sessao(
     val fechadaEm: Long? = null,
     val raizMerkle: String? = null,
     val carimboTempo: String? = null,   // token RFC 3161 (base64), quando obtido
-    val qtdFotos: Int = 0
+    val qtdFotos: Int = 0,
+    /**
+     * Instante DECLARADO PELA AUTORIDADE no carimbo (genTime), em milissegundos.
+     *
+     * Guardado separado do token de proposito: e o unico dado do carimbo que o laudo precisa
+     * mostrar, e reabrir o ASN.1 a cada exibicao seria caro e fragil. O token continua sendo a
+     * fonte da verdade para quem for validar por fora.
+     *
+     * CAMPOS NOVOS VAO NO FIM. A primeira versao os inseriu no meio da classe, e como o Banco
+     * construia `Sessao` por POSICAO, `qtdFotos` passou a receber o instante do carimbo — erro
+     * que so apareceria no CI. As chamadas passaram a usar argumentos NOMEADOS por isso.
+     */
+    val carimboInstante: Long? = null,
+    /** Autoridade que carimbou, como configurada, para constar do laudo. */
+    val carimboAutoridade: String? = null,
+    /**
+     * Declarado por quem configurou a Autoridade, nunca adivinhado: nao ha nada no protocolo
+     * RFC 3161 que permita ao aplicativo descobrir sozinho se a TSA e credenciada.
+     * Credenciamento e questao juridica, nao tecnica.
+     */
+    val carimboCredenciado: Boolean = false
 )
 
 data class Foto(
