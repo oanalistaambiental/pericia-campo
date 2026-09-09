@@ -53,4 +53,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
     testImplementation("junit:junit:4.13.2")
+// org.json faz parte do Android, mas nos testes de unidade e apenas um esqueleto;
+// esta dependencia da a implementacao real para a JVM.
+testImplementation("org.json:json:20240303")
 }
