@@ -86,7 +86,7 @@ def main():
             fornecedores[n] = (sub, orig)
         enums_todos.update({n: (sub, c) for n, c in enums.items()})
 
-    for sub in ("ui", "laudo", ""):
+    for sub in ("ui", "laudo", "ferramentas", "enquadramento/norma", "enquadramento/ui", "enquadramento/laudo", "enquadramento/geo", ""):
         for f in arquivos(sub):
             rel = os.path.relpath(f, RAIZ)
             texto = open(f, encoding="utf-8").read()
