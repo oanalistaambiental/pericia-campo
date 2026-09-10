@@ -72,6 +72,29 @@ data class OcorrenciaAmbiental(
     val fotos: List<FotoOcorrencia> = emptyList()
 )
 
+/**
+ * Registro de campo de uma captação de água — foto, coordenada e a classificação (Cadastro de
+ * Uso Insignificante × Outorga) no momento do registro. `tipoCaptacao` e `classificacao` gravam
+ * o NOME do enum (`geo.TipoCaptacao`/`geo.ClassificacaoUso`) como texto — mesmo padrão que
+ * [RegistroRestricao.situacao] já usa, para o pacote `dados` não depender de `geo`. Não é
+ * editável depois: é o que foi medido e observado naquele momento.
+ */
+data class RegistroCaptacao(
+    val id: Long = 0,
+    val lat: Double,
+    val lon: Double,
+    val precisaoM: Float?,
+    val instante: Long,
+    val tipoCaptacao: String,
+    val vazaoOuVolume: Double?,
+    val unidade: String,
+    val comBomba: Boolean?,
+    val fotoArquivo: String?,
+    val fotoSha256: String?,
+    val classificacao: String,
+    val baseLegal: String
+)
+
 data class Sessao(
     val id: Long = 0,
     val titulo: String,

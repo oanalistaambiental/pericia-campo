@@ -3,6 +3,7 @@ package br.com.oanalistaambiental.pericia.ui
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,16 +16,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.oanalistaambiental.pericia.dados.RegistroCaptacao
 import br.com.oanalistaambiental.pericia.geo.ClassificacaoUso
 import br.com.oanalistaambiental.pericia.geo.ResultadoUsoInsignificante
 import br.com.oanalistaambiental.pericia.geo.TipoCaptacao
 import br.com.oanalistaambiental.pericia.geo.UsoInsignificante
+import java.io.File
 
 /**
  * Recursos hídricos: bacia/CH e PGRH pela coordenada, e o classificador de Cadastro de Uso
@@ -67,6 +71,7 @@ private fun ColumnScope.AbaCampo(vm: CapturaViewModel) {
     val p by vm.estadoCampo.posicao.collectAsState()
     val bacia by vm.bacia.collectAsState()
     val consultandoBacia by vm.consultandoBacia.collectAsState()
+    val registros by vm.registrosCaptacao.collectAsState()
 
     LaunchedEffect(p.lat, p.lon) {
         val lat = p.lat
@@ -77,6 +82,18 @@ private fun ColumnScope.AbaCampo(vm: CapturaViewModel) {
     var tipo by rememberSaveable { mutableStateOf(TipoCaptacao.SUPERFICIAL) }
     var vazaoTexto by rememberSaveable { mutableStateOf("") }
     var acumulacaoTexto by rememberSaveable { mutableStateOf("") }
+    var comBomba by rememberSaveable { mutableStateOf<Boolean?>(null) }
+    var fotoRegistro by remember { mutableStateOf<File?>(null) }
+    var capturandoFoto by remember { mutableStateOf(false) }
+
+    if (capturandoFoto) {
+        CapturaFotoMinima(
+            prefixoArquivo = "captacao_temp",
+            aoCapturar = { arquivo -> fotoRegistro = arquivo; capturandoFoto = false },
+            aoCancelar = { capturandoFoto = false }
+        )
+        return
+    }
 
     LazyColumn(Modifier.weight(1f)) {
         item {
@@ -151,14 +168,67 @@ private fun ColumnScope.AbaCampo(vm: CapturaViewModel) {
 
                 val vazao = vazaoTexto.replace(',', '.').toDoubleOrNull()
                 val acumulacao = acumulacaoTexto.replace(',', '.').toDoubleOrNull()
-                if (vazao != null || acumulacao != null) {
-                    Spacer(Modifier.height(14.dp))
-                    val resultado = if (tipo == TipoCaptacao.SUPERFICIAL) {
+                val resultado = if (vazao == null && acumulacao == null) null
+                    else if (tipo == TipoCaptacao.SUPERFICIAL) {
                         UsoInsignificante.classificarSuperficial(vazao, acumulacao, bacia?.sigla)
                     } else {
                         UsoInsignificante.classificarSubterranea(tipo, vazao)
                     }
+                if (resultado != null) {
+                    Spacer(Modifier.height(14.dp))
                     CartaoResultado(resultado)
+
+                    Rotulo("BOMBEAMENTO")
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Box(Modifier.weight(1f)) {
+                            OpcaoTipo("Por gravidade", comBomba == false) { comBomba = false }
+                        }
+                        Box(Modifier.weight(1f)) {
+                            OpcaoTipo("Com bomba", comBomba == true) { comBomba = true }
+                        }
+                    }
+
+                    Rotulo("FOTO (OPCIONAL)")
+                    val foto = fotoRegistro
+                    if (foto != null) {
+                        val bitmap = remember(foto) {
+                            runCatching {
+                                android.graphics.BitmapFactory.decodeFile(foto.absolutePath)
+                                    ?.asImageBitmap()
+                            }.getOrNull()
+                        }
+                        if (bitmap != null) {
+                            Image(
+                                bitmap, contentDescription = "Foto da captação",
+                                modifier = Modifier.fillMaxWidth().height(180.dp)
+                                    .background(Cores.superficie, RoundedCornerShape(8.dp))
+                            )
+                            Spacer(Modifier.height(8.dp))
+                        }
+                        BotaoLargo("Remover foto") { fotoRegistro = null }
+                    } else {
+                        BotaoLargo("Tirar foto") { capturandoFoto = true }
+                    }
+
+                    Spacer(Modifier.height(14.dp))
+                    BotaoLargo("Salvar registro", principal = true, habilitado = p.temPosicao) {
+                        val unidade = when {
+                            tipo == TipoCaptacao.SUPERFICIAL && vazao != null -> "L/s"
+                            tipo == TipoCaptacao.SUPERFICIAL -> "m³"
+                            else -> "L/dia"
+                        }
+                        vm.salvarRegistroCaptacao(
+                            p.lat!!, p.lon!!, p.precisaoM, tipo.name,
+                            vazao ?: acumulacao, unidade, comBomba,
+                            resultado.classificacao.name, resultado.baseLegal, fotoRegistro
+                        )
+                        vazaoTexto = ""; acumulacaoTexto = ""; comBomba = null; fotoRegistro = null
+                    }
+                }
+
+                if (registros.isNotEmpty()) {
+                    Rotulo("MEUS REGISTROS")
+                    registros.forEach { r -> LinhaRegistroCaptacao(vm, r) }
                 }
 
                 Ajuda(
@@ -174,6 +244,57 @@ private fun ColumnScope.AbaCampo(vm: CapturaViewModel) {
             }
         }
     }
+}
+
+@Composable
+private fun LinhaRegistroCaptacao(vm: CapturaViewModel, r: RegistroCaptacao) {
+    var confirmarExclusao by remember { mutableStateOf(false) }
+    val insignificante = r.classificacao == ClassificacaoUso.INSIGNIFICANTE.name
+    Column(
+        Modifier.fillMaxWidth().padding(vertical = 6.dp)
+            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                rotuloTipoCaptacao(r.tipoCaptacao),
+                color = Cores.texto, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold
+            )
+            Spacer(Modifier.weight(1f))
+            Text(
+                if (insignificante) "CADASTRO" else "OUTORGA",
+                color = if (insignificante) Cores.bomClaro else Cores.alertaClaro,
+                fontSize = 10.5.sp, fontWeight = FontWeight.Bold
+            )
+        }
+        r.vazaoOuVolume?.let {
+            Spacer(Modifier.height(2.dp))
+            Mono("%.2f %s".format(it, r.unidade), Cores.textoFraco, 10)
+        }
+        r.comBomba?.let {
+            Spacer(Modifier.height(2.dp))
+            Text(if (it) "Com bomba" else "Por gravidade", color = Cores.textoFraco, fontSize = 10.5.sp)
+        }
+        if (r.fotoArquivo != null) {
+            Spacer(Modifier.height(2.dp))
+            Text("com foto", color = Cores.bomClaro, fontSize = 10.5.sp)
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            if (confirmarExclusao) "confirmar exclusão?" else "excluir",
+            color = Cores.alertaClaro, fontSize = 11.5.sp,
+            modifier = Modifier.clickable {
+                if (confirmarExclusao) { vm.excluirRegistroCaptacao(r); confirmarExclusao = false }
+                else confirmarExclusao = true
+            }
+        )
+    }
+}
+
+private fun rotuloTipoCaptacao(nome: String): String = when (nome) {
+    TipoCaptacao.SUPERFICIAL.name -> "Superficial"
+    TipoCaptacao.SUBTERRANEA_POCO_TUBULAR.name -> "Subterrânea — poço tubular"
+    TipoCaptacao.SUBTERRANEA_OUTRA.name -> "Subterrânea — poço escavado/manual/nascente"
+    else -> nome
 }
 
 @Composable

@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 7) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 8) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -95,6 +95,20 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 7)
                 sha256 TEXT NOT NULL,
                 FOREIGN KEY(ocorrencia_id) REFERENCES ocorrencia_ambiental(id)
             )""")
+        db.execSQL("""
+            CREATE TABLE registro_captacao (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
+                instante INTEGER NOT NULL,
+                tipo_captacao TEXT NOT NULL,
+                vazao_ou_volume REAL,
+                unidade TEXT NOT NULL,
+                com_bomba INTEGER,
+                foto_arquivo TEXT,
+                foto_sha256 TEXT,
+                classificacao TEXT NOT NULL,
+                base_legal TEXT NOT NULL
+            )""")
         db.execSQL("CREATE INDEX idx_foto_sessao ON foto(sessao_id)")
         db.execSQL("CREATE INDEX idx_restricao_foto ON restricao(foto_id)")
         db.execSQL("CREATE INDEX idx_caminhamento_sessao ON caminhamento_ponto(sessao_id)")
@@ -172,6 +186,22 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 7)
                 SELECT id, foto_arquivo, foto_sha256 FROM ocorrencia_ambiental
                 WHERE foto_arquivo IS NOT NULL AND foto_sha256 IS NOT NULL
             """)
+        }
+        if (old < 8) {
+            db.execSQL("""
+                CREATE TABLE registro_captacao (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
+                    instante INTEGER NOT NULL,
+                    tipo_captacao TEXT NOT NULL,
+                    vazao_ou_volume REAL,
+                    unidade TEXT NOT NULL,
+                    com_bomba INTEGER,
+                    foto_arquivo TEXT,
+                    foto_sha256 TEXT,
+                    classificacao TEXT NOT NULL,
+                    base_legal TEXT NOT NULL
+                )""")
         }
     }
 
@@ -457,6 +487,43 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 7)
     fun excluirOcorrencia(id: Long) {
         writableDatabase.delete("ocorrencia_foto", "ocorrencia_id=?", arrayOf(id.toString()))
         writableDatabase.delete("ocorrencia_ambiental", "id=?", arrayOf(id.toString()))
+    }
+
+    // ---- registro de captacao (recursos hidricos) ----
+
+    fun inserirRegistroCaptacao(r: RegistroCaptacao): Long =
+        writableDatabase.insert("registro_captacao", null, ContentValues().apply {
+            put("lat", r.lat); put("lon", r.lon); put("precisao_m", r.precisaoM)
+            put("instante", r.instante); put("tipo_captacao", r.tipoCaptacao)
+            put("vazao_ou_volume", r.vazaoOuVolume); put("unidade", r.unidade)
+            put("com_bomba", r.comBomba?.let { if (it) 1 else 0 })
+            put("foto_arquivo", r.fotoArquivo); put("foto_sha256", r.fotoSha256)
+            put("classificacao", r.classificacao); put("base_legal", r.baseLegal)
+        })
+
+    fun registrosCaptacao(): List<RegistroCaptacao> {
+        val out = mutableListOf<RegistroCaptacao>()
+        readableDatabase.rawQuery(
+            "SELECT id, lat, lon, precisao_m, instante, tipo_captacao, vazao_ou_volume, unidade," +
+                " com_bomba, foto_arquivo, foto_sha256, classificacao, base_legal" +
+                " FROM registro_captacao ORDER BY instante DESC", null
+        ).use { c ->
+            while (c.moveToNext()) out += RegistroCaptacao(
+                id = c.getLong(0), lat = c.getDouble(1), lon = c.getDouble(2),
+                precisaoM = if (c.isNull(3)) null else c.getFloat(3), instante = c.getLong(4),
+                tipoCaptacao = c.getString(5),
+                vazaoOuVolume = if (c.isNull(6)) null else c.getDouble(6),
+                unidade = c.getString(7),
+                comBomba = if (c.isNull(8)) null else c.getInt(8) != 0,
+                fotoArquivo = c.getString(9), fotoSha256 = c.getString(10),
+                classificacao = c.getString(11), baseLegal = c.getString(12)
+            )
+        }
+        return out
+    }
+
+    fun excluirRegistroCaptacao(id: Long) {
+        writableDatabase.delete("registro_captacao", "id=?", arrayOf(id.toString()))
     }
 
     fun foto(id: Long): Foto? =

@@ -28,6 +28,7 @@ import br.com.oanalistaambiental.pericia.dados.FotoOcorrencia
 import br.com.oanalistaambiental.pericia.dados.MAXIMO_FOTOS_OCORRENCIA
 import br.com.oanalistaambiental.pericia.dados.OcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.dados.PontoCaminhamento
+import br.com.oanalistaambiental.pericia.dados.RegistroCaptacao
 import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
 import br.com.oanalistaambiental.pericia.dados.PontoSalvo
 import br.com.oanalistaambiental.pericia.dados.Sessao
@@ -116,6 +117,9 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _ocorrencias = MutableStateFlow<List<OcorrenciaAmbiental>>(emptyList())
     val ocorrencias: StateFlow<List<OcorrenciaAmbiental>> = _ocorrencias
+
+    private val _registrosCaptacao = MutableStateFlow<List<RegistroCaptacao>>(emptyList())
+    val registrosCaptacao: StateFlow<List<RegistroCaptacao>> = _registrosCaptacao
 
     /**
      * Marca d'água (brasão do órgão, logo da consultoria) queimada no canto da CÓPIA com
@@ -457,6 +461,52 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * Grava um registro de campo de captação de água — foto (quando houver) com hash, mesma
+     * ideia de proveniência das outras fichas de campo. A classificação e a base legal vêm já
+     * calculadas de [br.com.oanalistaambiental.pericia.geo.UsoInsignificante] no momento do
+     * registro — gravadas como texto, não recalculadas depois: o limiar pode mudar de norma no
+     * futuro, e o registro precisa continuar dizendo o que valia quando foi feito.
+     */
+    fun salvarRegistroCaptacao(
+        lat: Double, lon: Double, precisaoM: Float?, tipoCaptacao: String,
+        vazaoOuVolume: Double?, unidade: String, comBomba: Boolean?,
+        classificacao: String, baseLegal: String, fotoOriginal: File?
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                var fotoArquivo: String? = null
+                var fotoSha256: String? = null
+                if (fotoOriginal != null && fotoOriginal.exists()) {
+                    val pasta = File(getApplication<Application>().filesDir, "captacoes").apply { mkdirs() }
+                    val destino = File(pasta, "captacao-${System.currentTimeMillis()}.jpg")
+                    fotoOriginal.copyTo(destino, overwrite = true)
+                    fotoArquivo = destino.absolutePath
+                    fotoSha256 = Integridade.sha256(destino)
+                }
+                banco.inserirRegistroCaptacao(
+                    RegistroCaptacao(
+                        lat = lat, lon = lon, precisaoM = precisaoM, instante = System.currentTimeMillis(),
+                        tipoCaptacao = tipoCaptacao, vazaoOuVolume = vazaoOuVolume, unidade = unidade,
+                        comBomba = comBomba, fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256,
+                        classificacao = classificacao, baseLegal = baseLegal
+                    )
+                )
+            }.onSuccess {
+                _registrosCaptacao.value = banco.registrosCaptacao()
+                _mensagem.value = "Registro de captação salvo."
+            }.onFailure { _mensagem.value = "Falha ao salvar registro: ${it.message}" }
+        }
+    }
+
+    fun excluirRegistroCaptacao(r: RegistroCaptacao) {
+        viewModelScope.launch(Dispatchers.IO) {
+            r.fotoArquivo?.let { runCatching { File(it).delete() } }
+            banco.excluirRegistroCaptacao(r.id)
+            _registrosCaptacao.value = banco.registrosCaptacao()
+        }
+    }
+
     /** Copia até [limite] arquivos para a pasta própria da ocorrência e devolve com hash — usado ao criar e ao editar. */
     private fun copiarFotosOcorrencia(originais: List<File>, limite: Int): List<FotoOcorrencia> {
         if (limite <= 0) return emptyList()
@@ -583,6 +633,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             }.onSuccess { _canaisDenuncia.value = it }
         }
         viewModelScope.launch(Dispatchers.IO) { _ocorrencias.value = banco.ocorrencias() }
+        viewModelScope.launch(Dispatchers.IO) { _registrosCaptacao.value = banco.registrosCaptacao() }
         _temMarcaDagua.value = arquivoMarcaDagua().exists()
     }
 

@@ -7,19 +7,12 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.Preview
-import androidx.camera.lifecycle.ProcessCameraProvider
-import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
@@ -37,9 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import br.com.oanalistaambiental.pericia.captura.Transcricao
 import br.com.oanalistaambiental.pericia.dados.FotoOcorrencia
 import br.com.oanalistaambiental.pericia.dados.GrupoCanal
@@ -149,7 +140,8 @@ private fun ColumnScope.NovaOcorrencia(
     }
 
     if (capturandoFoto) {
-        CapturaFotoOcorrencia(
+        CapturaFotoMinima(
+            prefixoArquivo = "ocorrencia_temp",
             aoCapturar = { arquivo -> fotosNovas.add(arquivo); capturandoFoto = false },
             aoCancelar = { capturandoFoto = false }
         )
@@ -308,73 +300,6 @@ private fun MiniaturaFoto(arquivo: File, descricao: String, aoRemover: () -> Uni
     }
 }
 
-/** Câmera mínima — só tira uma foto e devolve o arquivo. Nada de sessão, legenda ou hash aqui: quem grava o hash é o ViewModel, ao salvar a ocorrência. */
-@Composable
-private fun CapturaFotoOcorrencia(aoCapturar: (File) -> Unit, aoCancelar: () -> Unit) {
-    val contexto = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val imageCapture = remember { ImageCapture.Builder().build() }
-    val previewView = remember {
-        PreviewView(contexto).apply {
-            implementationMode = PreviewView.ImplementationMode.COMPATIBLE
-            scaleType = PreviewView.ScaleType.FILL_CENTER
-        }
-    }
-    var capturando by remember { mutableStateOf(false) }
-    var pronta by remember { mutableStateOf(false) }
-
-    DisposableEffect(lifecycleOwner, previewView) {
-        val futuro = ProcessCameraProvider.getInstance(contexto)
-        var provedor: ProcessCameraProvider? = null
-        var descartado = false
-        futuro.addListener({
-            try {
-                val p = futuro.get()
-                provedor = p
-                if (descartado) { runCatching { p.unbindAll() }; return@addListener }
-                val preview = Preview.Builder().build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
-                p.unbindAll()
-                p.bindToLifecycle(lifecycleOwner, CameraSelector.DEFAULT_BACK_CAMERA, preview, imageCapture)
-                pronta = true
-            } catch (_: Throwable) { pronta = false }
-        }, ContextCompat.getMainExecutor(contexto))
-        onDispose { descartado = true; runCatching { provedor?.unbindAll() } }
-    }
-
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
-        AndroidView(modifier = Modifier.fillMaxSize(), factory = { previewView })
-
-        Text(
-            "‹ Cancelar", color = Color.White, fontSize = 14.sp,
-            modifier = Modifier.align(Alignment.TopStart).windowInsetsPadding(WindowInsets.statusBars)
-                .clickable { aoCancelar() }.padding(16.dp)
-        )
-
-        Box(
-            Modifier.align(Alignment.BottomCenter).windowInsetsPadding(WindowInsets.navigationBars)
-                .padding(bottom = 28.dp)
-                .size(78.dp)
-                .background(if (capturando || !pronta) Cores.textoFraco else Color.White, CircleShape)
-                .clickable(enabled = pronta && !capturando) {
-                    capturando = true
-                    val destino = File(contexto.cacheDir, "ocorrencia_temp_${System.currentTimeMillis()}.jpg")
-                    val opcoes = ImageCapture.OutputFileOptions.Builder(destino).build()
-                    runCatching {
-                        imageCapture.takePicture(
-                            opcoes, ContextCompat.getMainExecutor(contexto),
-                            object : ImageCapture.OnImageSavedCallback {
-                                override fun onImageSaved(r: ImageCapture.OutputFileResults) {
-                                    capturando = false
-                                    aoCapturar(destino)
-                                }
-                                override fun onError(e: ImageCaptureException) { capturando = false }
-                            }
-                        )
-                    }.onFailure { capturando = false }
-                }
-        )
-    }
-}
 
 // ---------------------------------------------------------------- minhas ocorrencias
 
