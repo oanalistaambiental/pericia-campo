@@ -5,7 +5,9 @@ import br.com.oanalistaambiental.pericia.enquadramento.norma.Dispensa
 import br.com.oanalistaambiental.pericia.enquadramento.norma.Enquadramento
 import br.com.oanalistaambiental.pericia.enquadramento.norma.Grau
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -165,5 +167,74 @@ class CatalogoDN217Test {
     @Test
     fun `atividade revogada nao entra`() {
         assertEquals(null, r.atividade("A-07-01-1"))
+    }
+
+    /**
+     * Curadoria de 10/09/2026: uma nova extração independente do texto oficial (script à parte,
+     * não incluído no app) achou 3 atividades do Anexo Único que nunca tinham entrado no
+     * catálogo. O catálogo foi de 228 para 231 códigos.
+     */
+    @Test
+    fun `curadoria de 10-09-2026 — tres atividades que faltavam agora existem`() {
+        val b = r.atividade("B-10-06-5")
+        assertNotNull("Fabricação de móveis de metal com tratamento químico", b)
+        assertEquals(1000.0, b!!.limiteP, 0.001)
+        assertEquals(10000.0, b.limiteM, 0.001)
+
+        val d = r.atividade("D-02-01-1")
+        assertNotNull("Fabricação de vinhos", d)
+        assertEquals(50000.0, d!!.pisoFaixa)
+        assertEquals(125000.0, d.limiteP, 0.001)
+        assertEquals(250000.0, d.limiteM, 0.001)
+
+        val e = r.atividade("E-03-07-7")
+        assertNotNull("Aterro sanitário (CAF)", e)
+        assertEquals(110000.0, e!!.limiteP, 0.001)
+        assertEquals(2700000.0, e.limiteM, 0.001)
+    }
+
+    /**
+     * E-03-07-7 já era citado pelo art. 19 (restricoes-cadastro.json, alínea II.a) antes de
+     * existir no catálogo — a referência ficava órfã e ninguém conseguia, na prática, chegar a
+     * essa atividade para ver a restrição de LAS/Cadastro se aplicar. Trava o cruzamento.
+     */
+    @Test
+    fun `toda atividade citada nas restricoes do art 19 e 20 existe no catalogo`() {
+        val restricoes = r.restricoesCadastro
+        val citados = restricoes.art19.keys + restricoes.art20Excecoes.keys
+        val orfaos = citados.filter { r.atividade(it) == null }
+        assertEquals("citado nas restrições mas ausente do catálogo: $orfaos", emptyList<String>(), orfaos)
+    }
+
+    /**
+     * Curadoria de 10/09/2026: a nova extração achou 6 atividades cuja faixa Pequeno tem piso no
+     * texto oficial (abaixo do piso, porte inferior — art. 10), mas o `pisoFaixa` do catálogo
+     * estava nulo. G-02-04-6 é o caso mais sutil: já tinha `conferencia: divergente` e a nota
+     * certa, só faltava o campo que `Enquadramento.porteDe` de fato lê — a nota sozinha não
+     * protegia ninguém.
+     */
+    @Test
+    fun `curadoria de 10-09-2026 — pisos que faltavam agora barram porte inferior`() {
+        val comPisoNovo = listOf(
+            "B-10-03-0" to 0.1, "E-02-06-2" to 5.0, "E-05-01-1" to 1.0,
+            "F-05-16-0" to 8.0, "F-06-03-3" to 0.02, "G-02-04-6" to 200.0
+        )
+        comPisoNovo.forEach { (codigo, piso) ->
+            val a = r.atividade(codigo)!!
+            assertEquals("$codigo sem piso", piso, a.pisoFaixa)
+        }
+
+        // F-05-16-0 é o único desses com piso INCLUSIVO ("8 veículos/dia <=" : Pequeno) —
+        // no valor exato do piso ainda é Pequeno, só abaixo dele vira porte inferior.
+        val f = r.atividade("F-05-16-0")!!
+        assertFalse(f.pisoExclusivo)
+        assertEquals(Grau.P, Enquadramento.porteDe(f, 8.0))
+        assertThrows(Enquadramento.PorteInferior::class.java) { Enquadramento.porteDe(f, 7.99) }
+
+        // E-05-01-1 é piso EXCLUSIVO ("1 ha <" : Pequeno) — no valor exato ainda não entra.
+        val e = r.atividade("E-05-01-1")!!
+        assertTrue(e.pisoExclusivo)
+        assertThrows(Enquadramento.PorteInferior::class.java) { Enquadramento.porteDe(e, 1.0) }
+        assertEquals(Grau.P, Enquadramento.porteDe(e, 1.01))
     }
 }

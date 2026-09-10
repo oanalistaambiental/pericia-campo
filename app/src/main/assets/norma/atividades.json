@@ -1,9 +1,9 @@
 {
   "titulo": "Listagem de Atividades — Anexo Único da DN COPAM 217/2017",
-  "cobertura": "228 atividades — Listagens A a G completas, extraídas do texto oficial consolidado (DN 217/2017 com as alterações até a DN 246/2022). Atividades revogadas não entram.",
+  "cobertura": "231 atividades — Listagens A a G completas, extraídas do texto oficial consolidado (DN 217/2017 com as alterações até a DN 246/2022). Atividades revogadas não entram. Curadoria de 10/09/2026: comparado campo a campo com nova extração independente do texto oficial (potencial poluidor 100% confirmado nos 228 códigos originais); achou e corrigiu 6 pisos de faixa que faltavam e 3 atividades do Anexo Único que não estavam no catálogo (B-10-06-5, D-02-01-1, E-03-07-7 — este último já era citado pelo art. 19 em restricoes-cadastro.json sem existir aqui).",
   "base_legal": "DN COPAM 217/2017, Art. 4º e Anexo Único",
   "fonte": "https://www.siam.mg.gov.br/sla/download.pdf?idNorma=45558",
-  "extraido_em": "2026-09-07",
+  "extraido_em": "2026-09-10 (curadoria sobre a extração de 2026-09-07)",
   "como_completar": "Use ferramentas/importar-anexo.py para converter uma planilha do Anexo Único oficial e substituir este arquivo.",
   "nota_fronteira": "A DN 217 NÃO usa uma convenção única de fronteira. Em 185 das 226 atividades numéricas a faixa Pequeno é definida com \"<\" (o valor exatamente igual ao limite já é MÉDIO) e nas demais com \"≤\" (o valor igual ao limite ainda é PEQUENO). Por isso cada atividade carrega os campos limitePExclusivo e limiteMExclusivo lidos individualmente do texto oficial — não existe padrão que se possa assumir.",
   "legenda_conferencia": {
@@ -1106,8 +1106,27 @@
       "unidade": "ha",
       "limiteP": 1.0,
       "limiteM": 2.0,
-      "conferencia": "oficial",
-      "limitePExclusivo": true
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,1 ha < Área Construída < 1,0 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.1,
+      "pisoExclusivo": true
+    },
+    {
+      "codigo": "B-10-06-5",
+      "descricao": "Fabricação de móveis de metal com tratamento químico superficial e/ou pintura",
+      "pp": {
+        "ar": "G",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Consumo/ano de peças e/ou lâminas metálicas",
+      "unidade": "t",
+      "limiteP": 1000.0,
+      "limiteM": 10000.0,
+      "conferencia": "oficial"
     },
     {
       "codigo": "B-10-07-0",
@@ -2214,6 +2233,26 @@
       "pisoExclusivo": false
     },
     {
+      "codigo": "D-02-01-1",
+      "descricao": "Fabricação de vinhos",
+      "pp": {
+        "ar": "P",
+        "agua": "M",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade Instalada",
+      "unidade": "ℓ de produto/ano",
+      "limiteP": 125000.0,
+      "limiteM": 250000.0,
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"50.000 ℓ de produto/ano < Capacidade Instalada < 125.000 ℓ de produto/ano\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 50000.0,
+      "pisoExclusivo": true
+    },
+    {
       "codigo": "D-02-02-1",
       "descricao": "Fabricação de aguardente",
       "pp": {
@@ -2778,7 +2817,10 @@
       "unidade": "MW",
       "limiteP": 10.0,
       "limiteM": 80.0,
-      "conferencia": "oficial"
+      "conferencia": "divergente",
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"5 MW < potência nominal do inversor <= 10 MW\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 5.0,
+      "pisoExclusivo": true
     },
     {
       "codigo": "E-02-06-3",
@@ -2898,6 +2940,23 @@
       "pisoExclusivo": true
     },
     {
+      "codigo": "E-03-07-7",
+      "descricao": "Aterro sanitário, inclusive Aterro Sanitário de Pequeno Porte (ASPP)",
+      "pp": {
+        "ar": "M",
+        "agua": "G",
+        "solo": "M",
+        "geral": "M"
+      },
+      "tipo": "numerico",
+      "parametro": "Capacidade total aterrada em final de plano (CAF)",
+      "unidade": "t",
+      "limiteP": 110000.0,
+      "limiteM": 2700000.0,
+      "conferencia": "oficial",
+      "limitePExclusivo": true
+    },
+    {
       "codigo": "E-03-07-8",
       "descricao": "Estação de transbordo de resíduos sólidos urbanos",
       "pp": {
@@ -2916,7 +2975,7 @@
     },
     {
       "codigo": "E-03-07-9",
-      "descricao": "Unidade de triagem de recicláveis e/ou de tratamento de resíduos orgânicos originados de resíduos sólidos urbanos. Pot. poluidor/degradador: Ar: M Água: G Solo: M Geral: M Porte: Quantidade operada de RSU < 20 t/dia : Pequeno 20 t/ dia ≤ Quantidade operada de RSU ≤ 250 t/dia : Médio Quantidade operada de RSU > 250 t/dia : Grande | E-03-07-11 Outras formas de destinação de resíduos sólidos urbanos não listadas ou não classificadas",
+      "descricao": "Unidade de triagem de recicláveis e/ou de tratamento de resíduos orgânicos originados de resíduos sólidos urbanos",
       "pp": {
         "ar": "M",
         "agua": "G",
@@ -2982,8 +3041,11 @@
       "unidade": "ha",
       "limiteP": 10.0,
       "limiteM": 50.0,
-      "conferencia": "oficial",
-      "limitePExclusivo": true
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"1 ha < área alagada ao nível máximo de cheia < 10 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 1.0,
+      "pisoExclusivo": true
     },
     {
       "codigo": "E-05-02-9",
@@ -3645,7 +3707,10 @@
       "unidade": "veículos/dia",
       "limiteP": 40.0,
       "limiteM": 400.0,
-      "conferencia": "oficial"
+      "conferencia": "divergente",
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"8 veículos/dia <= Capacidade Instalada <= 40 veículos/dia\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 8.0,
+      "pisoExclusivo": false
     },
     {
       "codigo": "F-05-17-0",
@@ -3774,8 +3839,11 @@
       "unidade": "ha",
       "limiteP": 0.1,
       "limiteM": 0.3,
-      "conferencia": "oficial",
-      "limitePExclusivo": true
+      "conferencia": "divergente",
+      "limitePExclusivo": true,
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"0,02 ha < Área Construída < 0,1 ha\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 0.02,
+      "pisoExclusivo": true
     },
     {
       "codigo": "F-06-04-6",
@@ -3925,7 +3993,9 @@
       "limiteM": 10000.0,
       "conferencia": "divergente",
       "limitePExclusivo": true,
-      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"200 <número de cabeças < 2.000\". Abaixo desse valor não há faixa prevista nesta listagem."
+      "nota": "ATENÇÃO — a norma define a faixa Pequeno com piso: \"200 <número de cabeças < 2.000\". Abaixo desse valor não há faixa prevista nesta listagem.",
+      "pisoFaixa": 200.0,
+      "pisoExclusivo": true
     },
     {
       "codigo": "G-02-07-0",
