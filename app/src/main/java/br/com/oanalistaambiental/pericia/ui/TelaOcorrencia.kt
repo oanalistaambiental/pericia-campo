@@ -81,7 +81,7 @@ fun TelaOcorrenciaAmbiental(vm: CapturaViewModel, voltar: () -> Unit) {
 // ---------------------------------------------------------------- registrar
 
 @Composable
-private fun NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Unit) {
+private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Unit) {
     val contexto = LocalContext.current
     val p by vm.estadoCampo.posicao.collectAsState()
 
@@ -304,7 +304,7 @@ private fun CapturaFotoOcorrencia(aoCapturar: (File) -> Unit, aoCancelar: () -> 
 // ---------------------------------------------------------------- minhas ocorrencias
 
 @Composable
-private fun MinhasOcorrencias(vm: CapturaViewModel) {
+private fun ColumnScope.MinhasOcorrencias(vm: CapturaViewModel) {
     val ocorrencias by vm.ocorrencias.collectAsState()
     var confirmarExclusao by remember { mutableStateOf<Long?>(null) }
 
@@ -356,7 +356,7 @@ private fun MinhasOcorrencias(vm: CapturaViewModel) {
 // ---------------------------------------------------------------- canais oficiais
 
 @Composable
-private fun CanaisOficiais(vm: CapturaViewModel) {
+private fun ColumnScope.CanaisOficiais(vm: CapturaViewModel) {
     val canais by vm.canaisDenuncia.collectAsState()
     val c = canais
     if (c == null) {
