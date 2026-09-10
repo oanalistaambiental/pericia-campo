@@ -1,6 +1,9 @@
 package br.com.oanalistaambiental.pericia.ui
 
 import android.app.Application
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import br.com.oanalistaambiental.pericia.captura.Enderecos
@@ -38,6 +41,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.FileOutputStream
 import java.util.Date
 
 class CapturaViewModel(app: Application) : AndroidViewModel(app) {
@@ -66,6 +70,62 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _cadastrosIef = MutableStateFlow<CadastrosIef?>(null)
     val cadastrosIef: StateFlow<CadastrosIef?> = _cadastrosIef
+
+    /**
+     * Marca d'água (brasão do órgão, logo da consultoria) queimada no canto da CÓPIA com
+     * legenda — nunca no original, mesma regra de sempre. Guardada como um arquivo fixo em
+     * armazenamento interno do app, não como bytes no banco: é uma imagem, não um dado de
+     * registro, e um arquivo é trivial de reler a cada foto sem inchar o SQLite.
+     */
+    private fun arquivoMarcaDagua(): File = File(getApplication<Application>().filesDir, "marca_dagua.png")
+
+    private val _temMarcaDagua = MutableStateFlow(false)
+    val temMarcaDagua: StateFlow<Boolean> = _temMarcaDagua
+
+    /**
+     * Sobe a cada troca efetiva do arquivo (definir ou remover) — ao contrário de
+     * [temMarcaDagua], que fica em `true` sem mudar quando uma marca substitui outra. A tela
+     * usa isto como chave de `remember` para reler a prévia do disco só depois que a ESCRITA
+     * termina, nunca antes.
+     */
+    private val _versaoMarcaDagua = MutableStateFlow(0)
+    val versaoMarcaDagua: StateFlow<Int> = _versaoMarcaDagua
+
+    /**
+     * Decodifica de novo e regrava como PNG: aceita qualquer formato comum na entrada (JPG,
+     * PNG, WEBP — o que o BitmapFactory já lê), sai sempre em PNG para preservar transparência
+     * quando o arquivo original já tiver (um brasão recortado, por exemplo).
+     */
+    fun definirMarcaDagua(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                val ctx = getApplication<Application>()
+                val bitmap = ctx.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it) }
+                    ?: throw IllegalStateException("não consegui ler essa imagem")
+                // Teto de tamanho generoso: e so um logo, nao precisa do arquivo original inteiro
+                // de uma foto de 12 MP — mas tambem nao ha por que reduzir demais na entrada,
+                // Legenda.desenharMarcaDagua ja redimensiona para cada foto na hora de desenhar.
+                val maior = maxOf(bitmap.width, bitmap.height)
+                val fator = if (maior > 1200) 1200f / maior else 1f
+                val final = if (fator < 1f) {
+                    Bitmap.createScaledBitmap(bitmap, (bitmap.width * fator).toInt(), (bitmap.height * fator).toInt(), true)
+                        .also { if (it !== bitmap) bitmap.recycle() }
+                } else bitmap
+                FileOutputStream(arquivoMarcaDagua()).use { final.compress(Bitmap.CompressFormat.PNG, 100, it) }
+                final.recycle()
+            }.onSuccess {
+                _temMarcaDagua.value = true
+                _versaoMarcaDagua.value++
+                _mensagem.value = "Marca d'água definida — entra nas próximas fotos."
+            }.onFailure { _mensagem.value = "Falha ao definir marca d'água: ${it.message}" }
+        }
+    }
+
+    fun removerMarcaDagua() {
+        runCatching { arquivoMarcaDagua().delete() }
+        _temMarcaDagua.value = false
+        _versaoMarcaDagua.value++
+    }
 
     private val _fotosDaSessao = MutableStateFlow<List<Foto>>(emptyList())
     val fotosDaSessao: StateFlow<List<Foto>> = _fotosDaSessao
@@ -316,6 +376,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 CadastrosIefCarregador.carregar { getApplication<Application>().assets.open("ief/cadastros.json") }
             }.onSuccess { _cadastrosIef.value = it }
         }
+        _temMarcaDagua.value = arquivoMarcaDagua().exists()
     }
 
     override fun onCleared() {
@@ -502,7 +563,8 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             // Fora do caminho critico: copia com legenda.
             runCatching {
                 val destino = File(original.parentFile, original.nameWithoutExtension + "_legenda.jpg")
-                Legenda.gerar(original, destino, comId, sessao.titulo)
+                val marca = arquivoMarcaDagua().takeIf { it.exists() }
+                Legenda.gerar(original, destino, comId, sessao.titulo, marca)
                 // BUG corrigido: o caminho da copia nunca era gravado, e o laudo usava o original.
                 banco.atualizarLegenda(fotoId, destino.absolutePath)
             }.onFailure { _mensagem.value = "Legenda não gerada: ${it.message}" }

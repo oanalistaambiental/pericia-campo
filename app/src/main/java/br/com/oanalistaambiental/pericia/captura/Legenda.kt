@@ -37,7 +37,20 @@ object Legenda {
         SimpleDateFormat("dd/MM/yyyy HH:mm:ss", Locale("pt", "BR"))
     }
 
-    fun gerar(original: File, destino: File, foto: Foto, sessaoTitulo: String): File {
+    /**
+     * Maior lado da marca d'água, como fração da largura da cópia — pequena de propósito: é
+     * identificação (brasão do órgão, logo da consultoria), não uma segunda legenda competindo
+     * com a técnica.
+     */
+    private const val FRACAO_MARCA_DAGUA = 0.16f
+
+    fun gerar(
+        original: File,
+        destino: File,
+        foto: Foto,
+        sessaoTitulo: String,
+        marcaDagua: File? = null
+    ): File {
         // BUG corrigido: a imagem era decodificada em tamanho cheio e mutavel (ARGB_8888).
         // Um sensor de 50 MP vira ~200 MB de bitmap, e ainda mais 200 MB quando ha rotacao a
         // aplicar — OutOfMemoryError na hora de gravar a legenda, num aparelho de campo.
@@ -104,9 +117,37 @@ object Legenda {
             y += alturaLinha
         }
 
+        if (marcaDagua != null && marcaDagua.exists()) {
+            desenharMarcaDagua(canvas, marcaDagua, largura, padding)
+        }
+
         FileOutputStream(destino).use { copia.compress(Bitmap.CompressFormat.JPEG, 92, it) }
         copia.recycle()
         return destino
+    }
+
+    /**
+     * Desenha o brasão/logo no canto superior direito, em transparência de marca d'água — não
+     * some se falhar: uma marca ilegível ou corrompida não pode derrubar a legenda técnica
+     * inteira, que é o que importa para o laudo.
+     */
+    private fun desenharMarcaDagua(canvas: Canvas, arquivo: File, larguraCopia: Int, margem: Float) {
+        runCatching {
+            val bruta = BitmapFactory.decodeFile(arquivo.absolutePath) ?: return@runCatching
+            val ladoMaximo = larguraCopia * FRACAO_MARCA_DAGUA
+            val fatorEscala = minOf(1f, ladoMaximo / maxOf(bruta.width, bruta.height))
+            val larguraFinal = (bruta.width * fatorEscala).toInt().coerceAtLeast(1)
+            val alturaFinal = (bruta.height * fatorEscala).toInt().coerceAtLeast(1)
+            val redimensionada = if (fatorEscala < 1f) {
+                Bitmap.createScaledBitmap(bruta, larguraFinal, alturaFinal, true)
+                    .also { if (it !== bruta) bruta.recycle() }
+            } else bruta
+
+            val paint = Paint().apply { isAntiAlias = true; isFilterBitmap = true; alpha = 200 }
+            val x = larguraCopia - redimensionada.width - margem
+            canvas.drawBitmap(redimensionada, x, margem, paint)
+            redimensionada.recycle()
+        }
     }
 
     private fun montarLinhas(foto: Foto, sessaoTitulo: String): List<String> {

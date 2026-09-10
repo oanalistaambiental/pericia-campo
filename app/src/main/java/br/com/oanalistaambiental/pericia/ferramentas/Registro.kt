@@ -171,11 +171,12 @@ object Registro {
         Ferramenta(
             id = "configuracoes",
             nome = "Camadas e ajustes",
-            resumo = "Pacote de camadas do IDE-Sisema, versão e procedência.",
+            resumo = "Pacote de camadas do IDE-Sisema, marca d'água e outros ajustes.",
             grupo = Grupo.APOIO,
             icone = IconeGaveta.CAMADAS,
             limite = "As camadas são um retrato baixado numa data, não a base viva do órgão. " +
-                "A data de extração aparece no laudo justamente porque importa.",
+                "A data de extração aparece no laudo justamente porque importa. A marca d'água " +
+                "entra só na CÓPIA com legenda, nunca no arquivo original com hash calculado.",
             tela = { nav -> TelaConfiguracoes(vmCaptura(), nav.voltar) }
         )
     )

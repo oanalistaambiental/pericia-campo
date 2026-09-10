@@ -1,8 +1,10 @@
 package br.com.oanalistaambiental.pericia.ui
 
+import android.graphics.BitmapFactory
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +22,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -37,6 +40,7 @@ import br.com.oanalistaambiental.pericia.taxas.TaxaUfemg
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.File
 
 /** Menu de ferramentas — o que existe fora do ato de fotografar. */
 /*
@@ -812,6 +816,9 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                     }
                 }
 
+                Rotulo("MARCA D'ÁGUA")
+                MarcaDaguaConfig(vm)
+
                 Rotulo("SOBRE")
                 Text(
                     "Ferramenta independente. Não é afiliada ao SISEMA/SEMAD/FEAM nem os substitui. " +
@@ -823,6 +830,71 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                 )
                 Spacer(Modifier.height(24.dp))
             }
+        }
+    }
+}
+
+/**
+ * Marca d'água (brasão, logo) queimada no canto da cópia com legenda de toda foto tirada daqui
+ * em diante — nunca no original. Um arquivo fixo em armazenamento interno, lido de novo a cada
+ * foto: trocar ou remover aqui vale para as PRÓXIMAS fotos, não reprocessa as antigas.
+ */
+@Composable
+private fun MarcaDaguaConfig(vm: CapturaViewModel) {
+    val contexto = LocalContext.current
+    val temMarca by vm.temMarcaDagua.collectAsState()
+    // A versao sobe SO depois que a escrita do arquivo termina (dentro do ViewModel) — por
+    // isso a previa usa ela como chave, e nao um contador incrementado aqui na hora do clique:
+    // reler o disco antes da escrita acabar mostraria a imagem antiga, ou nenhuma.
+    val versao by vm.versaoMarcaDagua.collectAsState()
+    var confirmarRemocao by remember { mutableStateOf(false) }
+    val preview = remember(temMarca, versao) {
+        if (!temMarca) null else runCatching {
+            val arquivo = File(contexto.filesDir, "marca_dagua.png")
+            BitmapFactory.decodeFile(arquivo.absolutePath)?.asImageBitmap()
+        }.getOrNull()
+    }
+
+    val escolher = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri -> if (uri != null) vm.definirMarcaDagua(uri) }
+
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        if (temMarca && preview != null) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    preview, contentDescription = "Marca d'água atual",
+                    modifier = Modifier.size(56.dp)
+                        .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(4.dp)
+                )
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    "Entra em todas as fotos a partir de agora, no canto superior direito.",
+                    color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Row {
+                Box(Modifier.weight(1f)) {
+                    BotaoLargo("Trocar imagem") { escolher.launch("image/*") }
+                }
+                Spacer(Modifier.width(8.dp))
+                Box(Modifier.weight(1f)) {
+                    BotaoLargo(if (confirmarRemocao) "Confirmar?" else "Remover") {
+                        if (confirmarRemocao) { vm.removerMarcaDagua(); confirmarRemocao = false }
+                        else confirmarRemocao = true
+                    }
+                }
+            }
+        } else {
+            Text(
+                "Nenhuma marca definida. Aceita JPG, PNG ou WEBP — PNG com fundo transparente " +
+                    "fica melhor sobre a foto.",
+                color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+            )
+            Spacer(Modifier.height(10.dp))
+            BotaoLargo("Escolher imagem (brasão, logo)") { escolher.launch("image/*") }
         }
     }
 }
