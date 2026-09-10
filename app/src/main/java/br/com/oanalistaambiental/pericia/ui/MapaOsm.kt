@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import android.graphics.Color
@@ -17,6 +18,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
+import org.osmdroid.views.overlay.Polyline
 import java.io.File
 
 /**
@@ -43,6 +45,12 @@ private fun poligonoRestricao(pontos: List<GeoPoint>): Polygon = Polygon().apply
     strokeWidth = 3f
 }
 
+private fun linhaTrajeto(pontos: List<GeoPoint>): Polyline = Polyline().apply {
+    setPoints(pontos)
+    color = Color.argb(220, 30, 136, 229)
+    width = 6f
+}
+
 /**
  * Mapinha de referência — OpenStreetMap, de uso público e sem chave de API (ao contrário do
  * Google Maps, que exige conta Google Cloud com faturamento habilitado). Só para dar noção do
@@ -52,6 +60,10 @@ private fun poligonoRestricao(pontos: List<GeoPoint>): Polygon = Polygon().apply
  * [contorno] desenha o polígono de uma camada de restrição (lat, lon — ver
  * `Restricao.contornoLatLon`); [raioCirculoM] desenha o círculo de influência de uma camada de
  * ponto (`Restricao.raioCirculoM`). No máximo um dos dois costuma vir preenchido por vez.
+ *
+ * [trajeto] desenha uma linha conectando pontos em ordem (lat, lon) — o caminhamento do Modo
+ * Vistoria sendo percorrido, atualizado a cada novo ponto gravado. O centro do mapa continua
+ * sendo [lat]/[lon] (o ponto mais recente, ao vivo), não o meio do trajeto.
  */
 @Composable
 fun MapaReferencia(
@@ -59,11 +71,13 @@ fun MapaReferencia(
     lon: Double,
     modifier: Modifier = Modifier,
     zoom: Double = 15.0,
+    altura: Dp = 200.dp,
     contorno: List<DoubleArray>? = null,
-    raioCirculoM: Double? = null
+    raioCirculoM: Double? = null,
+    trajeto: List<DoubleArray>? = null
 ) {
     AndroidView(
-        modifier = modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(8.dp)),
+        modifier = modifier.fillMaxWidth().height(altura).clip(RoundedCornerShape(8.dp)),
         factory = { ctx ->
             configurarOsmdroidSeNecessario(ctx)
             MapView(ctx).apply {
@@ -72,6 +86,9 @@ fun MapaReferencia(
                 controller.setZoom(zoom)
                 val ponto = GeoPoint(lat, lon)
                 controller.setCenter(ponto)
+                trajeto?.takeIf { it.size >= 2 }?.let {
+                    overlays.add(linhaTrajeto(it.map { p -> GeoPoint(p[0], p[1]) }))
+                }
                 overlays.add(Marker(this).apply { position = ponto })
                 contorno?.let { overlays.add(poligonoRestricao(it.map { p -> GeoPoint(p[0], p[1]) })) }
                 raioCirculoM?.let { overlays.add(poligonoRestricao(Polygon.pointsAsCircle(ponto, it))) }
@@ -81,6 +98,9 @@ fun MapaReferencia(
             val ponto = GeoPoint(lat, lon)
             mapa.controller.setCenter(ponto)
             mapa.overlays.clear()
+            trajeto?.takeIf { it.size >= 2 }?.let {
+                mapa.overlays.add(linhaTrajeto(it.map { p -> GeoPoint(p[0], p[1]) }))
+            }
             mapa.overlays.add(Marker(mapa).apply { position = ponto })
             contorno?.let { mapa.overlays.add(poligonoRestricao(it.map { p -> GeoPoint(p[0], p[1]) })) }
             raioCirculoM?.let { mapa.overlays.add(poligonoRestricao(Polygon.pointsAsCircle(ponto, it))) }

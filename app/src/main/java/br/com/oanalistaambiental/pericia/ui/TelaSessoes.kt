@@ -481,6 +481,12 @@ private fun ModoVistoria(vm: CapturaViewModel, sessao: Sessao) {
                     Spacer(Modifier.width(14.dp))
                     Mono(Caminhamento.duracaoFormatada(Caminhamento.duracaoSegundos(pontos)), Cores.texto, 11)
                 }
+                Spacer(Modifier.height(8.dp))
+                val ultimo = pontos.last()
+                MapaReferencia(
+                    lat = ultimo.lat, lon = ultimo.lon, altura = 220.dp,
+                    trajeto = pontos.map { doubleArrayOf(it.lat, it.lon) }
+                )
             }
             Spacer(Modifier.height(10.dp))
             if (!sessaoAberta) {
