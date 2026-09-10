@@ -2,7 +2,7 @@
 <!--
     Atalho estatico de app (mantenha pressionado o icone do Kit na tela inicial): pula direto
     para a camera de pericia, sem passar pela gaveta. Existe porque abrir para fotografar e o
-    caminho mais comum e mais urgente do app -- perder tempo navegando ate a camera custa caro
+    caminho mais comum e mais urgente do app, e perder tempo navegando ate a camera custa caro
     quando o que importa e o instante do registro.
 -->
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
