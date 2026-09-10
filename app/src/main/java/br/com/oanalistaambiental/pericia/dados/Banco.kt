@@ -396,6 +396,33 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 7)
         }
     }
 
+    /**
+     * Atualiza descrição/transcrição e ACRESCENTA fotos novas — nunca mexe em lat/lon/instante:
+     * isso é o que foi observado e quando, não é editável depois. Fotos removidas se excluem à
+     * parte, uma a uma, por [excluirFotoOcorrencia].
+     */
+    fun atualizarOcorrencia(id: Long, descricao: String?, transcricaoAudio: String?, fotosNovas: List<FotoOcorrencia>) {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            db.update("ocorrencia_ambiental", ContentValues().apply {
+                put("descricao", descricao); put("transcricao_audio", transcricaoAudio)
+            }, "id=?", arrayOf(id.toString()))
+            fotosNovas.forEach { f ->
+                db.insert("ocorrencia_foto", null, ContentValues().apply {
+                    put("ocorrencia_id", id); put("arquivo", f.arquivo); put("sha256", f.sha256)
+                })
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+    }
+
+    fun excluirFotoOcorrencia(id: Long) {
+        writableDatabase.delete("ocorrencia_foto", "id=?", arrayOf(id.toString()))
+    }
+
     fun ocorrencias(): List<OcorrenciaAmbiental> {
         val fotosPorOcorrencia = mutableMapOf<Long, MutableList<FotoOcorrencia>>()
         readableDatabase.rawQuery(

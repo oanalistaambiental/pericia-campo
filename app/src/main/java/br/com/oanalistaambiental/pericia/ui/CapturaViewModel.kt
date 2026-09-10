@@ -403,14 +403,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
-                val pasta = File(getApplication<Application>().filesDir, "ocorrencias").apply { mkdirs() }
-                val fotos = fotosOriginais.take(MAXIMO_FOTOS_OCORRENCIA)
-                    .filter { it.exists() }
-                    .mapIndexed { i, original ->
-                        val destino = File(pasta, "ocorrencia-${System.currentTimeMillis()}-$i.jpg")
-                        original.copyTo(destino, overwrite = true)
-                        FotoOcorrencia(ocorrenciaId = 0, arquivo = destino.absolutePath, sha256 = Integridade.sha256(destino))
-                    }
+                val fotos = copiarFotosOcorrencia(fotosOriginais, MAXIMO_FOTOS_OCORRENCIA)
                 banco.inserirOcorrencia(
                     OcorrenciaAmbiental(
                         lat = lat, lon = lon, precisaoM = precisaoM, instante = System.currentTimeMillis(),
@@ -426,6 +419,36 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /**
+     * Atualiza descrição/transcrição e acrescenta fotos novas de uma ocorrência já salva.
+     * NUNCA mexe em lat/lon/instante — o que foi observado e quando não é editável depois,
+     * só o relato em volta disso.
+     */
+    fun atualizarOcorrencia(
+        id: Long, descricao: String, transcricaoAudio: String?,
+        quantasFotosJaTem: Int, fotosNovas: List<File>
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                val fotos = copiarFotosOcorrencia(fotosNovas, MAXIMO_FOTOS_OCORRENCIA - quantasFotosJaTem)
+                banco.atualizarOcorrencia(
+                    id, descricao.ifBlank { null }, transcricaoAudio?.ifBlank { null }, fotos
+                )
+            }.onSuccess {
+                _ocorrencias.value = banco.ocorrencias()
+                _mensagem.value = "Ocorrência atualizada."
+            }.onFailure { _mensagem.value = "Falha ao atualizar ocorrência: ${it.message}" }
+        }
+    }
+
+    fun excluirFotoDaOcorrencia(foto: FotoOcorrencia) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching { File(foto.arquivo).delete() }
+            banco.excluirFotoOcorrencia(foto.id)
+            _ocorrencias.value = banco.ocorrencias()
+        }
+    }
+
     fun excluirOcorrencia(o: OcorrenciaAmbiental) {
         viewModelScope.launch(Dispatchers.IO) {
             o.fotos.forEach { runCatching { File(it.arquivo).delete() } }
@@ -434,18 +457,33 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Copia até [limite] arquivos para a pasta própria da ocorrência e devolve com hash — usado ao criar e ao editar. */
+    private fun copiarFotosOcorrencia(originais: List<File>, limite: Int): List<FotoOcorrencia> {
+        if (limite <= 0) return emptyList()
+        val pasta = File(getApplication<Application>().filesDir, "ocorrencias").apply { mkdirs() }
+        return originais.take(limite).filter { it.exists() }.mapIndexed { i, original ->
+            val destino = File(pasta, "ocorrencia-${System.currentTimeMillis()}-$i.jpg")
+            original.copyTo(destino, overwrite = true)
+            FotoOcorrencia(ocorrenciaId = 0, arquivo = destino.absolutePath, sha256 = Integridade.sha256(destino))
+        }
+    }
+
     /**
-     * Compartilha um resumo em texto (coordenada, descrição, transcrição, hash de cada foto) +
+     * Compartilha o resumo em texto (coordenada, descrição, transcrição, hash de cada foto) +
      * uma CÓPIA de cada foto com a legenda queimada (coordenada, data, hash) — não a original
      * crua. É a mesma regra da câmera de perícia: quem recebe o arquivo por fora do app precisa
      * conseguir ler a informação sem abrir mais nada.
+     *
+     * BUG corrigido: o resumo ia como um .txt ANEXO junto das fotos — o WhatsApp (e outros apps
+     * de mensagem) costuma ignorar silenciosamente um anexo que não seja imagem quando envia
+     * várias fotos de uma vez, e a pessoa recebia só as fotos, sem coordenada nem descrição
+     * nenhuma. Agora o texto vai em EXTRA_TEXT (parâmetro `corpo` de [Exportador.compartilhar]),
+     * que chega independente de anexo.
      */
     fun compartilharOcorrencia(o: OcorrenciaAmbiental) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
-                val pasta = File(getApplication<Application>().filesDir, "ocorrencias").apply { mkdirs() }
-                val resumo = File(pasta, "ocorrencia-${o.id}-resumo.txt")
-                resumo.writeText(Exportador.resumoOcorrencia(o), Charsets.UTF_8)
+                val resumo = Exportador.resumoOcorrencia(o)
                 val marca = arquivoMarcaDagua().takeIf { it.exists() }
                 val fotosComLegenda = o.fotos.mapNotNull { f ->
                     val original = File(f.arquivo)
@@ -464,9 +502,10 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                         )
                     }.getOrElse { original }
                 }
-                val arquivos = listOf(resumo) + fotosComLegenda
                 withContext(Dispatchers.Main) {
-                    Exportador.compartilhar(getApplication(), arquivos, "Ocorrência ambiental registrada")
+                    Exportador.compartilhar(
+                        getApplication(), fotosComLegenda, "Ocorrência ambiental registrada", resumo
+                    )
                 }
             }.onFailure { _mensagem.value = "Falha ao compartilhar: ${it.message}" }
         }

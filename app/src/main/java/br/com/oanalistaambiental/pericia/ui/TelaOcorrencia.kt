@@ -41,6 +41,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import br.com.oanalistaambiental.pericia.captura.Transcricao
+import br.com.oanalistaambiental.pericia.dados.FotoOcorrencia
 import br.com.oanalistaambiental.pericia.dados.GrupoCanal
 import br.com.oanalistaambiental.pericia.dados.ItemCanal
 import br.com.oanalistaambiental.pericia.dados.MAXIMO_FOTOS_OCORRENCIA
@@ -64,6 +65,7 @@ private val fmtOcorrencia = SimpleDateFormat("dd/MM/yy HH:mm", Locale("pt", "BR"
 @Composable
 fun TelaOcorrenciaAmbiental(vm: CapturaViewModel, voltar: () -> Unit) {
     var aba by rememberSaveable { mutableStateOf(0) }
+    var editando by remember { mutableStateOf<OcorrenciaAmbiental?>(null) }
 
     Column(
         Modifier.fillMaxSize().background(Cores.fundo)
@@ -72,14 +74,18 @@ fun TelaOcorrenciaAmbiental(vm: CapturaViewModel, voltar: () -> Unit) {
         Cabecalho("Ocorrência ambiental", voltar)
 
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Box(Modifier.weight(1f)) { BotaoLargo("Registrar", principal = aba == 0) { aba = 0 } }
-            Box(Modifier.weight(1f)) { BotaoLargo("Minhas", principal = aba == 1) { aba = 1 } }
-            Box(Modifier.weight(1f)) { BotaoLargo("Canais oficiais", principal = aba == 2) { aba = 2 } }
+            Box(Modifier.weight(1f)) {
+                BotaoLargo(if (editando != null) "Editando" else "Registrar", principal = aba == 0) {
+                    aba = 0
+                }
+            }
+            Box(Modifier.weight(1f)) { BotaoLargo("Minhas", principal = aba == 1) { aba = 1; editando = null } }
+            Box(Modifier.weight(1f)) { BotaoLargo("Canais oficiais", principal = aba == 2) { aba = 2; editando = null } }
         }
 
         when (aba) {
-            0 -> NovaOcorrencia(vm) { aba = 1 }
-            1 -> MinhasOcorrencias(vm)
+            0 -> NovaOcorrencia(vm, editando, aoTerminarEdicao = { editando = null }) { aba = 1 }
+            1 -> MinhasOcorrencias(vm, aoEditar = { o -> editando = o; aba = 0 })
             else -> CanaisOficiais(vm)
         }
     }
@@ -88,13 +94,25 @@ fun TelaOcorrenciaAmbiental(vm: CapturaViewModel, voltar: () -> Unit) {
 // ---------------------------------------------------------------- registrar
 
 @Composable
-private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Unit) {
+private fun ColumnScope.NovaOcorrencia(
+    vm: CapturaViewModel,
+    editando: OcorrenciaAmbiental?,
+    aoTerminarEdicao: () -> Unit,
+    aoSalvar: () -> Unit
+) {
     val contexto = LocalContext.current
     val p by vm.estadoCampo.posicao.collectAsState()
 
-    var descricao by rememberSaveable { mutableStateOf("") }
-    var transcricao by rememberSaveable { mutableStateOf("") }
-    val fotos = remember { mutableStateListOf<File>() }
+    // Chave = id da ocorrencia (ou "nova"): trocar QUAL ocorrencia esta sendo editada reseta
+    // os campos para o conteudo dela, em vez de continuar com o que sobrou da edicao anterior.
+    val chave = editando?.id ?: -1L
+    var descricao by rememberSaveable(chave) { mutableStateOf(editando?.descricao ?: "") }
+    var transcricao by rememberSaveable(chave) { mutableStateOf(editando?.transcricaoAudio ?: "") }
+    val fotosExistentes = remember(chave) {
+        mutableStateListOf<FotoOcorrencia>().apply { editando?.fotos?.let(::addAll) }
+    }
+    val fotosNovas = remember(chave) { mutableStateListOf<File>() }
+    val totalFotos = fotosExistentes.size + fotosNovas.size
     var capturandoFoto by remember { mutableStateOf(false) }
     var ditando by remember { mutableStateOf(false) }
     var erroDitado by remember { mutableStateOf<String?>(null) }
@@ -132,7 +150,7 @@ private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Uni
 
     if (capturandoFoto) {
         CapturaFotoOcorrencia(
-            aoCapturar = { arquivo -> fotos.add(arquivo); capturandoFoto = false },
+            aoCapturar = { arquivo -> fotosNovas.add(arquivo); capturandoFoto = false },
             aoCancelar = { capturandoFoto = false }
         )
         return
@@ -142,7 +160,14 @@ private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Uni
         item {
             Column(Modifier.padding(horizontal = 16.dp)) {
                 Rotulo("COORDENADA")
-                if (p.temPosicao) {
+                if (editando != null) {
+                    Mono("%.6f, %.6f".format(Locale.US, editando.lat, editando.lon), Cores.texto, 12)
+                    Mono(
+                        (editando.precisaoM?.let { "±%.0f m ".format(it) } ?: "") +
+                            "no momento do registro — não muda ao editar",
+                        Cores.textoFraco, 10
+                    )
+                } else if (p.temPosicao) {
                     Mono("%.6f, %.6f".format(Locale.US, p.lat, p.lon), Cores.texto, 12)
                     Mono("±%.0f m".format(p.precisaoM ?: 0f), Cores.textoFraco, 10)
                 } else {
@@ -150,35 +175,26 @@ private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Uni
                 }
 
                 Rotulo("FOTOS (até ${MAXIMO_FOTOS_OCORRENCIA})")
-                if (fotos.isNotEmpty()) {
+                if (totalFotos > 0) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        fotos.forEachIndexed { i, arquivo ->
-                            Box {
-                                val bitmap = remember(arquivo) {
-                                    runCatching {
-                                        android.graphics.BitmapFactory.decodeFile(arquivo.absolutePath)?.asImageBitmap()
-                                    }.getOrNull()
-                                }
-                                if (bitmap != null) {
-                                    Image(
-                                        bitmap, contentDescription = "Foto ${i + 1} da ocorrência",
-                                        modifier = Modifier.size(72.dp).background(Cores.superficie, RoundedCornerShape(8.dp))
-                                    )
-                                }
-                                Text(
-                                    "×", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.align(Alignment.TopEnd).padding(3.dp)
-                                        .background(Cores.alertaClaro, RoundedCornerShape(50))
-                                        .clickable { fotos.removeAt(i) }
-                                        .padding(horizontal = 6.dp, vertical = 1.dp)
-                                )
-                            }
+                        fotosExistentes.forEachIndexed { i, foto ->
+                            MiniaturaFoto(
+                                arquivo = File(foto.arquivo), descricao = "Foto ${i + 1} da ocorrência",
+                                aoRemover = { vm.excluirFotoDaOcorrencia(foto); fotosExistentes.removeAt(i) }
+                            )
+                        }
+                        fotosNovas.forEachIndexed { i, arquivo ->
+                            MiniaturaFoto(
+                                arquivo = arquivo,
+                                descricao = "Foto ${fotosExistentes.size + i + 1} da ocorrência",
+                                aoRemover = { fotosNovas.removeAt(i) }
+                            )
                         }
                     }
                     Spacer(Modifier.height(8.dp))
                 }
-                if (fotos.size < MAXIMO_FOTOS_OCORRENCIA) {
-                    BotaoLargo(if (fotos.isEmpty()) "Tirar foto" else "Tirar outra foto", principal = fotos.isEmpty()) {
+                if (totalFotos < MAXIMO_FOTOS_OCORRENCIA) {
+                    BotaoLargo(if (totalFotos == 0) "Tirar foto" else "Tirar outra foto", principal = totalFotos == 0) {
                         if (temPermissaoCamera) capturandoFoto = true else pedirCamera.launch(Manifest.permission.CAMERA)
                     }
                 } else {
@@ -237,17 +253,58 @@ private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Uni
                 }
 
                 Spacer(Modifier.height(20.dp))
-                BotaoLargo(
-                    "Salvar ocorrência", principal = true,
-                    habilitado = p.temPosicao && (descricao.isNotBlank() || transcricao.isNotBlank())
-                ) {
-                    vm.salvarOcorrencia(p.lat!!, p.lon!!, p.precisaoM, descricao, transcricao, fotos.toList())
-                    descricao = ""; transcricao = ""; fotos.clear()
-                    aoSalvar()
+                if (editando != null) {
+                    BotaoLargo(
+                        "Salvar alterações", principal = true,
+                        habilitado = descricao.isNotBlank() || transcricao.isNotBlank() || totalFotos > 0
+                    ) {
+                        vm.atualizarOcorrencia(
+                            editando.id, descricao, transcricao, fotosExistentes.size, fotosNovas.toList()
+                        )
+                        aoTerminarEdicao()
+                        aoSalvar()
+                    }
+                    Spacer(Modifier.height(8.dp))
+                    BotaoLargo("Cancelar edição") { aoTerminarEdicao() }
+                } else {
+                    BotaoLargo(
+                        "Salvar ocorrência", principal = true,
+                        habilitado = p.temPosicao &&
+                            (descricao.isNotBlank() || transcricao.isNotBlank() || totalFotos > 0)
+                    ) {
+                        vm.salvarOcorrencia(p.lat!!, p.lon!!, p.precisaoM, descricao, transcricao, fotosNovas.toList())
+                        descricao = ""; transcricao = ""; fotosNovas.clear()
+                        aoSalvar()
+                    }
                 }
                 Spacer(Modifier.height(24.dp))
             }
         }
+    }
+}
+
+/** Uma miniatura com um × para remover — mesmo visual pra foto já salva ou recém-tirada. */
+@Composable
+private fun MiniaturaFoto(arquivo: File, descricao: String, aoRemover: () -> Unit) {
+    Box {
+        val bitmap = remember(arquivo) {
+            runCatching {
+                android.graphics.BitmapFactory.decodeFile(arquivo.absolutePath)?.asImageBitmap()
+            }.getOrNull()
+        }
+        if (bitmap != null) {
+            Image(
+                bitmap, contentDescription = descricao,
+                modifier = Modifier.size(72.dp).background(Cores.superficie, RoundedCornerShape(8.dp))
+            )
+        }
+        Text(
+            "×", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold,
+            modifier = Modifier.align(Alignment.TopEnd).padding(3.dp)
+                .background(Cores.alertaClaro, RoundedCornerShape(50))
+                .clickable { aoRemover() }
+                .padding(horizontal = 6.dp, vertical = 1.dp)
+        )
     }
 }
 
@@ -322,7 +379,7 @@ private fun CapturaFotoOcorrencia(aoCapturar: (File) -> Unit, aoCancelar: () -> 
 // ---------------------------------------------------------------- minhas ocorrencias
 
 @Composable
-private fun ColumnScope.MinhasOcorrencias(vm: CapturaViewModel) {
+private fun ColumnScope.MinhasOcorrencias(vm: CapturaViewModel, aoEditar: (OcorrenciaAmbiental) -> Unit) {
     val ocorrencias by vm.ocorrencias.collectAsState()
     var confirmarExclusao by remember { mutableStateOf<Long?>(null) }
 
@@ -354,6 +411,10 @@ private fun ColumnScope.MinhasOcorrencias(vm: CapturaViewModel) {
                 }
                 Spacer(Modifier.height(8.dp))
                 Row {
+                    Text(
+                        "editar", color = Cores.texto, fontSize = 12.sp,
+                        modifier = Modifier.clickable { aoEditar(o) }.padding(end = 20.dp, top = 4.dp, bottom = 4.dp)
+                    )
                     Text(
                         "compartilhar", color = Cores.bomClaro, fontSize = 12.sp,
                         modifier = Modifier.clickable { vm.compartilharOcorrencia(o) }.padding(end = 20.dp, top = 4.dp, bottom = 4.dp)
