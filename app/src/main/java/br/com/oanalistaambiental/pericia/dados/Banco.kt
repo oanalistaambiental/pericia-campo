@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 5) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 6) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -77,6 +77,16 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 5)
                 sha256 TEXT NOT NULL,
                 FOREIGN KEY(sessao_id) REFERENCES sessao(id)
             )""")
+        db.execSQL("""
+            CREATE TABLE ocorrencia_ambiental (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
+                instante INTEGER NOT NULL,
+                descricao TEXT,
+                transcricao_audio TEXT,
+                foto_arquivo TEXT,
+                foto_sha256 TEXT
+            )""")
         db.execSQL("CREATE INDEX idx_foto_sessao ON foto(sessao_id)")
         db.execSQL("CREATE INDEX idx_restricao_foto ON restricao(foto_id)")
         db.execSQL("CREATE INDEX idx_caminhamento_sessao ON caminhamento_ponto(sessao_id)")
@@ -124,6 +134,18 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 5)
                 )""")
             db.execSQL("CREATE INDEX idx_caminhamento_sessao ON caminhamento_ponto(sessao_id)")
             db.execSQL("CREATE INDEX idx_audio_sessao ON audio(sessao_id)")
+        }
+        if (old < 6) {
+            db.execSQL("""
+                CREATE TABLE ocorrencia_ambiental (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
+                    instante INTEGER NOT NULL,
+                    descricao TEXT,
+                    transcricao_audio TEXT,
+                    foto_arquivo TEXT,
+                    foto_sha256 TEXT
+                )""")
         }
     }
 
@@ -322,6 +344,36 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 5)
 
     fun excluirAudio(id: Long) {
         writableDatabase.delete("audio", "id=?", arrayOf(id.toString()))
+    }
+
+    // ---- ocorrencia ambiental ----
+
+    fun inserirOcorrencia(o: OcorrenciaAmbiental): Long =
+        writableDatabase.insert("ocorrencia_ambiental", null, ContentValues().apply {
+            put("lat", o.lat); put("lon", o.lon); put("precisao_m", o.precisaoM)
+            put("instante", o.instante); put("descricao", o.descricao)
+            put("transcricao_audio", o.transcricaoAudio)
+            put("foto_arquivo", o.fotoArquivo); put("foto_sha256", o.fotoSha256)
+        })
+
+    fun ocorrencias(): List<OcorrenciaAmbiental> {
+        val out = mutableListOf<OcorrenciaAmbiental>()
+        readableDatabase.rawQuery(
+            "SELECT id, lat, lon, precisao_m, instante, descricao, transcricao_audio," +
+                " foto_arquivo, foto_sha256 FROM ocorrencia_ambiental ORDER BY instante DESC", null
+        ).use { c ->
+            while (c.moveToNext()) out += OcorrenciaAmbiental(
+                id = c.getLong(0), lat = c.getDouble(1), lon = c.getDouble(2),
+                precisaoM = if (c.isNull(3)) null else c.getFloat(3), instante = c.getLong(4),
+                descricao = c.getString(5), transcricaoAudio = c.getString(6),
+                fotoArquivo = c.getString(7), fotoSha256 = c.getString(8)
+            )
+        }
+        return out
+    }
+
+    fun excluirOcorrencia(id: Long) {
+        writableDatabase.delete("ocorrencia_ambiental", "id=?", arrayOf(id.toString()))
     }
 
     fun foto(id: Long): Foto? =

@@ -1,0 +1,84 @@
+{
+  "titulo": "Canais oficiais para denúncia ambiental em Minas Gerais",
+  "extraido_em": "2026-09-10",
+  "aviso": "Ferramenta independente, sem vínculo com o SISEMA — a lista abaixo é a mesma informação pública que qualquer cidadão encontra nos sites oficiais. Este app não envia a denúncia por você: mostra para onde levá-la, e o registro fica com você decidir se e como encaminha.",
+  "grupos": [
+    {
+      "id": "principal",
+      "titulo": "Canal principal de denúncia ambiental",
+      "descricao": "Para poluição, desmatamento irregular, maus-tratos a animais silvestres, e qualquer outra infração ambiental. Entra no Sistema GAIA da SEMAD, o mesmo sistema usado pelas Unidades Regionais para decidir a fiscalização.",
+      "itens": [
+        {
+          "nome": "LigMinas 155",
+          "detalhe": "Opção 7. Dentro de Minas Gerais.",
+          "telefone": "155",
+          "horario": "Segunda a sexta, 7h às 19h"
+        },
+        {
+          "nome": "LigMinas — de fora de Minas Gerais",
+          "detalhe": "Opção 7.",
+          "telefone": "(31) 3069-6601",
+          "horario": "Segunda a sexta, 7h às 19h"
+        },
+        {
+          "nome": "Denúncia anônima on-line",
+          "detalhe": "Sem login. Não permite acompanhar o andamento depois.",
+          "link": "https://ecosistemas.meioambiente.mg.gov.br/sisden-ui/denunciaAnonima"
+        },
+        {
+          "nome": "Denúncia identificada on-line",
+          "detalhe": "Com login no Portal Ecossistemas, módulo \"GAIA Denúncias e Requisições\". Gera protocolo, permite acompanhar e recebe notificação por e-mail.",
+          "link": "https://ecosistemas.meioambiente.mg.gov.br/"
+        }
+      ]
+    },
+    {
+      "id": "urgente",
+      "titulo": "Crime ambiental em flagrante / risco imediato",
+      "descricao": "Quando a infração está acontecendo NA HORA — corte de árvore, caça, incêndio, despejo de efluente — o canal é a Polícia, não o sistema de denúncia administrativa, que responde em dias, não em minutos.",
+      "itens": [
+        {
+          "nome": "Emergência policial",
+          "telefone": "190",
+          "detalhe": "Acionamento imediato da Polícia Militar, inclusive Meio Ambiente, pelo despacho geral."
+        },
+        {
+          "nome": "Companhia de Polícia Militar de Meio Ambiente — sede estadual",
+          "telefone": "(31) 2123-1600",
+          "detalhe": "Outros ramais: (31) 2123-1610, (31) 2123-1614, (31) 2123-1616.",
+          "endereco": "Cidade Administrativa — Rodovia Papa João Paulo II, 3777, Serra Verde, Prédio Minas, 6º andar, Belo Horizonte/MG"
+        }
+      ]
+    },
+    {
+      "id": "ouvidoria",
+      "titulo": "Ouvidoria-Geral do Estado",
+      "descricao": "Não é o canal de denúncia ambiental em si — serve para reclamar do PRÓPRIO atendimento do órgão: pedido de fiscalização sem resposta, denúncia mal conduzida, e afins. Vinculada à Controladoria-Geral do Estado (CGE).",
+      "itens": [
+        {
+          "nome": "Ouvidoria-Geral do Estado de MG",
+          "telefone": "162",
+          "horario": "Segunda a sexta, 8h às 18h",
+          "link": "https://www.ouvidoriageral.mg.gov.br"
+        }
+      ]
+    }
+  ],
+  "uras": {
+    "titulo": "Unidades Regionais de Regularização Ambiental (URA)",
+    "descricao": "Antiga SUPRAM. É a unidade que efetivamente fiscaliza — útil para protocolar em pessoa, enviar correspondência ou confirmar se uma atividade está regularizada na regional.",
+    "fonte": "https://feam.br/w/contatos-das-uras",
+    "regionais": [
+      { "nome": "Alto Paranaíba", "endereco": "Fazenda Canavial, Zona Rural, Caixa Postal 240, CEP 38700-000, Patos de Minas/MG", "telefone": "(34) 3823-7206 / (34) 3822-2968" },
+      { "nome": "Alto São Francisco", "endereco": "R. Ceará, 180, Centro, CEP 35500-013, Divinópolis/MG", "telefone": "(37) 3229-2800" },
+      { "nome": "Central — Metropolitana", "endereco": "Cidade Administrativa, Prédio Minas, 2º andar, Rodovia João Paulo II, 4143, Serra Verde, CEP 31630-900, Belo Horizonte/MG", "telefone": null },
+      { "nome": "Jequitinhonha", "endereco": "Av. da Saudade, 335, Centro, CEP 39100-000, Diamantina/MG", "telefone": "(38) 3532-6650" },
+      { "nome": "Leste de Minas", "endereco": "Rua Oito, 146, Ilha dos Araújos, CEP 35020-700, Governador Valadares/MG", "telefone": "(33) 3271-4988 / 4935 / 9981" },
+      { "nome": "Noroeste de Minas", "endereco": "Rua Jovino Rodrigues Santana, 10, Nova Divinéia, CEP 38610-000, Unaí/MG", "telefone": "(38) 3677-9800" },
+      { "nome": "Norte de Minas", "endereco": "Rua Gabriel Passos, 50, Centro, CEP 39400-112, Montes Claros/MG", "telefone": "(38) 3224-7500" },
+      { "nome": "Sul de Minas", "endereco": "Avenida Manoel Diniz, 145, Bairro Industrial JK, CEP 37062-480, Varginha/MG", "telefone": "(35) 3229-1818" },
+      { "nome": "Triângulo Mineiro", "endereco": "Rua Praça Tubal Vilela, 03, Centro, CEP 38400-186, Uberlândia/MG", "telefone": "(34) 3088-6400" },
+      { "nome": "Zona da Mata", "endereco": "Rodovia Ubá–Juiz de Fora, KM 02, Horto Florestal, Caixa Postal 181, CEP 36500-970, Ubá/MG", "telefone": "(32) 3539-2700" }
+    ]
+  }
+}

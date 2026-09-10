@@ -159,6 +159,18 @@ object Registro {
             tela = { nav -> TelaCadastrosIef(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(
+            id = "ocorrencia_ambiental",
+            nome = "Ocorrência ambiental",
+            resumo = "Registra coordenada, foto e descrição (com ditado por voz) — e mostra os canais oficiais de denúncia.",
+            grupo = Grupo.CAMPO,
+            icone = IconeGaveta.ALERTA,
+            exige = setOf(Recurso.GNSS),
+            limite = "O app não envia denúncia nenhuma sozinho — só documenta e mostra para " +
+                "onde levar. A transcrição por voz é feita pelo reconhecimento do próprio " +
+                "aparelho e pode errar: revise antes de salvar.",
+            tela = { nav -> TelaOcorrenciaAmbiental(vmCaptura(), nav.voltar) }
+        ),
+        Ferramenta(
             id = "glossario",
             nome = "Glossário do SISEMA",
             resumo = "Siglas do licenciamento ambiental em MG — SEMAD, FEAM, IGAM, IEF e mais.",

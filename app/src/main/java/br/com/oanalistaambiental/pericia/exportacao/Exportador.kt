@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.Foto
+import br.com.oanalistaambiental.pericia.dados.OcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.dados.PontoCaminhamento
 import br.com.oanalistaambiental.pericia.dados.PontoSalvo
 import br.com.oanalistaambiental.pericia.dados.Sessao
@@ -438,6 +439,35 @@ object Exportador {
         }
         destino.writeBytes(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()) + sb.toString().toByteArray(Charsets.UTF_8))
         return destino
+    }
+
+    // ------------------------------------------------------------------ ocorrencia ambiental
+
+    /**
+     * Um resumo em texto simples — o que a pessoa consegue colar num e-mail ou levar junto ao
+     * protocolar num dos canais oficiais (ver `dados/CanaisDenuncia.kt`). Marca a transcrição
+     * como transcrição, nunca como se fosse a fala original — pedido explícito: "deve estar
+     * claro que a informação é transcrição".
+     */
+    fun resumoOcorrencia(o: OcorrenciaAmbiental): String {
+        val sb = StringBuilder()
+        sb.append("OCORRÊNCIA AMBIENTAL — registro de campo\n")
+        sb.append("Registrado em: ").append(fmtBr.get()!!.format(Date(o.instante))).append("\n\n")
+        val utm = Utm.projetar(o.lat, o.lon)
+        sb.append("Coordenada — UTM SIRGAS 2000: ").append(utm.formatado()).append("\n")
+        sb.append("Coordenada — geográfica: ").append("%.6f, %.6f".format(Locale.US, o.lat, o.lon)).append("\n")
+        o.precisaoM?.let { sb.append("Precisão do GNSS: ±").append("%.0f".format(it)).append(" m\n") }
+        sb.append("\n")
+        o.descricao?.let { sb.append("DESCRIÇÃO (digitada):\n").append(it).append("\n\n") }
+        o.transcricaoAudio?.let {
+            sb.append("TRANSCRIÇÃO DE ÁUDIO (ditado por voz, não é a gravação original):\n")
+                .append(it).append("\n\n")
+        }
+        o.fotoSha256?.let { sb.append("Foto anexa — SHA-256: ").append(it).append("\n") }
+        sb.append("\nRegistrado com o Perícia Campo — ferramenta independente, sem vínculo com o SISEMA.\n")
+        sb.append("Este resumo NÃO foi enviado a nenhum órgão automaticamente. ")
+        sb.append("Consulte os canais oficiais de denúncia dentro do aplicativo.\n")
+        return sb.toString()
     }
 
     // ------------------------------------------------------- compartilhamento

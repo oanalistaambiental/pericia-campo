@@ -42,6 +42,26 @@ data class AudioGravado(
     val sha256: String
 )
 
+/**
+ * Registro de uma ocorrência ambiental observada em campo — coordenada, foto e descrição (com
+ * transcrição de áudio opcional), pensado para quem já usa o app (analista, consultor, perito)
+ * documentar algo e DEPOIS decidir, por conta própria, se e para onde encaminha.
+ *
+ * Não é uma denúncia enviada pelo app — o app nunca envia nada a lugar nenhum sozinho. É o
+ * registro que a pessoa pode levar consigo até o canal que escolher (ver [CanaisDenuncia]).
+ */
+data class OcorrenciaAmbiental(
+    val id: Long = 0,
+    val lat: Double,
+    val lon: Double,
+    val precisaoM: Float?,
+    val instante: Long,
+    val descricao: String?,
+    val transcricaoAudio: String?,
+    val fotoArquivo: String?,
+    val fotoSha256: String?
+)
+
 data class Sessao(
     val id: Long = 0,
     val titulo: String,

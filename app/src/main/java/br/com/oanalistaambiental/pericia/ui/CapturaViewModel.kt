@@ -21,7 +21,10 @@ import br.com.oanalistaambiental.pericia.dados.AudioGravado
 import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.CadastrosIef
 import br.com.oanalistaambiental.pericia.dados.CadastrosIefCarregador
+import br.com.oanalistaambiental.pericia.dados.CanaisDenuncia
+import br.com.oanalistaambiental.pericia.dados.CanaisDenunciaCarregador
 import br.com.oanalistaambiental.pericia.dados.Foto
+import br.com.oanalistaambiental.pericia.dados.OcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.dados.PontoCaminhamento
 import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
 import br.com.oanalistaambiental.pericia.dados.PontoSalvo
@@ -104,6 +107,12 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _cadastrosIef = MutableStateFlow<CadastrosIef?>(null)
     val cadastrosIef: StateFlow<CadastrosIef?> = _cadastrosIef
+
+    private val _canaisDenuncia = MutableStateFlow<CanaisDenuncia?>(null)
+    val canaisDenuncia: StateFlow<CanaisDenuncia?> = _canaisDenuncia
+
+    private val _ocorrencias = MutableStateFlow<List<OcorrenciaAmbiental>>(emptyList())
+    val ocorrencias: StateFlow<List<OcorrenciaAmbiental>> = _ocorrencias
 
     /**
      * Marca d'água (brasão do órgão, logo da consultoria) queimada no canto da CÓPIA com
@@ -223,6 +232,16 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     fun definirPosicaoMarcaDagua(posicao: PosicaoMarcaDagua) {
         _posicaoMarcaDagua.value = posicao
         prefs.edit().putString("posicao_marca_dagua", posicao.name).apply()
+    }
+
+    /** 0f = totalmente transparente, 1f = sólida. Vale tanto para a prévia ao vivo quanto para a foto final. */
+    private val _opacidadeMarcaDagua = MutableStateFlow(prefs.getFloat("opacidade_marca_dagua", 0.78f))
+    val opacidadeMarcaDagua: StateFlow<Float> = _opacidadeMarcaDagua
+
+    fun definirOpacidadeMarcaDagua(opacidade: Float) {
+        val v = opacidade.coerceIn(0.05f, 1f)
+        _opacidadeMarcaDagua.value = v
+        prefs.edit().putFloat("opacidade_marca_dagua", v).apply()
     }
 
     /**
@@ -356,6 +375,66 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // ------------------------------------------------------------------ ocorrencia ambiental
+
+    /**
+     * A FOTO, quando existe, e copiada para a pasta propria da ocorrencia e recebe hash — mesma
+     * ideia de proveniencia da camera de pericia, sem o aparato inteiro de sessao/legenda: aqui
+     * o registro e mais leve, pensado para documentar rapido e decidir depois para onde levar.
+     */
+    fun salvarOcorrencia(
+        lat: Double, lon: Double, precisaoM: Float?, descricao: String,
+        transcricaoAudio: String?, fotoOriginal: File?
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                var fotoArquivo: String? = null
+                var fotoSha256: String? = null
+                if (fotoOriginal != null && fotoOriginal.exists()) {
+                    val pasta = File(getApplication<Application>().filesDir, "ocorrencias").apply { mkdirs() }
+                    val destino = File(pasta, "ocorrencia-${System.currentTimeMillis()}.jpg")
+                    fotoOriginal.copyTo(destino, overwrite = true)
+                    fotoArquivo = destino.absolutePath
+                    fotoSha256 = Integridade.sha256(destino)
+                }
+                banco.inserirOcorrencia(
+                    OcorrenciaAmbiental(
+                        lat = lat, lon = lon, precisaoM = precisaoM, instante = System.currentTimeMillis(),
+                        descricao = descricao.ifBlank { null },
+                        transcricaoAudio = transcricaoAudio?.ifBlank { null },
+                        fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256
+                    )
+                )
+            }.onSuccess {
+                _ocorrencias.value = banco.ocorrencias()
+                _mensagem.value = "Ocorrência registrada."
+            }.onFailure { _mensagem.value = "Falha ao salvar ocorrência: ${it.message}" }
+        }
+    }
+
+    fun excluirOcorrencia(o: OcorrenciaAmbiental) {
+        viewModelScope.launch(Dispatchers.IO) {
+            o.fotoArquivo?.let { runCatching { File(it).delete() } }
+            banco.excluirOcorrencia(o.id)
+            _ocorrencias.value = banco.ocorrencias()
+        }
+    }
+
+    /** Compartilha um resumo em texto (coordenada, descrição, transcrição, hash da foto) + a foto, quando há. */
+    fun compartilharOcorrencia(o: OcorrenciaAmbiental) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                val pasta = File(getApplication<Application>().filesDir, "ocorrencias").apply { mkdirs() }
+                val resumo = File(pasta, "ocorrencia-${o.id}-resumo.txt")
+                resumo.writeText(Exportador.resumoOcorrencia(o), Charsets.UTF_8)
+                val arquivos = listOfNotNull(resumo, o.fotoArquivo?.let { File(it) }?.takeIf { it.exists() })
+                withContext(Dispatchers.Main) {
+                    Exportador.compartilhar(getApplication(), arquivos, "Ocorrência ambiental registrada")
+                }
+            }.onFailure { _mensagem.value = "Falha ao compartilhar: ${it.message}" }
+        }
+    }
+
     /** Exporta o polígono medido por caminhamento — GPX (rota), KML (área) ou CSV. */
     fun exportarMedicao(formato: String) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -422,6 +501,12 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 CadastrosIefCarregador.carregar { getApplication<Application>().assets.open("ief/cadastros.json") }
             }.onSuccess { _cadastrosIef.value = it }
         }
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                CanaisDenunciaCarregador.carregar { getApplication<Application>().assets.open("ocorrencia/canais.json") }
+            }.onSuccess { _canaisDenuncia.value = it }
+        }
+        viewModelScope.launch(Dispatchers.IO) { _ocorrencias.value = banco.ocorrencias() }
         _temMarcaDagua.value = arquivoMarcaDagua().exists()
     }
 
@@ -789,7 +874,10 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             runCatching {
                 val destino = File(original.parentFile, original.nameWithoutExtension + "_legenda.jpg")
                 val marca = arquivoMarcaDagua().takeIf { it.exists() }
-                Legenda.gerar(original, destino, comId, sessao.titulo, marca, _posicaoMarcaDagua.value)
+                Legenda.gerar(
+                    original, destino, comId, sessao.titulo, marca,
+                    _posicaoMarcaDagua.value, _opacidadeMarcaDagua.value
+                )
                 // BUG corrigido: o caminho da copia nunca era gravado, e o laudo usava o original.
                 banco.atualizarLegenda(fotoId, destino.absolutePath)
                 // A copia (com legenda e marca d'agua) vai tambem para a galeria publica do

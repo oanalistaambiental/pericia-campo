@@ -42,7 +42,8 @@ enum class IconeGaveta {
     ALTURA,
     PINO,
     MOEDA,
-    CARTEIRA
+    CARTEIRA,
+    ALERTA
 }
 
 @Composable
@@ -267,6 +268,20 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                 drawLine(cor, Offset(w * 0.56f, h * 0.38f), Offset(w * 0.8f, h * 0.38f), traco.width, StrokeCap.Round)
                 drawLine(cor, Offset(w * 0.56f, h * 0.5f), Offset(w * 0.8f, h * 0.5f), traco.width, StrokeCap.Round)
                 drawLine(cor, Offset(w * 0.56f, h * 0.62f), Offset(w * 0.72f, h * 0.62f), traco.width, StrokeCap.Round)
+            }
+
+            IconeGaveta.ALERTA -> {
+                // Triangulo de alerta com ponto de exclamacao — ocorrencia/denuncia, nao
+                // restricao georreferenciada (essa ja usa o alvo).
+                val topo = Offset(w * 0.5f, h * 0.14f)
+                val esq = Offset(w * 0.1f, h * 0.86f)
+                val dir = Offset(w * 0.9f, h * 0.86f)
+                val tri = Path().apply {
+                    moveTo(topo.x, topo.y); lineTo(dir.x, dir.y); lineTo(esq.x, esq.y); close()
+                }
+                drawPath(tri, cor, style = traco)
+                drawLine(cor, Offset(w * 0.5f, h * 0.4f), Offset(w * 0.5f, h * 0.64f), traco.width, StrokeCap.Round)
+                drawCircle(cor, w * 0.035f, Offset(w * 0.5f, h * 0.74f), style = Fill)
             }
 
             IconeGaveta.CAMADAS -> {

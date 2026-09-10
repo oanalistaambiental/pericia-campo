@@ -294,6 +294,7 @@ private fun BoxScope.PreviaMarcaDagua(vm: CapturaViewModel) {
     val contexto = LocalContext.current
     val temMarca by vm.temMarcaDagua.collectAsState()
     val posicao by vm.posicaoMarcaDagua.collectAsState()
+    val opacidade by vm.opacidadeMarcaDagua.collectAsState()
     val versao by vm.versaoMarcaDagua.collectAsState()
     if (!temMarca) return
 
@@ -320,7 +321,7 @@ private fun BoxScope.PreviaMarcaDagua(vm: CapturaViewModel) {
                 start = 14.dp, end = 14.dp
             )
             .widthIn(max = 72.dp).heightIn(max = 72.dp)
-            .alpha(0.8f)
+            .alpha(opacidade)
     )
 }
 

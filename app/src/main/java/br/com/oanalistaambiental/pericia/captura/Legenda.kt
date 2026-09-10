@@ -53,7 +53,8 @@ object Legenda {
         foto: Foto,
         sessaoTitulo: String,
         marcaDagua: File? = null,
-        posicaoMarcaDagua: PosicaoMarcaDagua = PosicaoMarcaDagua.SUPERIOR_DIREITA
+        posicaoMarcaDagua: PosicaoMarcaDagua = PosicaoMarcaDagua.SUPERIOR_DIREITA,
+        opacidadeMarcaDagua: Float = 0.78f
     ): File {
         // BUG corrigido: a imagem era decodificada em tamanho cheio e mutavel (ARGB_8888).
         // Um sensor de 50 MP vira ~200 MB de bitmap, e ainda mais 200 MB quando ha rotacao a
@@ -128,7 +129,7 @@ object Legenda {
             val limiteInferior = if (posicaoMarcaDagua == PosicaoMarcaDagua.INFERIOR_ESQUERDA ||
                 posicaoMarcaDagua == PosicaoMarcaDagua.INFERIOR_DIREITA
             ) copia.height - alturaBarra else copia.height.toFloat()
-            desenharMarcaDagua(canvas, marcaDagua, largura, padding, posicaoMarcaDagua, limiteInferior)
+            desenharMarcaDagua(canvas, marcaDagua, largura, padding, posicaoMarcaDagua, limiteInferior, opacidadeMarcaDagua)
         }
 
         FileOutputStream(destino).use { copia.compress(Bitmap.CompressFormat.JPEG, 92, it) }
@@ -147,7 +148,7 @@ object Legenda {
      */
     private fun desenharMarcaDagua(
         canvas: Canvas, arquivo: File, larguraCopia: Int, margem: Float,
-        posicao: PosicaoMarcaDagua, limiteInferiorY: Float
+        posicao: PosicaoMarcaDagua, limiteInferiorY: Float, opacidade: Float
     ) {
         runCatching {
             val bruta = BitmapFactory.decodeFile(arquivo.absolutePath) ?: return@runCatching
@@ -160,7 +161,10 @@ object Legenda {
                     .also { if (it !== bruta) bruta.recycle() }
             } else bruta
 
-            val paint = Paint().apply { isAntiAlias = true; isFilterBitmap = true; alpha = 200 }
+            val paint = Paint().apply {
+                isAntiAlias = true; isFilterBitmap = true
+                alpha = (opacidade.coerceIn(0f, 1f) * 255).toInt()
+            }
             val x = when (posicao) {
                 PosicaoMarcaDagua.SUPERIOR_ESQUERDA, PosicaoMarcaDagua.INFERIOR_ESQUERDA -> margem
                 PosicaoMarcaDagua.SUPERIOR_DIREITA, PosicaoMarcaDagua.INFERIOR_DIREITA ->

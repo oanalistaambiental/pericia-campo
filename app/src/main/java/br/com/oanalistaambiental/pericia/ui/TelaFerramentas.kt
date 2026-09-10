@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -912,6 +914,25 @@ private fun MarcaDaguaConfig(vm: CapturaViewModel) {
                 color = Cores.textoFraco, fontSize = 10.5.sp, lineHeight = 15.sp,
                 modifier = Modifier.padding(top = 6.dp)
             )
+
+            Spacer(Modifier.height(14.dp))
+            val opacidade by vm.opacidadeMarcaDagua.collectAsState()
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("OPACIDADE", color = Cores.textoFraco, fontSize = 10.sp, letterSpacing = 1.sp)
+                Spacer(Modifier.weight(1f))
+                Mono("${(opacidade * 100).toInt()}%", Cores.texto, 11)
+            }
+            Slider(
+                value = opacidade,
+                onValueChange = { vm.definirOpacidadeMarcaDagua(it) },
+                valueRange = 0.1f..1f,
+                colors = SliderDefaults.colors(thumbColor = Cores.bom, activeTrackColor = Cores.bom)
+            )
+            Text(
+                "10% quase invisível, 100% sólida — vale para a prévia na câmera e para a foto final.",
+                color = Cores.textoFraco, fontSize = 10.5.sp, lineHeight = 15.sp
+            )
+
             Spacer(Modifier.height(10.dp))
             Row {
                 Box(Modifier.weight(1f)) {
