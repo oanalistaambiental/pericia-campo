@@ -17,6 +17,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaIrParaCoordenada
 import br.com.oanalistaambiental.pericia.ui.TelaMedicao
 import br.com.oanalistaambiental.pericia.ui.TelaOcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.ui.TelaPrazoRenovacao
+import br.com.oanalistaambiental.pericia.ui.TelaRecursosHidricos
 
 /**
  * A gaveta, em um lugar so.
@@ -126,6 +127,19 @@ object Registro {
                 "metros do limite oficial. Não é indício de restrição, só contexto para " +
                 "outorga.",
             tela = { nav -> TelaBaciaHidrografica(vmCaptura(), nav.voltar) }
+        ),
+        Ferramenta(
+            id = "recursos_hidricos",
+            nome = "Recursos hídricos",
+            resumo = "Cadastro de Uso Insignificante × Outorga pela captação, e as normas do CERH-MG.",
+            grupo = Grupo.CAMPO,
+            icone = IconeGaveta.AGUA,
+            exige = setOf(Recurso.GNSS),
+            limite = "É sugestão a partir do valor que você digita, não decisão do IGAM. Não " +
+                "cobre o regime de outorga acima do limiar nas UPGRHs do norte (usa cálculo de " +
+                "Recurso Potencial Explotável, sem tabela pública) nem valores próprios de Área " +
+                "de Restrição e Controle por superexplotação.",
+            tela = { nav -> TelaRecursosHidricos(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(
             id = "prazo_renovacao",

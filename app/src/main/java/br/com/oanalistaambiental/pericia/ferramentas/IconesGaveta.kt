@@ -43,7 +43,8 @@ enum class IconeGaveta {
     PINO,
     MOEDA,
     CARTEIRA,
-    ALERTA
+    ALERTA,
+    AGUA
 }
 
 @Composable
@@ -282,6 +283,20 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                 drawPath(tri, cor, style = traco)
                 drawLine(cor, Offset(w * 0.5f, h * 0.4f), Offset(w * 0.5f, h * 0.64f), traco.width, StrokeCap.Round)
                 drawCircle(cor, w * 0.035f, Offset(w * 0.5f, h * 0.74f), style = Fill)
+            }
+
+            IconeGaveta.AGUA -> {
+                // Gota d'agua: circulo (a base) com uma ponta triangular subindo — mesmo
+                // raciocinio do pino de mapa (IconeGaveta.PINO), so invertido.
+                val c = Offset(w * 0.5f, h * 0.62f)
+                val r = w * 0.24f
+                val ponta = Path().apply {
+                    moveTo(c.x - r * 0.62f, c.y - r * 0.7f)
+                    lineTo(c.x, h * 0.14f)
+                    lineTo(c.x + r * 0.62f, c.y - r * 0.7f)
+                }
+                drawPath(ponta, cor, style = traco)
+                drawCircle(cor, r, c, style = traco)
             }
 
             IconeGaveta.CAMADAS -> {
