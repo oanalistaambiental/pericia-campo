@@ -80,7 +80,7 @@ def main():
     problemas = []
     fornecedores = {}
     enums_todos = {}
-    for sub in ("captura", "dados", "geo"):
+    for sub in ("captura", "dados", "geo", "taxas"):
         nomes, enums = declaracoes(sub)
         for n, orig in nomes.items():
             fornecedores[n] = (sub, orig)

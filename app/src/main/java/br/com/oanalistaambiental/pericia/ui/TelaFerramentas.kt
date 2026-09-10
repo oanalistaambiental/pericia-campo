@@ -28,6 +28,7 @@ import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.PontosLocais
 import br.com.oanalistaambiental.pericia.geo.PrazoRenovacao
 import br.com.oanalistaambiental.pericia.geo.Utm
+import br.com.oanalistaambiental.pericia.taxas.TaxaUfemg
 
 /** Menu de ferramentas — o que existe fora do ato de fotografar. */
 /*
