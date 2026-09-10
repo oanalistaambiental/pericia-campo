@@ -12,9 +12,11 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
@@ -36,6 +38,8 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import br.com.oanalistaambiental.pericia.captura.PosicaoMarcaDagua
+import br.com.oanalistaambiental.pericia.geo.Restricao
+import br.com.oanalistaambiental.pericia.geo.Situacao
 import br.com.oanalistaambiental.pericia.geo.Utm
 import kotlinx.coroutines.delay
 import java.io.File
@@ -394,10 +398,44 @@ private fun BlocoPrecisao(vm: CapturaViewModel) {
     SeloPrecisao(posicao)
 }
 
+/**
+ * Selo de status instantâneo por camada — nome da camada + "dentro"/"próximo"/"fora", antes do
+ * texto completo do [AvisoRestricao] logo abaixo. Mesmo dado (última foto tirada), só mais rápido
+ * de ler num relance do que a frase inteira.
+ */
 @Composable
 private fun BlocoRestricoes(vm: CapturaViewModel) {
     val restricoes by vm.ultimasRestricoes.collectAsState()
+    if (restricoes.isNotEmpty()) {
+        Row(
+            Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            restricoes.take(4).forEach { SeloCamada(it) }
+        }
+    }
     restricoes.take(3).forEach { AvisoRestricao(it.frase(), it.situacao) }
+}
+
+@Composable
+private fun SeloCamada(r: Restricao) {
+    val cor = when (r.situacao) {
+        Situacao.DENTRO -> Cores.alerta
+        Situacao.PROXIMO_AO_LIMITE -> Cores.atencao
+        Situacao.FORA -> Cores.neutro
+    }
+    val rotulo = when (r.situacao) {
+        Situacao.DENTRO -> "dentro"
+        Situacao.PROXIMO_AO_LIMITE -> "próximo"
+        Situacao.FORA -> "fora"
+    }
+    Box(Modifier.background(cor, RoundedCornerShape(10.dp)).padding(horizontal = 8.dp, vertical = 3.dp)) {
+        Text(
+            "${r.camadaNome} · $rotulo", color = Color.White,
+            fontSize = 9.5.sp, fontWeight = FontWeight.SemiBold
+        )
+    }
 }
 
 /** Guia ativo: ponto de retorno ou coordenada digitada. */
