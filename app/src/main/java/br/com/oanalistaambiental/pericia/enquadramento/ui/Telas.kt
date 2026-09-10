@@ -77,17 +77,39 @@ fun TelaInicio(vm: SimulacaoViewModel, irParaSimulacao: () -> Unit, irParaNorma:
 
 /* --------------------------------------------------------------- ATIVIDADE */
 
+/**
+ * As sete Listagens do Anexo Único da DN 217/2017 — a letra inicial do código
+ * ("A-01-01-5" → "A") já é a tipologia oficial da norma, lida linha a linha do texto
+ * consolidado (título de cada Listagem, antes do primeiro código daquele grupo).
+ */
+private val TIPOLOGIAS = listOf(
+    "A" to "Atividades minerárias",
+    "B" to "Atividades industriais — indústria metalúrgica e outras",
+    "C" to "Atividades industriais — indústria química e outras",
+    "D" to "Atividades industriais — indústria alimentícia",
+    "E" to "Atividades de infraestrutura",
+    "F" to "Gerenciamento de resíduos e serviços",
+    "G" to "Atividades agrossilvipastoris"
+)
+
 @Composable
 fun TelaAtividade(vm: SimulacaoViewModel, avancar: () -> Unit, voltar: () -> Unit) {
     val regras by vm.regras.collectAsState()
     var busca by rememberSaveable { mutableStateOf("") }
+    var tipologia by rememberSaveable { mutableStateOf<String?>(null) }
     val erroBase by vm.erroBase.collectAsState()
     val r = regras ?: return Carregando("1. Atividade", voltar, erroBase)
 
-    val lista = remember(busca, r) {
-        if (busca.isBlank()) r.atividades
-        else r.atividades.filter {
-            it.codigo.contains(busca, true) || it.descricao.contains(busca, true)
+    val porTipologia = remember(r) { r.atividades.groupBy { it.codigo.substringBefore('-') } }
+
+    val lista = remember(busca, tipologia, r) {
+        val tipologiaAtual = tipologia
+        when {
+            busca.isNotBlank() -> r.atividades.filter {
+                it.codigo.contains(busca, true) || it.descricao.contains(busca, true)
+            }
+            tipologiaAtual != null -> porTipologia[tipologiaAtual].orEmpty()
+            else -> emptyList()
         }
     }
 
@@ -96,7 +118,7 @@ fun TelaAtividade(vm: SimulacaoViewModel, avancar: () -> Unit, voltar: () -> Uni
 
         OutlinedTextField(
             value = busca, onValueChange = { busca = it },
-            label = { Text("Buscar por código ou descrição") },
+            label = { Text("Buscar por código ou descrição, em todas as listagens") },
             modifier = Modifier.fillMaxWidth().padding(16.dp), singleLine = true
         )
 
@@ -113,27 +135,74 @@ fun TelaAtividade(vm: SimulacaoViewModel, avancar: () -> Unit, voltar: () -> Uni
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Rotulo("CATÁLOGO — ${lista.size} ATIVIDADE(S)")
-        LazyColumn(Modifier.weight(1f)) {
-            items(lista) { a ->
-                Column(
-                    Modifier.fillMaxWidth().clickable { vm.escolherAtividade(a); avancar() }
-                        .padding(horizontal = 16.dp, vertical = 13.dp)
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Mono(a.codigo, Cores.acento, 12)
-                        Spacer(Modifier.weight(1f))
-                        Selo(a.conferencia)
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    Text(a.descricao, color = Cores.texto, fontSize = 13.5.sp, lineHeight = 18.sp)
-                    Spacer(Modifier.height(3.dp))
-                    Mono("potencial geral ${a.pp.geral.name} · porte por ${a.parametro.lowercase()}")
-                }
-                HorizontalDivider(color = Cores.linha)
+        when {
+            busca.isNotBlank() -> {
+                Rotulo("RESULTADO DA BUSCA — ${lista.size} ATIVIDADE(S)")
+                ListaAtividades(lista, vm, avancar)
             }
-            item { Spacer(Modifier.height(24.dp)) }
+            tipologia == null -> {
+                Rotulo("LISTAGEM — ESCOLHA A TIPOLOGIA")
+                LazyColumn(Modifier.weight(1f)) {
+                    items(TIPOLOGIAS) { (letra, titulo) ->
+                        val quantidade = porTipologia[letra]?.size ?: 0
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .clickable(enabled = quantidade > 0) { tipologia = letra }
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Mono("LISTAGEM $letra", Cores.acento, 12)
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(titulo, color = Cores.texto, fontSize = 13.5.sp, lineHeight = 18.sp)
+                                Mono("$quantidade atividade(s)")
+                            }
+                        }
+                        HorizontalDivider(color = Cores.linha)
+                    }
+                    item { Spacer(Modifier.height(24.dp)) }
+                }
+            }
+            else -> {
+                Row(
+                    Modifier.fillMaxWidth().clickable { tipologia = null }
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("‹ voltar às tipologias", color = Cores.acento, fontSize = 13.sp)
+                }
+                Rotulo("LISTAGEM $tipologia — ${lista.size} ATIVIDADE(S)")
+                ListaAtividades(lista, vm, avancar)
+            }
         }
+    }
+}
+
+@Composable
+private fun ColumnScope.ListaAtividades(
+    lista: List<Atividade>,
+    vm: SimulacaoViewModel,
+    avancar: () -> Unit
+) {
+    LazyColumn(Modifier.weight(1f)) {
+        items(lista) { a ->
+            Column(
+                Modifier.fillMaxWidth().clickable { vm.escolherAtividade(a); avancar() }
+                    .padding(horizontal = 16.dp, vertical = 13.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Mono(a.codigo, Cores.acento, 12)
+                    Spacer(Modifier.weight(1f))
+                    Selo(a.conferencia)
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(a.descricao, color = Cores.texto, fontSize = 13.5.sp, lineHeight = 18.sp)
+                Spacer(Modifier.height(3.dp))
+                Mono("potencial geral ${a.pp.geral.name} · porte por ${a.parametro.lowercase()}")
+            }
+            HorizontalDivider(color = Cores.linha)
+        }
+        item { Spacer(Modifier.height(24.dp)) }
     }
 }
 
