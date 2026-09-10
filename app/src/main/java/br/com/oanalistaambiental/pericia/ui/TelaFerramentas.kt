@@ -999,6 +999,116 @@ fun TelaPontosSalvos(vm: CapturaViewModel, voltar: () -> Unit) {
     }
 }
 
+/**
+ * Calculadora de taxa em UFEMG — taxa de expediente (análise de intervenção ambiental/DAIA) e
+ * taxa florestal. Dado real, extraído da planilha oficial de estimativa de custo (ver
+ * `taxas/TaxaUfemg.kt`), com a resolução que fixa o valor da UFEMG citada na tela.
+ */
+@Composable
+fun TelaTaxaUfemg(vm: CapturaViewModel, voltar: () -> Unit) {
+    val tabela by vm.tabelaTaxas.collectAsState()
+    var abaFlorestal by rememberSaveable { mutableStateOf(false) }
+    var itemSelecionadoCodigo by rememberSaveable { mutableStateOf<String?>(null) }
+    var quantidadeTexto by rememberSaveable { mutableStateOf("") }
+
+    Column(
+        Modifier.fillMaxSize().background(Cores.fundo)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+    ) {
+        Cabecalho("Taxa em UFEMG", voltar)
+
+        val t = tabela
+        if (t == null) {
+            Vazio("Carregando tabela…", "")
+            return@Column
+        }
+
+        Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
+            Box(Modifier.weight(1f)) {
+                BotaoLargo("Intervenção (DAIA)", principal = !abaFlorestal) {
+                    abaFlorestal = false; itemSelecionadoCodigo = null
+                }
+            }
+            Spacer(Modifier.width(8.dp))
+            Box(Modifier.weight(1f)) {
+                BotaoLargo("Florestal", principal = abaFlorestal) {
+                    abaFlorestal = true; itemSelecionadoCodigo = null
+                }
+            }
+        }
+
+        val itens = if (abaFlorestal) t.taxaFlorestal else t.taxaExpedienteIntervencao
+        val selecionado = itens.firstOrNull { it.codigo == itemSelecionadoCodigo }
+
+        if (selecionado == null) {
+            Rotulo("ESCOLHA O ITEM")
+            LazyColumn(Modifier.weight(1f)) {
+                items(itens) { item ->
+                    Column(
+                        Modifier.fillMaxWidth()
+                            .clickable { itemSelecionadoCodigo = item.codigo }
+                            .padding(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Mono(item.codigo, Cores.bomClaro, 11)
+                        Spacer(Modifier.height(2.dp))
+                        Text(item.especificacao, color = Cores.texto, fontSize = 13.sp, lineHeight = 18.sp)
+                    }
+                    HorizontalDivider(color = Cores.linha)
+                }
+            }
+        } else {
+            Column(Modifier.fillMaxWidth().weight(1f).padding(16.dp)) {
+                Text(selecionado.especificacao, color = Cores.texto, fontSize = 14.sp, lineHeight = 19.sp)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "clique para escolher outro item",
+                    color = Cores.bomClaro, fontSize = 11.5.sp,
+                    modifier = Modifier.clickable { itemSelecionadoCodigo = null }
+                )
+                Spacer(Modifier.height(16.dp))
+                OutlinedTextField(
+                    value = quantidadeTexto,
+                    onValueChange = { quantidadeTexto = it },
+                    label = { Text("Quantidade (${selecionado.unidade})") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(20.dp))
+                val quantidade = quantidadeTexto.replace(',', '.').toDoubleOrNull()
+                if (quantidade != null && quantidade >= 0) {
+                    val valor = TaxaUfemg.calcular(selecionado, quantidade, t.valorUfemg)
+                    Text(
+                        "R$ %,.2f".format(java.util.Locale("pt", "BR"), valor),
+                        color = Cores.texto, fontSize = 34.sp, fontWeight = FontWeight.Bold
+                    )
+                    if (selecionado.fixoUfemg > 0) {
+                        Mono(
+                            "%.0f UFEMG fixas + %.0f × %.2f UFEMG/%s".format(
+                                java.util.Locale.US, selecionado.fixoUfemg, selecionado.variavelUfemgPorUnidade,
+                                quantidade, selecionado.unidade
+                            ), Cores.textoFraco, 11
+                        )
+                    } else {
+                        Mono(
+                            "%.2f × %.2f UFEMG/%s".format(
+                                java.util.Locale.US, quantidade, selecionado.variavelUfemgPorUnidade, selecionado.unidade
+                            ), Cores.textoFraco, 11
+                        )
+                    }
+                } else {
+                    Text("Informe a quantidade.", color = Cores.textoFraco, fontSize = 12.5.sp)
+                }
+            }
+        }
+
+        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+            Text(
+                "UFEMG ${t.exercicio}: R$ %.4f — %s".format(java.util.Locale.US, t.valorUfemg, t.fonte),
+                color = Cores.textoFraco, fontSize = 10.5.sp, lineHeight = 15.sp
+            )
+        }
+    }
+}
+
 /** Glossário de siglas do SISEMA — referência, sem busca por enquanto: a lista cabe na tela. */
 @Composable
 fun TelaGlossario(voltar: () -> Unit) {

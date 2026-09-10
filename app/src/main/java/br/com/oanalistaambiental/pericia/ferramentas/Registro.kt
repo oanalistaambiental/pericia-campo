@@ -9,6 +9,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaBaciaHidrografica
 import br.com.oanalistaambiental.pericia.ui.TelaBussola
 import br.com.oanalistaambiental.pericia.ui.TelaGlossario
 import br.com.oanalistaambiental.pericia.ui.TelaPontosSalvos
+import br.com.oanalistaambiental.pericia.ui.TelaTaxaUfemg
 import br.com.oanalistaambiental.pericia.ui.TelaClinometro
 import br.com.oanalistaambiental.pericia.ui.TelaConfiguracoes
 import br.com.oanalistaambiental.pericia.ui.TelaIrParaCoordenada
@@ -129,6 +130,17 @@ object Registro {
             limite = "Faz só a conta do art. 12 da DN COPAM 217/2017. Não conhece condicionante " +
                 "nem prazo específico do processo — confirme com a Unidade Regional.",
             tela = { nav -> TelaPrazoRenovacao(nav.voltar) }
+        ),
+        Ferramenta(
+            id = "taxa_ufemg",
+            nome = "Taxa em UFEMG",
+            resumo = "Taxa de expediente (intervenção/DAIA) e taxa florestal, em UFEMG.",
+            grupo = Grupo.ENQUADRAR,
+            icone = IconeGaveta.MOEDA,
+            limite = "Estimativa a partir da planilha de custos vigente para o exercício " +
+                "citado na tela — o valor da UFEMG muda todo ano. Confirme a taxa final com a " +
+                "Unidade Regional antes de pagar.",
+            tela = { nav -> TelaTaxaUfemg(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(
             id = "glossario",

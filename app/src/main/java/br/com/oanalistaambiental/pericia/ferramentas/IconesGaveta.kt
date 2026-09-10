@@ -40,7 +40,8 @@ enum class IconeGaveta {
     BACIA,
     GLOSSARIO,
     ALTURA,
-    PINO
+    PINO,
+    MOEDA
 }
 
 @Composable
@@ -190,6 +191,16 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                     }
                     drawPath(onda, cor, style = traco)
                 }
+            }
+
+            IconeGaveta.MOEDA -> {
+                // Moeda: dois circulos concentricos (a borda e o miolo) e uma linha vertical no
+                // centro — a forma classica de "ficha/moeda", sem depender de texto no Canvas.
+                val c = Offset(w * 0.5f, h * 0.5f)
+                drawCircle(cor, w * 0.38f, c, style = traco)
+                drawCircle(cor, w * 0.20f, c, style = traco)
+                drawLine(cor, Offset(c.x, h * 0.12f), Offset(c.x, h * 0.24f), traco.width, StrokeCap.Round)
+                drawLine(cor, Offset(c.x, h * 0.76f), Offset(c.x, h * 0.88f), traco.width, StrokeCap.Round)
             }
 
             IconeGaveta.PINO -> {

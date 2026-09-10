@@ -17,6 +17,8 @@ import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
 import br.com.oanalistaambiental.pericia.dados.PontoSalvo
 import br.com.oanalistaambiental.pericia.dados.Sessao
 import br.com.oanalistaambiental.pericia.dados.TiposOcorrencia
+import br.com.oanalistaambiental.pericia.taxas.TabelaTaxas
+import br.com.oanalistaambiental.pericia.taxas.TaxaUfemg
 import br.com.oanalistaambiental.pericia.exportacao.Exportador
 import br.com.oanalistaambiental.pericia.geo.CamadaInfo
 import br.com.oanalistaambiental.pericia.geo.CircunscricaoHidrografica
@@ -56,6 +58,9 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     /** Dado, nao codigo (ver `dados/Modelos.kt`): comeca com o padrao embutido, ate o asset carregar. */
     private val _tiposOcorrencia = MutableStateFlow(TiposOcorrencia.padrao)
     val tiposOcorrencia: StateFlow<List<String>> = _tiposOcorrencia
+
+    private val _tabelaTaxas = MutableStateFlow<TabelaTaxas?>(null)
+    val tabelaTaxas: StateFlow<TabelaTaxas?> = _tabelaTaxas
 
     private val _fotosDaSessao = MutableStateFlow<List<Foto>>(emptyList())
     val fotosDaSessao: StateFlow<List<Foto>> = _fotosDaSessao
@@ -270,6 +275,11 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             _tiposOcorrencia.value = TiposOcorrencia.carregar {
                 getApplication<Application>().assets.open("tipos_ocorrencia.json")
             }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                TaxaUfemg.carregar { getApplication<Application>().assets.open("taxas/ufemg_2026.json") }
+            }.onSuccess { _tabelaTaxas.value = it }
         }
     }
 

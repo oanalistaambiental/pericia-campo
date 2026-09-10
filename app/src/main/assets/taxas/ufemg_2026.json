@@ -1,0 +1,31 @@
+{
+  "exercicio": 2026,
+  "valor_ufemg": 5.7899,
+  "fonte": "Resolução SEF-MG Nº 5.969, de 28/11/2025",
+  "taxa_expediente_intervencao": [
+    {"codigo": "7.24.1", "especificacao": "Supressão de cobertura vegetal nativa, com ou sem destoca, para uso alternativo do solo", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
+    {"codigo": "7.24.2", "especificacao": "Intervenção com supressão de cobertura vegetal nativa em áreas de preservação permanente – APP", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
+    {"codigo": "7.24.3", "especificacao": "Destoca em área remanescente de supressão de vegetação nativa", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
+    {"codigo": "7.24.4", "especificacao": "Corte ou aproveitamento de árvores isoladas nativas vivas", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
+    {"codigo": "7.24.5", "especificacao": "Análise e vistoria de plano de manejo sustentável da vegetação nativa", "unidade": "hectare ou fração", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
+    {"codigo": "7.24.6", "especificacao": "Intervenção em área de preservação permanente – APP – sem supressão de cobertura vegetal nativa", "unidade": "hectare ou fração", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 30},
+    {"codigo": "7.24.7", "especificacao": "Supressão de maciço florestal de origem plantada com presença de sub-bosque nativo com rendimento lenhoso", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
+    {"codigo": "7.24.8", "especificacao": "Supressão de maciço florestal de origem plantada localizado em APP", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
+    {"codigo": "7.24.9", "especificacao": "Aproveitamento de material lenhoso", "unidade": "metro cúbico", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
+    {"codigo": "7.24.13", "especificacao": "Prorrogação de prazo de validade do DAIA", "unidade": "hectare ou fração", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1}
+  ],
+  "taxa_florestal": [
+    {"codigo": "1.00", "especificacao": "Lenha de floresta plantada", "unidade": "m³", "ufemg_por_unidade": 0.28},
+    {"codigo": "1.01", "especificacao": "Lenha de floresta nativa sob manejo sustentável", "unidade": "m³", "ufemg_por_unidade": 0.28},
+    {"codigo": "1.02", "especificacao": "Lenha de floresta nativa", "unidade": "m³", "ufemg_por_unidade": 1.4},
+    {"codigo": "2.00", "especificacao": "Madeira de floresta plantada", "unidade": "m³", "ufemg_por_unidade": 0.54},
+    {"codigo": "2.01", "especificacao": "Madeira de floresta nativa sob manejo sustentável", "unidade": "m³", "ufemg_por_unidade": 0.54},
+    {"codigo": "2.02", "especificacao": "Madeira de floresta nativa", "unidade": "m³", "ufemg_por_unidade": 9.35},
+    {"codigo": "3.00", "especificacao": "Carvão vegetal de floresta plantada", "unidade": "m³", "ufemg_por_unidade": 0.56},
+    {"codigo": "3.01", "especificacao": "Carvão vegetal de floresta nativa sob manejo sustentável", "unidade": "m³", "ufemg_por_unidade": 0.56},
+    {"codigo": "3.02", "especificacao": "Carvão vegetal de floresta nativa", "unidade": "m³", "ufemg_por_unidade": 2.8},
+    {"codigo": "4.00", "especificacao": "Produtos não madeireiros de floresta plantada", "unidade": "kg", "ufemg_por_unidade": 0.07},
+    {"codigo": "4.01", "especificacao": "Produtos não madeireiros de floresta nativa sob manejo sustentável", "unidade": "kg", "ufemg_por_unidade": 0.07},
+    {"codigo": "4.02", "especificacao": "Produtos não madeireiros de floresta nativa", "unidade": "kg", "ufemg_por_unidade": 0.37}
+  ]
+}
