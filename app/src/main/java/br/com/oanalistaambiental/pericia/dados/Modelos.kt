@@ -95,6 +95,24 @@ data class RegistroCaptacao(
     val baseLegal: String
 )
 
+/**
+ * Uma ficha de vistoria preenchida — qual [modeloId]/[modeloNome] (do catálogo em
+ * `assets/fichas/fichas.json`), onde e quando, e as respostas serializadas em JSON
+ * (ver `fichas.serializarRespostas`/`parseRespostas`). Uma linha por ficha, não uma tabela
+ * por resposta: é um formulário preenchido de uma vez, não um registro que cresce item a item
+ * como a sessão de fotos.
+ */
+data class RegistroFicha(
+    val id: Long = 0,
+    val modeloId: String,
+    val modeloNome: String,
+    val lat: Double,
+    val lon: Double,
+    val precisaoM: Float?,
+    val instante: Long,
+    val respostasJson: String
+)
+
 data class Sessao(
     val id: Long = 0,
     val titulo: String,

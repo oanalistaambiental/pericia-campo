@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 8) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 9) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -109,6 +109,14 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 8)
                 classificacao TEXT NOT NULL,
                 base_legal TEXT NOT NULL
             )""")
+        db.execSQL("""
+            CREATE TABLE ficha_vistoria (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                modelo_id TEXT NOT NULL, modelo_nome TEXT NOT NULL,
+                lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
+                instante INTEGER NOT NULL,
+                respostas_json TEXT NOT NULL
+            )""")
         db.execSQL("CREATE INDEX idx_foto_sessao ON foto(sessao_id)")
         db.execSQL("CREATE INDEX idx_restricao_foto ON restricao(foto_id)")
         db.execSQL("CREATE INDEX idx_caminhamento_sessao ON caminhamento_ponto(sessao_id)")
@@ -201,6 +209,16 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 8)
                     foto_sha256 TEXT,
                     classificacao TEXT NOT NULL,
                     base_legal TEXT NOT NULL
+                )""")
+        }
+        if (old < 9) {
+            db.execSQL("""
+                CREATE TABLE ficha_vistoria (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    modelo_id TEXT NOT NULL, modelo_nome TEXT NOT NULL,
+                    lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
+                    instante INTEGER NOT NULL,
+                    respostas_json TEXT NOT NULL
                 )""")
         }
     }
@@ -524,6 +542,35 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 8)
 
     fun excluirRegistroCaptacao(id: Long) {
         writableDatabase.delete("registro_captacao", "id=?", arrayOf(id.toString()))
+    }
+
+    // ---- ficha de vistoria ----
+
+    fun inserirRegistroFicha(r: RegistroFicha): Long =
+        writableDatabase.insert("ficha_vistoria", null, ContentValues().apply {
+            put("modelo_id", r.modeloId); put("modelo_nome", r.modeloNome)
+            put("lat", r.lat); put("lon", r.lon); put("precisao_m", r.precisaoM)
+            put("instante", r.instante); put("respostas_json", r.respostasJson)
+        })
+
+    fun registrosFicha(): List<RegistroFicha> {
+        val out = mutableListOf<RegistroFicha>()
+        readableDatabase.rawQuery(
+            "SELECT id, modelo_id, modelo_nome, lat, lon, precisao_m, instante, respostas_json" +
+                " FROM ficha_vistoria ORDER BY instante DESC", null
+        ).use { c ->
+            while (c.moveToNext()) out += RegistroFicha(
+                id = c.getLong(0), modeloId = c.getString(1), modeloNome = c.getString(2),
+                lat = c.getDouble(3), lon = c.getDouble(4),
+                precisaoM = if (c.isNull(5)) null else c.getFloat(5),
+                instante = c.getLong(6), respostasJson = c.getString(7)
+            )
+        }
+        return out
+    }
+
+    fun excluirRegistroFicha(id: Long) {
+        writableDatabase.delete("ficha_vistoria", "id=?", arrayOf(id.toString()))
     }
 
     fun foto(id: Long): Foto? =

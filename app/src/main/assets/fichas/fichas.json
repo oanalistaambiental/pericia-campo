@@ -1,0 +1,215 @@
+{
+  "modelos": [
+    {
+      "id": "generica",
+      "nome": "Genérica — qualquer empreendimento",
+      "secoes": [
+        {
+          "titulo": "Documentação e identificação",
+          "itens": [
+            "Placa de identificação do empreendimento e da licença visível e legível",
+            "Licença ou dispensa (art. 10) apresentada corresponde à atividade observada em campo",
+            "Condicionantes da licença conferidas contra o que está anexado ao processo"
+          ]
+        },
+        {
+          "titulo": "Efluentes e recursos hídricos",
+          "itens": [
+            "Efluente líquido tem destinação identificável (rede coletora, fossa, corpo hídrico)",
+            "Outorga ou Cadastro de Uso Insignificante compatível com a captação observada",
+            "Sinal visível de lançamento irregular (cor, espuma, odor) em corpo hídrico próximo"
+          ]
+        },
+        {
+          "titulo": "Resíduos sólidos",
+          "itens": [
+            "Resíduos segregados por classe e com destinação/armazenamento identificável",
+            "Ausência de queima ou disposição a céu aberto no local"
+          ]
+        },
+        {
+          "titulo": "Vegetação e área de preservação",
+          "itens": [
+            "Área de Preservação Permanente presente no entorno está preservada",
+            "Sem indício de supressão de vegetação nativa recente sem autorização aparente"
+          ]
+        },
+        {
+          "titulo": "Emissões e incômodo",
+          "itens": [
+            "Sem emissão atmosférica visível (fumaça, poeira, fuligem) fora do processo esperado",
+            "Sem ruído perceptível como incômodo à vizinhança no momento da vistoria"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mineracao",
+      "nome": "Mineração e extração mineral",
+      "secoes": [
+        {
+          "titulo": "Título minerário e licenciamento",
+          "itens": [
+            "Título minerário (DNPM/ANM) vigente e compatível com a área observada",
+            "Poligonal de lavra observada corresponde à licenciada"
+          ]
+        },
+        {
+          "titulo": "Estabilidade e barragem",
+          "itens": [
+            "Taludes de cava ou pilha sem sinal visível de instabilidade (trincas, abatimento)",
+            "Barragem de rejeito, se houver, com estrutura de monitoramento aparente e sem infiltração visível"
+          ]
+        },
+        {
+          "titulo": "Água e drenagem",
+          "itens": [
+            "Sistema de drenagem pluvial da área minerada direcionado e sem carreamento de sedimento visível",
+            "Outorga de captação/rebaixamento de nível d'água compatível com a operação"
+          ]
+        },
+        {
+          "titulo": "Recuperação de área",
+          "itens": [
+            "PRAD em execução aparente nas áreas já exauridas ou desativadas",
+            "Ausência de disposição de estéril fora da área licenciada"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "industria",
+      "nome": "Indústria (transformação, processamento)",
+      "secoes": [
+        {
+          "titulo": "Processo e emissões",
+          "itens": [
+            "Sistema de controle de emissão atmosférica (filtro, lavador) aparentemente em operação",
+            "Chaminé ou ponto de emissão sem fumaça visivelmente fora do padrão"
+          ]
+        },
+        {
+          "titulo": "Efluentes industriais",
+          "itens": [
+            "Estação de tratamento de efluente (ETE), se exigida, aparenta estar em operação",
+            "Ponto de lançamento de efluente tratado identificável e sem coloração/odor anômalo"
+          ]
+        },
+        {
+          "titulo": "Armazenamento de insumos e produtos químicos",
+          "itens": [
+            "Tanques e produtos químicos com contenção secundária visível",
+            "Rótulo/FISPQ disponível para os produtos perigosos armazenados"
+          ]
+        },
+        {
+          "titulo": "Resíduos industriais",
+          "itens": [
+            "Resíduo perigoso (Classe I) segregado, identificado e em área coberta",
+            "Manifesto de transporte de resíduo (MTR) disponível para conferência"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "agropecuaria",
+      "nome": "Agropecuária e silvicultura",
+      "secoes": [
+        {
+          "titulo": "Uso do solo e vegetação",
+          "itens": [
+            "Reserva Legal averbada/registrada e presente na área observada",
+            "Sem indício de supressão de vegetação nativa recente sem autorização aparente",
+            "Área de Preservação Permanente ao longo de curso d'água ou nascente preservada"
+          ]
+        },
+        {
+          "titulo": "Efluentes e dejetos",
+          "itens": [
+            "Dejeto animal (esterqueira, lagoa) com impermeabilização e contenção aparente",
+            "Sem lançamento visível de dejeto em corpo hídrico"
+          ]
+        },
+        {
+          "titulo": "Insumos agrícolas",
+          "itens": [
+            "Local de armazenamento de agrotóxico separado, sinalizado e com contenção",
+            "Embalagem vazia de agrotóxico com destinação aparente (não descartada a céu aberto)"
+          ]
+        },
+        {
+          "titulo": "Água",
+          "itens": [
+            "Captação de água (poço ou superficial) compatível com outorga ou uso insignificante declarado"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "infraestrutura",
+      "nome": "Infraestrutura e obras (rodovia, loteamento, linha)",
+      "secoes": [
+        {
+          "titulo": "Licenciamento e escopo",
+          "itens": [
+            "Trecho ou área observada corresponde ao poligonal licenciado",
+            "Canteiro de obras com licença/autorização própria, quando exigida"
+          ]
+        },
+        {
+          "titulo": "Supressão e terraplenagem",
+          "itens": [
+            "Supressão de vegetação limitada à faixa autorizada",
+            "Controle de erosão e sedimento (bacia de contenção, cobertura de solo exposto) visível"
+          ]
+        },
+        {
+          "titulo": "Travessia de corpo hídrico",
+          "itens": [
+            "Travessia de curso d'água com estrutura adequada e sem assoreamento visível a jusante"
+          ]
+        },
+        {
+          "titulo": "Resíduos de obra",
+          "itens": [
+            "Resíduo de construção civil (RCC) segregado e com destinação identificável",
+            "Sem bota-fora irregular nas proximidades"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "residuos",
+      "nome": "Gerenciamento de resíduos e serviços",
+      "secoes": [
+        {
+          "titulo": "Recebimento e triagem",
+          "itens": [
+            "Área de recebimento coberta e com piso impermeabilizado",
+            "Triagem por classe de resíduo visivelmente organizada"
+          ]
+        },
+        {
+          "titulo": "Armazenamento temporário",
+          "itens": [
+            "Resíduo perigoso segregado dos demais e com sinalização",
+            "Tempo de permanência do resíduo no local compatível com o autorizado"
+          ]
+        },
+        {
+          "titulo": "Destinação final",
+          "itens": [
+            "Manifesto de transporte de resíduo (MTR) disponível para os lotes já expedidos",
+            "Destinatário final (aterro, coprocessamento, reciclagem) identificado e licenciado"
+          ]
+        },
+        {
+          "titulo": "Percolado e drenagem",
+          "itens": [
+            "Sem indício de percolado ou chorume escoando para fora da área impermeabilizada"
+          ]
+        }
+      ]
+    }
+  ]
+}

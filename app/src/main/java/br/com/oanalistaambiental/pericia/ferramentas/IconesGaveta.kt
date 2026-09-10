@@ -45,7 +45,8 @@ enum class IconeGaveta {
     CARTEIRA,
     ALERTA,
     AGUA,
-    RELATORIO
+    RELATORIO,
+    CHECKLIST
 }
 
 @Composable
@@ -335,6 +336,32 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                 drawLine(cor, Offset(w * 0.28f, h * 0.42f), Offset(w * 0.72f, h * 0.42f), traco.width, StrokeCap.Round)
                 drawLine(cor, Offset(w * 0.28f, h * 0.56f), Offset(w * 0.72f, h * 0.56f), traco.width, StrokeCap.Round)
                 drawLine(cor, Offset(w * 0.28f, h * 0.7f), Offset(w * 0.56f, h * 0.7f), traco.width, StrokeCap.Round)
+            }
+
+            IconeGaveta.CHECKLIST -> {
+                // Tres quadradinhos marcados, um por linha — ficha de vistoria, nao relatorio
+                // (RELATORIO e prancheta+texto corrido) nem camadas (losangos empilhados).
+                for (i in 0..2) {
+                    val cy = h * (0.22f + i * 0.28f)
+                    val ladoCaixa = w * 0.16f
+                    drawRoundRect(
+                        color = cor,
+                        topLeft = Offset(w * 0.14f, cy - ladoCaixa / 2f),
+                        size = Size(ladoCaixa, ladoCaixa),
+                        cornerRadius = CornerRadius(w * 0.02f, w * 0.02f),
+                        style = traco
+                    )
+                    val marca = Path().apply {
+                        moveTo(w * 0.165f, cy)
+                        lineTo(w * 0.20f, cy + ladoCaixa * 0.32f)
+                        lineTo(w * 0.26f, cy - ladoCaixa * 0.32f)
+                    }
+                    drawPath(marca, cor, style = Stroke(width = traco.width * 0.85f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                    drawLine(
+                        cor, Offset(w * 0.38f, cy), Offset(w * 0.86f, cy),
+                        traco.width, StrokeCap.Round
+                    )
+                }
             }
         }
     }

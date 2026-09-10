@@ -1,0 +1,238 @@
+package br.com.oanalistaambiental.pericia.ui
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import br.com.oanalistaambiental.pericia.captura.EstadoCampo
+import br.com.oanalistaambiental.pericia.dados.RegistroFicha
+import br.com.oanalistaambiental.pericia.fichas.ModeloFicha
+import br.com.oanalistaambiental.pericia.fichas.Resposta
+import br.com.oanalistaambiental.pericia.fichas.ValorResposta
+import br.com.oanalistaambiental.pericia.fichas.parseRespostas
+
+/**
+ * Ficha de vistoria configurável: escolhe o tipo de empreendimento, responde o checklist daquele
+ * catálogo (`assets/fichas/fichas.json` — dado, não código, mesma razão de `enquadramento/norma`)
+ * e salva com a coordenada de quem preencheu. É roteiro de apoio, nunca a vistoria em si — cada
+ * modelo já diz isso no próprio [br.com.oanalistaambiental.pericia.ferramentas.Ferramenta.limite].
+ */
+@Composable
+fun TelaFichaVistoria(vm: CapturaViewModel, voltar: () -> Unit) {
+    val modelos by vm.modelosFicha.collectAsState()
+    val registros by vm.registrosFicha.collectAsState()
+    val p by vm.estadoCampo.posicao.collectAsState()
+    var modeloId by rememberSaveable { mutableStateOf<String?>(null) }
+    val modelo = modelos.firstOrNull { it.id == modeloId }
+
+    Column(
+        Modifier.fillMaxSize().background(Cores.fundo).windowInsetsPadding(WindowInsets.safeDrawing)
+    ) {
+        Cabecalho("Ficha de vistoria", voltar)
+
+        if (modelo == null) {
+            EscolhaModelo(modelos, registros, vm, aoEscolher = { modeloId = it.id })
+        } else {
+            PreenchimentoFicha(vm, modelo, p, aoTrocarModelo = { modeloId = null })
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.EscolhaModelo(
+    modelos: List<ModeloFicha>,
+    registros: List<RegistroFicha>,
+    vm: CapturaViewModel,
+    aoEscolher: (ModeloFicha) -> Unit
+) {
+    LazyColumn(Modifier.weight(1f)) {
+        item { Rotulo("ESCOLHA O TIPO DE EMPREENDIMENTO") }
+        items(modelos) { m ->
+            Column(
+                Modifier.fillMaxWidth().clickable { aoEscolher(m) }
+                    .padding(horizontal = 16.dp, vertical = 13.dp)
+            ) {
+                Text(m.nome, color = Cores.texto, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.height(2.dp))
+                Mono("${m.totalItens} item(ns) de checklist")
+            }
+            HorizontalDivider(color = Cores.linha)
+        }
+        if (modelos.isEmpty()) {
+            item {
+                Text(
+                    "Catálogo de fichas não carregou.",
+                    color = Cores.textoFraco, fontSize = 12.sp,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+        }
+        if (registros.isNotEmpty()) {
+            item { Rotulo("FICHAS SALVAS") }
+            items(registros) { r -> LinhaRegistroFicha(vm, r) }
+        }
+        item { Spacer(Modifier.height(24.dp)) }
+    }
+}
+
+@Composable
+private fun LinhaRegistroFicha(vm: CapturaViewModel, r: RegistroFicha) {
+    var confirmarExclusao by remember { mutableStateOf(false) }
+    val respostas = remember(r.respostasJson) { runCatching { parseRespostas(r.respostasJson) }.getOrDefault(emptyList()) }
+    val naoConformes = respostas.count { it.valor == ValorResposta.NAO_CONFORME }
+    Column(
+        Modifier.fillMaxWidth().padding(vertical = 6.dp)
+            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(12.dp)
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(r.modeloNome, color = Cores.texto, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.weight(1f))
+            Text(
+                if (naoConformes > 0) "$naoConformes não conforme(s)" else "sem não conformidade",
+                color = if (naoConformes > 0) Cores.alertaClaro else Cores.bomClaro,
+                fontSize = 10.5.sp, fontWeight = FontWeight.Bold
+            )
+        }
+        Spacer(Modifier.height(2.dp))
+        Mono("${respostas.size} item(ns) respondido(s)")
+        Spacer(Modifier.height(6.dp))
+        Text(
+            if (confirmarExclusao) "confirmar exclusão?" else "excluir",
+            color = Cores.alertaClaro, fontSize = 11.5.sp,
+            modifier = Modifier.clickable {
+                if (confirmarExclusao) { vm.excluirRegistroFicha(r); confirmarExclusao = false }
+                else confirmarExclusao = true
+            }
+        )
+    }
+}
+
+@Composable
+private fun ColumnScope.PreenchimentoFicha(
+    vm: CapturaViewModel,
+    modelo: ModeloFicha,
+    p: EstadoCampo.Posicao,
+    aoTrocarModelo: () -> Unit
+) {
+    val valores = remember(modelo.id) { mutableStateMapOf<String, ValorResposta>() }
+    val observacoes = remember(modelo.id) { mutableStateMapOf<String, String>() }
+    fun chave(secao: String, item: String) = "$secao||$item"
+
+    val totalItens = modelo.totalItens
+    val respondidos = valores.values.count { it != ValorResposta.NAO_RESPONDIDO }
+    val naoConformes = valores.values.count { it == ValorResposta.NAO_CONFORME }
+
+    Row(
+        Modifier.fillMaxWidth().clickable { aoTrocarModelo() }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("‹ trocar tipo de empreendimento", color = Cores.bomClaro, fontSize = 13.sp)
+    }
+    Text(
+        modelo.nome, color = Cores.texto, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+        modifier = Modifier.padding(horizontal = 16.dp)
+    )
+    Spacer(Modifier.height(4.dp))
+    Mono("$respondidos de $totalItens respondido(s) · $naoConformes não conforme(s)", modifier = Modifier.padding(horizontal = 16.dp))
+
+    LazyColumn(Modifier.weight(1f)) {
+        modelo.secoes.forEach { secao ->
+            item { Rotulo(secao.titulo.uppercase()) }
+            items(secao.itens) { item ->
+                val k = chave(secao.titulo, item.texto)
+                ItemChecklist(
+                    texto = item.texto,
+                    valor = valores[k] ?: ValorResposta.NAO_RESPONDIDO,
+                    observacao = observacoes[k] ?: "",
+                    aoMudarValor = { valores[k] = it },
+                    aoMudarObservacao = { observacoes[k] = it }
+                )
+            }
+        }
+        item { Spacer(Modifier.height(12.dp)) }
+    }
+
+    Box(Modifier.padding(16.dp)) {
+        BotaoLargo("Salvar ficha", principal = true, habilitado = p.lat != null && p.lon != null) {
+            val lat = p.lat
+            val lon = p.lon
+            if (lat != null && lon != null) {
+                val respostas = modelo.secoes.flatMap { secao ->
+                    secao.itens.map { item ->
+                        val k = chave(secao.titulo, item.texto)
+                        Resposta(
+                            secao = secao.titulo, item = item.texto,
+                            valor = valores[k] ?: ValorResposta.NAO_RESPONDIDO,
+                            observacao = observacoes[k]?.ifBlank { null }
+                        )
+                    }
+                }
+                vm.salvarRegistroFicha(modelo, respostas, lat, lon, p.precisaoM)
+                aoTrocarModelo()
+            }
+        }
+    }
+}
+
+@Composable
+private fun ItemChecklist(
+    texto: String,
+    valor: ValorResposta,
+    observacao: String,
+    aoMudarValor: (ValorResposta) -> Unit,
+    aoMudarObservacao: (String) -> Unit
+) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Text(texto, color = Cores.texto, fontSize = 13.sp, lineHeight = 18.sp)
+        Spacer(Modifier.height(6.dp))
+        SeletorResposta(valor, aoMudarValor)
+        if (valor == ValorResposta.NAO_CONFORME) {
+            Spacer(Modifier.height(6.dp))
+            OutlinedTextField(
+                value = observacao, onValueChange = aoMudarObservacao,
+                label = { Text("Observação (opcional)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
+private fun SeletorResposta(valor: ValorResposta, aoEscolher: (ValorResposta) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        BotaoResposta("Conforme", valor == ValorResposta.CONFORME, Cores.bom) { aoEscolher(ValorResposta.CONFORME) }
+        BotaoResposta("Não conforme", valor == ValorResposta.NAO_CONFORME, Cores.alerta) { aoEscolher(ValorResposta.NAO_CONFORME) }
+        BotaoResposta("N/A", valor == ValorResposta.NAO_SE_APLICA, Cores.neutro) { aoEscolher(ValorResposta.NAO_SE_APLICA) }
+    }
+}
+
+@Composable
+private fun RowScope.BotaoResposta(rotulo: String, selecionado: Boolean, cor: Color, aoClicar: () -> Unit) {
+    Box(
+        Modifier.weight(1f)
+            .background(if (selecionado) cor else Cores.superficie, RoundedCornerShape(6.dp))
+            .clickable { aoClicar() }
+            .padding(vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            rotulo, color = if (selecionado) Color.White else Cores.textoFraco,
+            fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center
+        )
+    }
+}

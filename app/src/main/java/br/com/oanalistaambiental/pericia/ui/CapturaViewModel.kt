@@ -29,7 +29,12 @@ import br.com.oanalistaambiental.pericia.dados.MAXIMO_FOTOS_OCORRENCIA
 import br.com.oanalistaambiental.pericia.dados.OcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.dados.PontoCaminhamento
 import br.com.oanalistaambiental.pericia.dados.RegistroCaptacao
+import br.com.oanalistaambiental.pericia.dados.RegistroFicha
 import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
+import br.com.oanalistaambiental.pericia.fichas.CatalogoFichas
+import br.com.oanalistaambiental.pericia.fichas.ModeloFicha
+import br.com.oanalistaambiental.pericia.fichas.Resposta
+import br.com.oanalistaambiental.pericia.fichas.serializarRespostas
 import br.com.oanalistaambiental.pericia.dados.PontoSalvo
 import br.com.oanalistaambiental.pericia.dados.Sessao
 import br.com.oanalistaambiental.pericia.dados.TiposOcorrencia
@@ -131,6 +136,12 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _registrosCaptacao = MutableStateFlow<List<RegistroCaptacao>>(emptyList())
     val registrosCaptacao: StateFlow<List<RegistroCaptacao>> = _registrosCaptacao
+
+    private val _modelosFicha = MutableStateFlow<List<ModeloFicha>>(emptyList())
+    val modelosFicha: StateFlow<List<ModeloFicha>> = _modelosFicha
+
+    private val _registrosFicha = MutableStateFlow<List<RegistroFicha>>(emptyList())
+    val registrosFicha: StateFlow<List<RegistroFicha>> = _registrosFicha
 
     /**
      * Marca d'água (brasão do órgão, logo da consultoria) queimada no canto da CÓPIA com
@@ -518,6 +529,35 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Grava uma ficha de vistoria preenchida, com a coordenada de quem a preencheu. */
+    fun salvarRegistroFicha(
+        modelo: ModeloFicha, respostas: List<Resposta>,
+        lat: Double, lon: Double, precisaoM: Float?
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                banco.inserirRegistroFicha(
+                    RegistroFicha(
+                        modeloId = modelo.id, modeloNome = modelo.nome,
+                        lat = lat, lon = lon, precisaoM = precisaoM,
+                        instante = System.currentTimeMillis(),
+                        respostasJson = serializarRespostas(respostas)
+                    )
+                )
+            }.onSuccess {
+                _registrosFicha.value = banco.registrosFicha()
+                _mensagem.value = "Ficha de vistoria salva."
+            }.onFailure { _mensagem.value = "Falha ao salvar ficha: ${it.message}" }
+        }
+    }
+
+    fun excluirRegistroFicha(r: RegistroFicha) {
+        viewModelScope.launch(Dispatchers.IO) {
+            banco.excluirRegistroFicha(r.id)
+            _registrosFicha.value = banco.registrosFicha()
+        }
+    }
+
     /** Copia até [limite] arquivos para a pasta própria da ocorrência e devolve com hash — usado ao criar e ao editar. */
     private fun copiarFotosOcorrencia(originais: List<File>, limite: Int): List<FotoOcorrencia> {
         if (limite <= 0) return emptyList()
@@ -643,8 +683,14 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 CanaisDenunciaCarregador.carregar { getApplication<Application>().assets.open("ocorrencia/canais.json") }
             }.onSuccess { _canaisDenuncia.value = it }
         }
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                CatalogoFichas.carregar { getApplication<Application>().assets.open("fichas/fichas.json") }
+            }.onSuccess { _modelosFicha.value = it }
+        }
         viewModelScope.launch(Dispatchers.IO) { _ocorrencias.value = banco.ocorrencias() }
         viewModelScope.launch(Dispatchers.IO) { _registrosCaptacao.value = banco.registrosCaptacao() }
+        viewModelScope.launch(Dispatchers.IO) { _registrosFicha.value = banco.registrosFicha() }
         _temMarcaDagua.value = arquivoMarcaDagua().exists()
     }
 

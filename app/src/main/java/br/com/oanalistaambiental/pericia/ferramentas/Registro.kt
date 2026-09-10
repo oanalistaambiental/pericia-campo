@@ -18,6 +18,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaMedicao
 import br.com.oanalistaambiental.pericia.ui.TelaOcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.ui.TelaPrazoRenovacao
 import br.com.oanalistaambiental.pericia.ui.TelaRecursosHidricos
+import br.com.oanalistaambiental.pericia.ui.TelaFichaVistoria
 import br.com.oanalistaambiental.pericia.ui.TelaRelatorioPonto
 
 /**
@@ -197,6 +198,18 @@ object Registro {
                 "onde levar. A transcrição por voz é feita pelo reconhecimento do próprio " +
                 "aparelho e pode errar: revise antes de salvar.",
             tela = { nav -> TelaOcorrenciaAmbiental(vmCaptura(), nav.voltar) }
+        ),
+        Ferramenta(
+            id = "ficha_vistoria",
+            nome = "Ficha de vistoria",
+            resumo = "Checklist por tipo de empreendimento — mineração, indústria, agropecuária e mais.",
+            grupo = Grupo.CAMPO,
+            icone = IconeGaveta.CHECKLIST,
+            exige = setOf(Recurso.GNSS),
+            limite = "É roteiro de apoio, não a vistoria em si — os itens são de prática geral, " +
+                "não citação de condicionante específica de um processo. Confirme sempre contra a " +
+                "licença e o parecer daquele empreendimento.",
+            tela = { nav -> TelaFichaVistoria(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(
             id = "glossario",
