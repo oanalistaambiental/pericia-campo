@@ -15,6 +15,7 @@ import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.Utm
 import java.io.File
 import java.io.FileOutputStream
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -524,6 +525,48 @@ object Exportador {
         context.startActivity(Intent.createChooser(intent, "Compartilhar").apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         })
+    }
+
+    // ------------------------------------------------------------------ backup completo
+
+    /**
+     * Backup completo: banco de dados + todos os arquivos gerados EM CAMPO (fotos, áudio,
+     * pontos, medições, caminhamentos, ocorrências, registros de captação, marca d'água) — tudo
+     * que quebrar ou perder o aparelho levaria junto, sem chance de refazer.
+     *
+     * O pacote de camadas do IDE-Sisema fica de FORA de propósito: é dado público baixado, nunca
+     * produzido pela pessoa, pesa muito mais que o resto somado, e refazer é só "Recarregar
+     * pacote" — não é perda de prova nenhuma.
+     *
+     * Só cria o arquivo — restaurar um backup é um passo à parte, que ainda não existe: exige
+     * cuidado maior (substituir um banco em uso sem corromper nada).
+     */
+    fun criarBackup(context: Context, saida: OutputStream) {
+        ZipOutputStream(saida).use { zip ->
+            val banco = context.getDatabasePath("pericia.db")
+            if (banco.exists()) adicionarArquivoAoZip(zip, banco, "banco/pericia.db")
+
+            val raiz = context.filesDir
+            listOf("sessoes", "ocorrencias", "captacoes", "pontos", "medicoes", "caminhamentos").forEach { nome ->
+                val pasta = File(raiz, nome)
+                if (pasta.exists()) adicionarPastaAoZip(zip, pasta, "dados/$nome")
+            }
+            val marca = File(raiz, "marca_dagua.png")
+            if (marca.exists()) adicionarArquivoAoZip(zip, marca, "dados/marca_dagua.png")
+        }
+    }
+
+    private fun adicionarArquivoAoZip(zip: ZipOutputStream, arquivo: File, nomeNoZip: String) {
+        zip.putNextEntry(ZipEntry(nomeNoZip))
+        arquivo.inputStream().use { it.copyTo(zip) }
+        zip.closeEntry()
+    }
+
+    private fun adicionarPastaAoZip(zip: ZipOutputStream, pasta: File, prefixo: String) {
+        pasta.listFiles()?.forEach { f ->
+            if (f.isDirectory) adicionarPastaAoZip(zip, f, "$prefixo/${f.name}")
+            else adicionarArquivoAoZip(zip, f, "$prefixo/${f.name}")
+        }
     }
 
     private fun tipoDe(f: File) = when (f.extension.lowercase()) {

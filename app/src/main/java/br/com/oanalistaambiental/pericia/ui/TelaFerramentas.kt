@@ -47,6 +47,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /** Menu de ferramentas — o que existe fora do ato de fotografar. */
 /*
@@ -825,6 +828,9 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                 Rotulo("MARCA D'ÁGUA")
                 MarcaDaguaConfig(vm)
 
+                Rotulo("BACKUP")
+                BackupConfig(vm)
+
                 Rotulo("SOBRE")
                 Text(
                     "Ferramenta independente. Não é afiliada ao SISEMA/SEMAD/FEAM nem os substitui. " +
@@ -978,6 +984,33 @@ private fun MarcaDaguaConfig(vm: CapturaViewModel) {
             )
             Spacer(Modifier.height(10.dp))
             BotaoLargo("Escolher imagem (brasão, logo)") { escolher.launch("image/*") }
+        }
+    }
+}
+
+/**
+ * Backup completo — banco de dados + tudo que foi produzido em campo (fotos, áudio, pontos,
+ * medições, caminhamentos, ocorrências, registros de captação) num único .zip, salvo onde a
+ * pessoa escolher. Não sobe para lugar nenhum sozinho: quem decide para onde vai é quem exporta.
+ */
+@Composable
+private fun BackupConfig(vm: CapturaViewModel) {
+    val criarArquivo = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri -> if (uri != null) vm.criarBackup(uri) }
+
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        Text(
+            "Gera um arquivo .zip com o banco de dados e todos os arquivos de campo — se o " +
+                "aparelho quebrar ou for perdido, é o que garante não perder o que já foi " +
+                "registrado. O pacote de camadas fica de fora (é dado público, não prova " +
+                "produzida por você — refazer é só \"Recarregar pacote\" acima).",
+            color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+        )
+        Spacer(Modifier.height(10.dp))
+        BotaoLargo("Criar backup (.zip)") {
+            val agora = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
+            criarArquivo.launch("pericia-campo-backup-$agora.zip")
         }
     }
 }

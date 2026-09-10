@@ -681,6 +681,27 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     fun pastaDePacotes(): File =
         File(getApplication<Application>().getExternalFilesDir(null), "pacotes").apply { mkdirs() }
 
+    /**
+     * Backup completo (banco + fotos + áudio + registros) num arquivo .zip escolhido pela
+     * própria pessoa — Storage Access Framework, então pode ir para qualquer lugar que o
+     * aparelho enxergue (armazenamento local, um app de nuvem, um pendrive OTG). Não tenta
+     * mandar para lugar nenhum sozinho, mesma regra de sempre.
+     */
+    fun criarBackup(uri: Uri) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                val ctx = getApplication<Application>()
+                val saida = ctx.contentResolver.openOutputStream(uri)
+                    ?: error("Não foi possível abrir o arquivo de destino.")
+                saida.use { Exportador.criarBackup(ctx, it) }
+            }.onSuccess {
+                _mensagem.value = "Backup criado."
+            }.onFailure {
+                _mensagem.value = "Falha ao criar backup: ${it.message}"
+            }
+        }
+    }
+
     // ------------------------------------------------------------------ sessoes
 
     fun recarregar() {
