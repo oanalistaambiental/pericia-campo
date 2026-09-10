@@ -167,21 +167,16 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         get() = File(getApplication<Application>().getExternalFilesDir(null), "pacotes/mg-base.gpkg")
 
     /**
-     * Pacote de EXEMPLO, ficticio, empacotado dentro do proprio APK
-     * (`assets/pacotes/exemplo.gpkg`, gerado por `ferramentas/gerar-exemplo.py`).
-     *
-     * Existe para quem acabou de instalar o app ver COMO o alerta de restricao funciona, sem
-     * precisar rodar `montar-pacote.sh` primeiro. Nao e preciso marcar isso em codigo aqui: o
-     * proprio pacote se declara ficticio em `pericia_pacote.versao` ("exemplo") e em
-     * `pericia_camadas.nome`/`fonte`, os mesmos campos que a tela de configuracoes ja mostra e
-     * que vao para qualquer alerta gerado a partir dele — nunca pode ser confundido com dado
-     * real do IDE-Sisema.
+     * Copia um `.gpkg` de `assets/pacotes/<nome>` para o armazenamento interno, uma unica vez —
+     * SQLite precisa de um caminho de arquivo de verdade, nao da de abrir direto de dentro do
+     * APK. Usada pelos tres pacotes embarcados: o real (`base-real.gpkg`), o de circunscricoes
+     * hidrograficas e o de exemplo ficticio.
      */
-    private fun copiarExemploSeNecessario(): File {
-        val destino = File(getApplication<Application>().filesDir, "pacotes/exemplo.gpkg")
+    private fun copiarAssetPacote(nome: String): File {
+        val destino = File(getApplication<Application>().filesDir, "pacotes/$nome")
         if (!destino.exists()) {
             destino.parentFile?.mkdirs()
-            getApplication<Application>().assets.open("pacotes/exemplo.gpkg").use { entrada ->
+            getApplication<Application>().assets.open("pacotes/$nome").use { entrada ->
                 destino.outputStream().use { saida -> entrada.copyTo(saida) }
             }
         }
@@ -195,17 +190,6 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
      * que [copiarExemploSeNecessario] copia o pacote de exemplo — sempre embarcado, nunca
      * opcional, porque cobre o estado inteiro e nao depende de instalar nada em campo.
      */
-    private fun copiarBaciasSeNecessario(): File {
-        val destino = File(getApplication<Application>().filesDir, "pacotes/circunscricoes-hidrograficas.gpkg")
-        if (!destino.exists()) {
-            destino.parentFile?.mkdirs()
-            getApplication<Application>().assets.open("pacotes/circunscricoes-hidrograficas.gpkg").use { entrada ->
-                destino.outputStream().use { saida -> entrada.copyTo(saida) }
-            }
-        }
-        return destino
-    }
-
     private val _bacia = MutableStateFlow<CircunscricaoHidrografica.Info?>(null)
     val bacia: StateFlow<CircunscricaoHidrografica.Info?> = _bacia
 
@@ -216,7 +200,9 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             _consultandoBacia.value = true
             _bacia.value = runCatching {
-                CircunscricaoHidrografica.localizar(copiarBaciasSeNecessario(), lat, lon)
+                CircunscricaoHidrografica.localizar(
+                    copiarAssetPacote("circunscricoes-hidrograficas.gpkg"), lat, lon
+                )
             }.getOrNull()
             _consultandoBacia.value = false
         }
@@ -256,7 +242,13 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching { consulta?.close() }
             runCatching {
-                val arquivo = if (arquivoPacote.exists()) arquivoPacote else copiarExemploSeNecessario()
+                // Ordem: pacote oficial instalado (montar-pacote.sh) > base real embarcada
+                // (leve, sempre no APK) > exemplo ficticio (so se ate a base real falhar).
+                val arquivo = when {
+                    arquivoPacote.exists() -> arquivoPacote
+                    else -> runCatching { copiarAssetPacote("base-real.gpkg") }
+                        .getOrElse { copiarAssetPacote("exemplo.gpkg") }
+                }
                 val c = ConsultaRestricao.abrir(arquivo)
                 consulta = c
                 _camadas.value = c.camadasInstaladas()
