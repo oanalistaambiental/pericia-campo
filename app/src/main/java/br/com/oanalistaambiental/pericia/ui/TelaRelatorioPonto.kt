@@ -1,6 +1,7 @@
 package br.com.oanalistaambiental.pericia.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -8,11 +9,17 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import br.com.oanalistaambiental.pericia.exportacao.Exportador
+import br.com.oanalistaambiental.pericia.geo.CircunscricaoHidrografica
 import br.com.oanalistaambiental.pericia.geo.Restricao
 import br.com.oanalistaambiental.pericia.geo.Situacao
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * "Relatório do ponto": tudo que o app já sabe sobre a coordenada atual, numa tela só — a bacia/
@@ -27,6 +34,7 @@ fun TelaRelatorioPonto(vm: CapturaViewModel, voltar: () -> Unit) {
     val bacia by vm.bacia.collectAsState()
     val relatorio by vm.relatorioPonto.collectAsState()
     val consultando by vm.consultandoRelatorio.collectAsState()
+    val contexto = LocalContext.current
 
     LaunchedEffect(p.lat, p.lon) {
         val lat = p.lat
@@ -52,6 +60,18 @@ fun TelaRelatorioPonto(vm: CapturaViewModel, voltar: () -> Unit) {
                 "Aguarde o GNSS fixar para consultar tudo o que se sabe deste ponto."
             )
             return@Column
+        }
+
+        if (!relatorio.isNullOrEmpty()) {
+            Text(
+                "compartilhar relatório", color = Cores.bomClaro, fontSize = 12.5.sp,
+                modifier = Modifier.clickable {
+                    Exportador.compartilhar(
+                        contexto, emptyList(), "Relatório do ponto",
+                        textoRelatorioPonto(bacia, relatorio.orEmpty(), latAtual, lonAtual)
+                    )
+                }.padding(horizontal = 16.dp, vertical = 6.dp)
+            )
         }
 
         LazyColumn(Modifier.weight(1f)) {
@@ -112,6 +132,31 @@ private fun LinhaRestricaoRelatorio(r: Restricao, lat: Double, lon: Double) {
                 contorno = r.contornoLatLon,
                 raioCirculoM = r.raioCirculoM
             )
+        }
+    }
+}
+
+/** Texto simples pronto para WhatsApp/e-mail — mesmo raciocínio do corpo usado em Ocorrência. */
+private fun textoRelatorioPonto(
+    bacia: CircunscricaoHidrografica.Info?, relatorio: List<Restricao>, lat: Double, lon: Double
+): String = buildString {
+    appendLine("RELATÓRIO DO PONTO")
+    appendLine(SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR")).format(Date()))
+    appendLine("Coordenada: %.6f, %.6f".format(lat, lon))
+    appendLine()
+    appendLine("BACIA / CIRCUNSCRIÇÃO HIDROGRÁFICA")
+    appendLine(
+        if (bacia == null) "Fora de qualquer CH mapeada, ou ainda consultando."
+        else "${bacia.sigla} — ${bacia.nome.substringAfter(": ").ifBlank { bacia.nome }}"
+    )
+    appendLine()
+    appendLine("CAMADAS DE RESTRIÇÃO E VEDAÇÃO")
+    if (relatorio.isEmpty()) {
+        appendLine("Nenhuma camada respondeu — pacote de camadas não instalado, ou nenhuma camada cobre esta região.")
+    } else {
+        relatorio.forEach { r ->
+            appendLine("• ${r.frase()}")
+            appendLine("  ${r.fonte} · pacote ${r.proveniencia.pacoteVersao} · extraído ${r.proveniencia.dataExtracao}")
         }
     }
 }

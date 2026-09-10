@@ -14,16 +14,21 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.oanalistaambiental.pericia.captura.EstadoCampo
 import br.com.oanalistaambiental.pericia.dados.RegistroFicha
+import br.com.oanalistaambiental.pericia.exportacao.Exportador
 import br.com.oanalistaambiental.pericia.fichas.ModeloFicha
 import br.com.oanalistaambiental.pericia.fichas.Resposta
 import br.com.oanalistaambiental.pericia.fichas.ValorResposta
 import br.com.oanalistaambiental.pericia.fichas.parseRespostas
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Ficha de vistoria configurável: escolhe o tipo de empreendimento, responde o checklist daquele
@@ -92,6 +97,7 @@ private fun ColumnScope.EscolhaModelo(
 @Composable
 private fun LinhaRegistroFicha(vm: CapturaViewModel, r: RegistroFicha) {
     var confirmarExclusao by remember { mutableStateOf(false) }
+    val contexto = LocalContext.current
     val respostas = remember(r.respostasJson) { runCatching { parseRespostas(r.respostasJson) }.getOrDefault(emptyList()) }
     val naoConformes = respostas.count { it.valor == ValorResposta.NAO_CONFORME }
     Column(
@@ -110,15 +116,50 @@ private fun LinhaRegistroFicha(vm: CapturaViewModel, r: RegistroFicha) {
         Spacer(Modifier.height(2.dp))
         Mono("${respostas.size} item(ns) respondido(s)")
         Spacer(Modifier.height(6.dp))
-        Text(
-            if (confirmarExclusao) "confirmar exclusão?" else "excluir",
-            color = Cores.alertaClaro, fontSize = 11.5.sp,
-            modifier = Modifier.clickable {
-                if (confirmarExclusao) { vm.excluirRegistroFicha(r); confirmarExclusao = false }
-                else confirmarExclusao = true
-            }
-        )
+        Row {
+            Text(
+                "compartilhar", color = Cores.bomClaro, fontSize = 11.5.sp,
+                modifier = Modifier.clickable {
+                    Exportador.compartilhar(
+                        contexto, emptyList(),
+                        "Ficha de vistoria — ${r.modeloNome}", textoFicha(r, respostas)
+                    )
+                }
+            )
+            Spacer(Modifier.width(16.dp))
+            Text(
+                if (confirmarExclusao) "confirmar exclusão?" else "excluir",
+                color = Cores.alertaClaro, fontSize = 11.5.sp,
+                modifier = Modifier.clickable {
+                    if (confirmarExclusao) { vm.excluirRegistroFicha(r); confirmarExclusao = false }
+                    else confirmarExclusao = true
+                }
+            )
+        }
     }
+}
+
+/** Texto simples pronto para WhatsApp/e-mail — mesmo raciocínio do corpo usado em Ocorrência. */
+private fun textoFicha(r: RegistroFicha, respostas: List<Resposta>): String = buildString {
+    appendLine("FICHA DE VISTORIA — ${r.modeloNome.uppercase()}")
+    appendLine(SimpleDateFormat("dd/MM/yyyy HH:mm", Locale("pt", "BR")).format(Date(r.instante)))
+    appendLine("Coordenada: %.6f, %.6f".format(r.lat, r.lon))
+    appendLine()
+    respostas.groupBy { it.secao }.forEach { (secao, itens) ->
+        appendLine(secao.uppercase())
+        itens.forEach { resp ->
+            val marca = when (resp.valor) {
+                ValorResposta.CONFORME -> "[CONFORME]"
+                ValorResposta.NAO_CONFORME -> "[NÃO CONFORME]"
+                ValorResposta.NAO_SE_APLICA -> "[N/A]"
+                ValorResposta.NAO_RESPONDIDO -> "[NÃO RESPONDIDO]"
+            }
+            appendLine("$marca ${resp.item}")
+            resp.observacao?.let { appendLine("   obs.: $it") }
+        }
+        appendLine()
+    }
+    append("Roteiro de apoio à vistoria, gerado pelo app — não substitui o registro formal.")
 }
 
 @Composable
