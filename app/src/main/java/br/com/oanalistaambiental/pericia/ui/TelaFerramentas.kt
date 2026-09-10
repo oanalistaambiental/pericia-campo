@@ -11,7 +11,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -1143,7 +1145,9 @@ fun TelaAlturaTrigonometrica(vm: CapturaViewModel, voltar: () -> Unit) {
             }
         }
 
-        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+        Column(
+            Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(16.dp)
+        ) {
             OutlinedTextField(
                 value = distanciaTexto,
                 onValueChange = { distanciaTexto = it },

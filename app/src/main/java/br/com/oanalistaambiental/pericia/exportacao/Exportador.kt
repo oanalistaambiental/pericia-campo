@@ -463,7 +463,9 @@ object Exportador {
             sb.append("TRANSCRIÇÃO DE ÁUDIO (ditado por voz, não é a gravação original):\n")
                 .append(it).append("\n\n")
         }
-        o.fotoSha256?.let { sb.append("Foto anexa — SHA-256: ").append(it).append("\n") }
+        o.fotos.forEachIndexed { i, f ->
+            sb.append("Foto ${i + 1} — SHA-256: ").append(f.sha256).append("\n")
+        }
         sb.append("\nRegistrado com o Perícia Campo — ferramenta independente, sem vínculo com o SISEMA.\n")
         sb.append("Este resumo NÃO foi enviado a nenhum órgão automaticamente. ")
         sb.append("Consulte os canais oficiais de denúncia dentro do aplicativo.\n")

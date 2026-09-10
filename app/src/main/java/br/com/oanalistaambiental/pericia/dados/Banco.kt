@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 6) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 7) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -87,6 +87,14 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 6)
                 foto_arquivo TEXT,
                 foto_sha256 TEXT
             )""")
+        db.execSQL("""
+            CREATE TABLE ocorrencia_foto (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ocorrencia_id INTEGER NOT NULL,
+                arquivo TEXT NOT NULL,
+                sha256 TEXT NOT NULL,
+                FOREIGN KEY(ocorrencia_id) REFERENCES ocorrencia_ambiental(id)
+            )""")
         db.execSQL("CREATE INDEX idx_foto_sessao ON foto(sessao_id)")
         db.execSQL("CREATE INDEX idx_restricao_foto ON restricao(foto_id)")
         db.execSQL("CREATE INDEX idx_caminhamento_sessao ON caminhamento_ponto(sessao_id)")
@@ -146,6 +154,24 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 6)
                     foto_arquivo TEXT,
                     foto_sha256 TEXT
                 )""")
+        }
+        if (old < 7) {
+            db.execSQL("""
+                CREATE TABLE ocorrencia_foto (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    ocorrencia_id INTEGER NOT NULL,
+                    arquivo TEXT NOT NULL,
+                    sha256 TEXT NOT NULL,
+                    FOREIGN KEY(ocorrencia_id) REFERENCES ocorrencia_ambiental(id)
+                )""")
+            // Ocorrencias gravadas antes de existir mais de uma foto tinham a foto direto nas
+            // colunas foto_arquivo/foto_sha256 (ainda no esquema, so nao usadas mais por codigo
+            // novo) — migra para a tabela nova em vez de deixar essa foto orfa.
+            db.execSQL("""
+                INSERT INTO ocorrencia_foto (ocorrencia_id, arquivo, sha256)
+                SELECT id, foto_arquivo, foto_sha256 FROM ocorrencia_ambiental
+                WHERE foto_arquivo IS NOT NULL AND foto_sha256 IS NOT NULL
+            """)
         }
     }
 
@@ -348,31 +374,61 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 6)
 
     // ---- ocorrencia ambiental ----
 
-    fun inserirOcorrencia(o: OcorrenciaAmbiental): Long =
-        writableDatabase.insert("ocorrencia_ambiental", null, ContentValues().apply {
-            put("lat", o.lat); put("lon", o.lon); put("precisao_m", o.precisaoM)
-            put("instante", o.instante); put("descricao", o.descricao)
-            put("transcricao_audio", o.transcricaoAudio)
-            put("foto_arquivo", o.fotoArquivo); put("foto_sha256", o.fotoSha256)
-        })
+    /** Grava a ocorrencia e as fotos dela (0 a 5) numa transacao so — ou entram as duas coisas, ou nenhuma. */
+    fun inserirOcorrencia(o: OcorrenciaAmbiental): Long {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            val id = db.insert("ocorrencia_ambiental", null, ContentValues().apply {
+                put("lat", o.lat); put("lon", o.lon); put("precisao_m", o.precisaoM)
+                put("instante", o.instante); put("descricao", o.descricao)
+                put("transcricao_audio", o.transcricaoAudio)
+            })
+            o.fotos.forEach { f ->
+                db.insert("ocorrencia_foto", null, ContentValues().apply {
+                    put("ocorrencia_id", id); put("arquivo", f.arquivo); put("sha256", f.sha256)
+                })
+            }
+            db.setTransactionSuccessful()
+            return id
+        } finally {
+            db.endTransaction()
+        }
+    }
 
     fun ocorrencias(): List<OcorrenciaAmbiental> {
+        val fotosPorOcorrencia = mutableMapOf<Long, MutableList<FotoOcorrencia>>()
+        readableDatabase.rawQuery(
+            "SELECT id, ocorrencia_id, arquivo, sha256 FROM ocorrencia_foto ORDER BY id", null
+        ).use { c ->
+            while (c.moveToNext()) {
+                val ocorrenciaId = c.getLong(1)
+                fotosPorOcorrencia.getOrPut(ocorrenciaId) { mutableListOf() } += FotoOcorrencia(
+                    id = c.getLong(0), ocorrenciaId = ocorrenciaId,
+                    arquivo = c.getString(2), sha256 = c.getString(3)
+                )
+            }
+        }
         val out = mutableListOf<OcorrenciaAmbiental>()
         readableDatabase.rawQuery(
-            "SELECT id, lat, lon, precisao_m, instante, descricao, transcricao_audio," +
-                " foto_arquivo, foto_sha256 FROM ocorrencia_ambiental ORDER BY instante DESC", null
+            "SELECT id, lat, lon, precisao_m, instante, descricao, transcricao_audio" +
+                " FROM ocorrencia_ambiental ORDER BY instante DESC", null
         ).use { c ->
-            while (c.moveToNext()) out += OcorrenciaAmbiental(
-                id = c.getLong(0), lat = c.getDouble(1), lon = c.getDouble(2),
-                precisaoM = if (c.isNull(3)) null else c.getFloat(3), instante = c.getLong(4),
-                descricao = c.getString(5), transcricaoAudio = c.getString(6),
-                fotoArquivo = c.getString(7), fotoSha256 = c.getString(8)
-            )
+            while (c.moveToNext()) {
+                val id = c.getLong(0)
+                out += OcorrenciaAmbiental(
+                    id = id, lat = c.getDouble(1), lon = c.getDouble(2),
+                    precisaoM = if (c.isNull(3)) null else c.getFloat(3), instante = c.getLong(4),
+                    descricao = c.getString(5), transcricaoAudio = c.getString(6),
+                    fotos = fotosPorOcorrencia[id] ?: emptyList()
+                )
+            }
         }
         return out
     }
 
     fun excluirOcorrencia(id: Long) {
+        writableDatabase.delete("ocorrencia_foto", "ocorrencia_id=?", arrayOf(id.toString()))
         writableDatabase.delete("ocorrencia_ambiental", "id=?", arrayOf(id.toString()))
     }
 

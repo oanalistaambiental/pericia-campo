@@ -1,7 +1,10 @@
 package br.com.oanalistaambiental.pericia.ui
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -28,8 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -38,6 +43,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import br.com.oanalistaambiental.pericia.captura.Transcricao
 import br.com.oanalistaambiental.pericia.dados.GrupoCanal
 import br.com.oanalistaambiental.pericia.dados.ItemCanal
+import br.com.oanalistaambiental.pericia.dados.MAXIMO_FOTOS_OCORRENCIA
 import br.com.oanalistaambiental.pericia.dados.OcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.geo.Utm
 import java.io.File
@@ -88,7 +94,7 @@ private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Uni
 
     var descricao by rememberSaveable { mutableStateOf("") }
     var transcricao by rememberSaveable { mutableStateOf("") }
-    var fotoCapturada by remember { mutableStateOf<File?>(null) }
+    val fotos = remember { mutableStateListOf<File>() }
     var capturandoFoto by remember { mutableStateOf(false) }
     var ditando by remember { mutableStateOf(false) }
     var erroDitado by remember { mutableStateOf<String?>(null) }
@@ -126,7 +132,7 @@ private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Uni
 
     if (capturandoFoto) {
         CapturaFotoOcorrencia(
-            aoCapturar = { arquivo -> fotoCapturada = arquivo; capturandoFoto = false },
+            aoCapturar = { arquivo -> fotos.add(arquivo); capturandoFoto = false },
             aoCancelar = { capturandoFoto = false }
         )
         return
@@ -143,32 +149,43 @@ private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Uni
                     Text("Aguardando GNSS…", color = Cores.atencaoClaro, fontSize = 12.sp)
                 }
 
-                Rotulo("FOTO")
-                if (fotoCapturada != null) {
-                    val bitmap = remember(fotoCapturada) {
-                        runCatching {
-                            android.graphics.BitmapFactory.decodeFile(fotoCapturada!!.absolutePath)?.asImageBitmap()
-                        }.getOrNull()
-                    }
-                    if (bitmap != null) {
-                        Image(
-                            bitmap, contentDescription = "Foto da ocorrência",
-                            modifier = Modifier.fillMaxWidth().height(200.dp).background(Cores.superficie, RoundedCornerShape(8.dp))
-                        )
-                        Spacer(Modifier.height(8.dp))
-                    }
+                Rotulo("FOTOS (até ${MAXIMO_FOTOS_OCORRENCIA})")
+                if (fotos.isNotEmpty()) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Box(Modifier.weight(1f)) {
-                            BotaoLargo("Tirar outra") {
-                                if (temPermissaoCamera) capturandoFoto = true else pedirCamera.launch(Manifest.permission.CAMERA)
+                        fotos.forEachIndexed { i, arquivo ->
+                            Box {
+                                val bitmap = remember(arquivo) {
+                                    runCatching {
+                                        android.graphics.BitmapFactory.decodeFile(arquivo.absolutePath)?.asImageBitmap()
+                                    }.getOrNull()
+                                }
+                                if (bitmap != null) {
+                                    Image(
+                                        bitmap, contentDescription = "Foto ${i + 1} da ocorrência",
+                                        modifier = Modifier.size(72.dp).background(Cores.superficie, RoundedCornerShape(8.dp))
+                                    )
+                                }
+                                Text(
+                                    "×", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.align(Alignment.TopEnd).padding(3.dp)
+                                        .background(Cores.alertaClaro, RoundedCornerShape(50))
+                                        .clickable { fotos.removeAt(i) }
+                                        .padding(horizontal = 6.dp, vertical = 1.dp)
+                                )
                             }
                         }
-                        Box(Modifier.weight(1f)) { BotaoLargo("Remover foto") { fotoCapturada = null } }
                     }
-                } else {
-                    BotaoLargo("Tirar foto", principal = true) {
+                    Spacer(Modifier.height(8.dp))
+                }
+                if (fotos.size < MAXIMO_FOTOS_OCORRENCIA) {
+                    BotaoLargo(if (fotos.isEmpty()) "Tirar foto" else "Tirar outra foto", principal = fotos.isEmpty()) {
                         if (temPermissaoCamera) capturandoFoto = true else pedirCamera.launch(Manifest.permission.CAMERA)
                     }
+                } else {
+                    Text(
+                        "Limite de ${MAXIMO_FOTOS_OCORRENCIA} fotos atingido.",
+                        color = Cores.textoFraco, fontSize = 11.sp
+                    )
                 }
 
                 Rotulo("DESCRIÇÃO")
@@ -224,8 +241,8 @@ private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Uni
                     "Salvar ocorrência", principal = true,
                     habilitado = p.temPosicao && (descricao.isNotBlank() || transcricao.isNotBlank())
                 ) {
-                    vm.salvarOcorrencia(p.lat!!, p.lon!!, p.precisaoM, descricao, transcricao, fotoCapturada)
-                    descricao = ""; transcricao = ""; fotoCapturada = null
+                    vm.salvarOcorrencia(p.lat!!, p.lon!!, p.precisaoM, descricao, transcricao, fotos.toList())
+                    descricao = ""; transcricao = ""; fotos.clear()
                     aoSalvar()
                 }
                 Spacer(Modifier.height(24.dp))
@@ -328,9 +345,12 @@ private fun ColumnScope.MinhasOcorrencias(vm: CapturaViewModel) {
                     Spacer(Modifier.height(4.dp))
                     Text(it, color = Cores.texto, fontSize = 12.5.sp, lineHeight = 17.sp, maxLines = 3)
                 }
-                if (o.fotoArquivo != null) {
+                if (o.fotos.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
-                    Text("com foto", color = Cores.bomClaro, fontSize = 10.5.sp)
+                    Text(
+                        if (o.fotos.size == 1) "1 foto" else "${o.fotos.size} fotos",
+                        color = Cores.bomClaro, fontSize = 10.5.sp
+                    )
                 }
                 Spacer(Modifier.height(8.dp))
                 Row {
@@ -383,13 +403,17 @@ private fun ColumnScope.CanaisOficiais(vm: CapturaViewModel) {
             )
         }
         items(c.uras.regionais) { r ->
+            val contexto = LocalContext.current
             Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
                 Text(r.nome, color = Cores.texto, fontSize = 13.sp, fontWeight = FontWeight.Medium)
                 Spacer(Modifier.height(2.dp))
                 Text(r.endereco, color = Cores.textoFraco, fontSize = 11.sp, lineHeight = 15.sp)
                 r.telefone?.let {
                     Spacer(Modifier.height(2.dp))
-                    Mono(it, Cores.bomClaro, 11)
+                    Text(
+                        it, color = Cores.bomClaro, fontSize = 11.sp, fontFamily = FontFamily.Monospace,
+                        modifier = Modifier.clickable { discar(contexto, it) }
+                    )
                 }
             }
             HorizontalDivider(color = Cores.linha)
@@ -410,8 +434,20 @@ private fun GrupoCanalBloco(grupo: GrupoCanal) {
     }
 }
 
+/** Abre o discador com o número já preenchido — nunca liga sozinho, só prepara a tela. */
+private fun discar(contexto: Context, telefone: String) {
+    val numero = telefone.substringBefore("/").trim().filter { it.isDigit() || it == '+' }
+    if (numero.isBlank()) return
+    runCatching { contexto.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$numero"))) }
+}
+
+private fun abrirLink(contexto: Context, url: String) {
+    runCatching { contexto.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }
+}
+
 @Composable
 private fun ItemCanalLinha(item: ItemCanal) {
+    val contexto = LocalContext.current
     Column(
         Modifier.fillMaxWidth().padding(vertical = 6.dp)
             .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(12.dp)
@@ -423,7 +459,10 @@ private fun ItemCanalLinha(item: ItemCanal) {
         }
         item.telefone?.let {
             Spacer(Modifier.height(4.dp))
-            Mono(it, Cores.bomClaro, 13)
+            Text(
+                it, color = Cores.bomClaro, fontSize = 13.sp, fontFamily = FontFamily.Monospace,
+                modifier = Modifier.clickable { discar(contexto, it) }
+            )
         }
         item.horario?.let {
             Spacer(Modifier.height(2.dp))
@@ -435,7 +474,11 @@ private fun ItemCanalLinha(item: ItemCanal) {
         }
         item.link?.let {
             Spacer(Modifier.height(4.dp))
-            Mono(it, Cores.bomClaro, 10)
+            Text(
+                it, color = Cores.bomClaro, fontSize = 10.sp, fontFamily = FontFamily.Monospace,
+                textDecoration = TextDecoration.Underline,
+                modifier = Modifier.clickable { abrirLink(contexto, it) }
+            )
         }
     }
 }

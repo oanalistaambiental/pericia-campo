@@ -24,6 +24,8 @@ import br.com.oanalistaambiental.pericia.dados.CadastrosIefCarregador
 import br.com.oanalistaambiental.pericia.dados.CanaisDenuncia
 import br.com.oanalistaambiental.pericia.dados.CanaisDenunciaCarregador
 import br.com.oanalistaambiental.pericia.dados.Foto
+import br.com.oanalistaambiental.pericia.dados.FotoOcorrencia
+import br.com.oanalistaambiental.pericia.dados.MAXIMO_FOTOS_OCORRENCIA
 import br.com.oanalistaambiental.pericia.dados.OcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.dados.PontoCaminhamento
 import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
@@ -391,31 +393,30 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     // ------------------------------------------------------------------ ocorrencia ambiental
 
     /**
-     * A FOTO, quando existe, e copiada para a pasta propria da ocorrencia e recebe hash — mesma
-     * ideia de proveniencia da camera de pericia, sem o aparato inteiro de sessao/legenda: aqui
-     * o registro e mais leve, pensado para documentar rapido e decidir depois para onde levar.
+     * Cada FOTO e copiada para a pasta propria da ocorrencia e recebe hash — mesma ideia de
+     * proveniencia da camera de pericia, sem o aparato inteiro de sessao/legenda: aqui o
+     * registro e mais leve, pensado para documentar rapido e decidir depois para onde levar.
      */
     fun salvarOcorrencia(
         lat: Double, lon: Double, precisaoM: Float?, descricao: String,
-        transcricaoAudio: String?, fotoOriginal: File?
+        transcricaoAudio: String?, fotosOriginais: List<File>
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
-                var fotoArquivo: String? = null
-                var fotoSha256: String? = null
-                if (fotoOriginal != null && fotoOriginal.exists()) {
-                    val pasta = File(getApplication<Application>().filesDir, "ocorrencias").apply { mkdirs() }
-                    val destino = File(pasta, "ocorrencia-${System.currentTimeMillis()}.jpg")
-                    fotoOriginal.copyTo(destino, overwrite = true)
-                    fotoArquivo = destino.absolutePath
-                    fotoSha256 = Integridade.sha256(destino)
-                }
+                val pasta = File(getApplication<Application>().filesDir, "ocorrencias").apply { mkdirs() }
+                val fotos = fotosOriginais.take(MAXIMO_FOTOS_OCORRENCIA)
+                    .filter { it.exists() }
+                    .mapIndexed { i, original ->
+                        val destino = File(pasta, "ocorrencia-${System.currentTimeMillis()}-$i.jpg")
+                        original.copyTo(destino, overwrite = true)
+                        FotoOcorrencia(ocorrenciaId = 0, arquivo = destino.absolutePath, sha256 = Integridade.sha256(destino))
+                    }
                 banco.inserirOcorrencia(
                     OcorrenciaAmbiental(
                         lat = lat, lon = lon, precisaoM = precisaoM, instante = System.currentTimeMillis(),
                         descricao = descricao.ifBlank { null },
                         transcricaoAudio = transcricaoAudio?.ifBlank { null },
-                        fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256
+                        fotos = fotos
                     )
                 )
             }.onSuccess {
@@ -427,20 +428,43 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     fun excluirOcorrencia(o: OcorrenciaAmbiental) {
         viewModelScope.launch(Dispatchers.IO) {
-            o.fotoArquivo?.let { runCatching { File(it).delete() } }
+            o.fotos.forEach { runCatching { File(it.arquivo).delete() } }
             banco.excluirOcorrencia(o.id)
             _ocorrencias.value = banco.ocorrencias()
         }
     }
 
-    /** Compartilha um resumo em texto (coordenada, descrição, transcrição, hash da foto) + a foto, quando há. */
+    /**
+     * Compartilha um resumo em texto (coordenada, descrição, transcrição, hash de cada foto) +
+     * uma CÓPIA de cada foto com a legenda queimada (coordenada, data, hash) — não a original
+     * crua. É a mesma regra da câmera de perícia: quem recebe o arquivo por fora do app precisa
+     * conseguir ler a informação sem abrir mais nada.
+     */
     fun compartilharOcorrencia(o: OcorrenciaAmbiental) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
                 val pasta = File(getApplication<Application>().filesDir, "ocorrencias").apply { mkdirs() }
                 val resumo = File(pasta, "ocorrencia-${o.id}-resumo.txt")
                 resumo.writeText(Exportador.resumoOcorrencia(o), Charsets.UTF_8)
-                val arquivos = listOfNotNull(resumo, o.fotoArquivo?.let { File(it) }?.takeIf { it.exists() })
+                val marca = arquivoMarcaDagua().takeIf { it.exists() }
+                val fotosComLegenda = o.fotos.mapNotNull { f ->
+                    val original = File(f.arquivo)
+                    if (!original.exists()) return@mapNotNull null
+                    runCatching {
+                        val destino = File(original.parentFile, original.nameWithoutExtension + "_legenda.jpg")
+                        val fotoSintetica = Foto(
+                            sessaoId = 0, arquivoOriginal = f.arquivo, arquivoComLegenda = null,
+                            sha256 = f.sha256, lat = o.lat, lon = o.lon, precisaoM = o.precisaoM ?: 999f,
+                            altitudeM = null, azimuteGraus = null, inclinacaoGraus = null,
+                            instante = o.instante, tipoOcorrencia = null, observacao = o.descricao
+                        )
+                        Legenda.gerar(
+                            original, destino, fotoSintetica, "OCORRÊNCIA AMBIENTAL", marca,
+                            _posicaoMarcaDagua.value, _opacidadeMarcaDagua.value, _formatoCoordenada.value
+                        )
+                    }.getOrElse { original }
+                }
+                val arquivos = listOf(resumo) + fotosComLegenda
                 withContext(Dispatchers.Main) {
                     Exportador.compartilhar(getApplication(), arquivos, "Ocorrência ambiental registrada")
                 }
@@ -932,8 +956,8 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             // senao ele le a ausencia de alerta como ausencia de restricao.
             val falhas = c.falhasDaUltimaConsulta()
             if (falhas.isNotEmpty()) {
-                _mensagem.value = "Camadas sem resposta nesta consulta: ${falhas.joinToString(", ")}. " +
-                    "Não é 'sem restrição' — é sem leitura. Refaça o pacote de camadas."
+                _mensagem.value = "${falhas.size} camada(s) sem leitura nesta consulta " +
+                    "(não é 'sem restrição') — veja Configurações → Camadas."
             }
         }.onFailure { _mensagem.value = "Consulta de restrição falhou: ${it.message}" }
 

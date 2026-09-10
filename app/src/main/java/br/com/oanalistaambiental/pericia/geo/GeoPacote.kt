@@ -65,9 +65,20 @@ class GeoPacote(private val arquivo: File) : AutoCloseable {
 
     /**
      * Busca as feicoes de [tabela] cuja caixa envolvente cruza o retangulo informado.
-     * O R-tree derruba milhares de feicoes para um punhado antes de desserializar geometria.
+     * O R-tree derruba milhares de feicoes para um punhado antes de desserializar geometria —
+     * mas o modulo R-tree do SQLite NAO vem garantido em todo Android (depende do OEM/versao
+     * do build do sistema). Quando falta, a JOIN abaixo falha por igual em TODA camada, nao so
+     * numa — e antes disso virava "sem resposta" para o pacote inteiro. [candidatasSemIndice]
+     * e o mesmo resultado sem depender do R-tree, so mais lento.
      */
-    fun candidatas(tabela: String, minX: Double, minY: Double, maxX: Double, maxY: Double): List<Feicao> {
+    fun candidatas(tabela: String, minX: Double, minY: Double, maxX: Double, maxY: Double): List<Feicao> =
+        try {
+            candidatasComRtree(tabela, minX, minY, maxX, maxY)
+        } catch (e: Exception) {
+            candidatasSemIndice(tabela, minX, minY, maxX, maxY)
+        }
+
+    private fun candidatasComRtree(tabela: String, minX: Double, minY: Double, maxX: Double, maxY: Double): List<Feicao> {
         val colunas = colunasDescritivas(tabela)
         val selecao = (listOf("f.fid", "f.geom") + colunas.map { "f.\"$it\"" }).joinToString(", ")
         val sql = """
@@ -82,6 +93,28 @@ class GeoPacote(private val arquivo: File) : AutoCloseable {
             while (c.moveToNext()) {
                 val blob = c.getBlob(1) ?: continue
                 val geom = lerGeometria(blob) ?: continue
+                val atributos = LinkedHashMap<String, String>()
+                colunas.forEachIndexed { i, nome ->
+                    val v = c.getString(2 + i)
+                    if (!v.isNullOrBlank()) atributos[nome] = v
+                }
+                resultado += Feicao(c.getLong(0), geom, atributos)
+            }
+        }
+        return resultado
+    }
+
+    /** Varre a tabela inteira e filtra pela caixa envolvente da propria geometria ja decodificada. */
+    private fun candidatasSemIndice(tabela: String, minX: Double, minY: Double, maxX: Double, maxY: Double): List<Feicao> {
+        val colunas = colunasDescritivas(tabela)
+        val selecao = (listOf("f.fid", "f.geom") + colunas.map { "f.\"$it\"" }).joinToString(", ")
+        val resultado = mutableListOf<Feicao>()
+        db.rawQuery("SELECT $selecao FROM \"$tabela\" f", null).use { c ->
+            while (c.moveToNext()) {
+                val blob = c.getBlob(1) ?: continue
+                val geom = lerGeometria(blob) ?: continue
+                val env = geom.envelopeInternal
+                if (env.maxX < minX || env.minX > maxX || env.maxY < minY || env.minY > maxY) continue
                 val atributos = LinkedHashMap<String, String>()
                 colunas.forEachIndexed { i, nome ->
                     val v = c.getString(2 + i)
