@@ -8,14 +8,14 @@ import android.speech.RecognizerIntent
 import android.speech.SpeechRecognizer
 
 /**
- * Ditado por voz -> texto, usando o reconhecedor do PRÓPRIO Android — sem mandar áudio para
- * nuvem nenhuma além da que o próprio aparelho já usa para isso (pedido explícito: nada de
- * serviço externo complexo).
+ * Ditado por voz -> texto, usando o reconhecedor do PRÓPRIO Android.
  *
- * `EXTRA_PREFER_OFFLINE` pede ao Android para preferir o reconhecimento local quando o aparelho
- * suportar — não é garantia: a API do Android não promete isso para todo aparelho/idioma
- * baixado, então a tela precisa dizer isso com todas as letras, não fingir uma certeza que a
- * plataforma não dá.
+ * Decisão revista a pedido de Francisco (10/09/2026): a acentuação do modo offline saía errada
+ * com frequência — o pacote de reconhecimento local de pt-BR é sensivelmente mais fraco que o
+ * modelo na nuvem do Google. Deixou de pedir `EXTRA_PREFER_OFFLINE`, então o Android pode usar
+ * o reconhecimento online quando disponível: melhora a precisão, mas o áudio da fala passa a
+ * sair do aparelho para o serviço de reconhecimento do Google — revisar antes de salvar
+ * continua obrigatório de qualquer forma.
  *
  * O reconhecedor do Android entende UMA fala por vez e para sozinho no silêncio — para virar
  * ditado contínuo (um relato inteiro, não uma frase), esta classe reinicia a escuta sozinha a
@@ -73,7 +73,6 @@ class Transcricao(private val contexto: Context) {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
             putExtra(RecognizerIntent.EXTRA_LANGUAGE, "pt-BR")
-            putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, true)
         }
         runCatching { r.startListening(intent) }
     }

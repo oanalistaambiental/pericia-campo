@@ -197,9 +197,9 @@ private fun ColumnScope.NovaOcorrencia(vm: CapturaViewModel, aoSalvar: () -> Uni
 
                 Rotulo("DITAR POR VOZ (OPCIONAL)")
                 Text(
-                    "Transcrito pelo reconhecimento de voz do próprio aparelho — não sai áudio " +
-                        "para nenhum servidor além do que o Android já usa para isso. Revise antes " +
-                        "de salvar: transcrição erra.",
+                    "Transcrito pelo reconhecimento de voz do Android — pode usar o serviço " +
+                        "online do aparelho para melhorar a precisão, o que manda o áudio da " +
+                        "fala para fora do aparelho. Revise antes de salvar: transcrição erra.",
                     color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
                 )
                 Spacer(Modifier.height(8.dp))
