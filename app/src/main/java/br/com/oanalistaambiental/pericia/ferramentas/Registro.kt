@@ -19,6 +19,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaOcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.ui.TelaPrazoRenovacao
 import br.com.oanalistaambiental.pericia.ui.TelaRecursosHidricos
 import br.com.oanalistaambiental.pericia.ui.TelaCondicionantes
+import br.com.oanalistaambiental.pericia.ui.TelaConversorUnidades
 import br.com.oanalistaambiental.pericia.ui.TelaFichaVistoria
 import br.com.oanalistaambiental.pericia.ui.TelaRelatorioPonto
 
@@ -188,6 +189,17 @@ object Registro {
                 "citado na tela — o valor da UFEMG muda todo ano. Confirme a taxa final com a " +
                 "Unidade Regional antes de pagar.",
             tela = { nav -> TelaTaxaUfemg(vmCaptura(), nav.voltar) }
+        ),
+        Ferramenta(
+            id = "conversor_unidades",
+            nome = "Conversor de unidades",
+            resumo = "Vazão, área, volume, massa e taxa de produção — L/s, ha, m³, t/dia e mais.",
+            grupo = Grupo.ENQUADRAR,
+            icone = IconeGaveta.CONVERSOR,
+            limite = "Só aritmética de conversão — não decide qual unidade a norma ou o " +
+                "condicionante exige. Taxa de produção assume mês de 30 dias e ano de 365 dias, " +
+                "convenção deste conversor, não de nenhum documento.",
+            tela = { nav -> TelaConversorUnidades(nav.voltar) }
         ),
         Ferramenta(
             id = "cadastros_ief",

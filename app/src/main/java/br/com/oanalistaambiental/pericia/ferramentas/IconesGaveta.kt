@@ -47,7 +47,8 @@ enum class IconeGaveta {
     AGUA,
     RELATORIO,
     CHECKLIST,
-    SINO
+    SINO,
+    CONVERSOR
 }
 
 @Composable
@@ -379,6 +380,26 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                 drawPath(corpo, cor, style = traco)
                 drawLine(cor, Offset(w * 0.5f, h * 0.08f), Offset(w * 0.5f, h * 0.14f), traco.width, StrokeCap.Round)
                 drawCircle(cor, w * 0.06f, Offset(w * 0.5f, h * 0.82f), style = Fill)
+            }
+
+            IconeGaveta.CONVERSOR -> {
+                // Duas flechas horizontais em sentidos opostos — trocar de unidade, nao
+                // enquadramento (que usa setas de outro jeito) nem relatorio.
+                drawLine(cor, Offset(w * 0.16f, h * 0.36f), Offset(w * 0.84f, h * 0.36f), traco.width, StrokeCap.Round)
+                val pontaDireita = Path().apply {
+                    moveTo(w * 0.68f, h * 0.24f)
+                    lineTo(w * 0.84f, h * 0.36f)
+                    lineTo(w * 0.68f, h * 0.48f)
+                }
+                drawPath(pontaDireita, cor, style = Stroke(width = traco.width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+
+                drawLine(cor, Offset(w * 0.16f, h * 0.64f), Offset(w * 0.84f, h * 0.64f), traco.width, StrokeCap.Round)
+                val pontaEsquerda = Path().apply {
+                    moveTo(w * 0.32f, h * 0.52f)
+                    lineTo(w * 0.16f, h * 0.64f)
+                    lineTo(w * 0.32f, h * 0.76f)
+                }
+                drawPath(pontaEsquerda, cor, style = Stroke(width = traco.width, cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
         }
     }
