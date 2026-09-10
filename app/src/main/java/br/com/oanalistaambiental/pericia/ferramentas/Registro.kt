@@ -18,6 +18,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaMedicao
 import br.com.oanalistaambiental.pericia.ui.TelaOcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.ui.TelaPrazoRenovacao
 import br.com.oanalistaambiental.pericia.ui.TelaRecursosHidricos
+import br.com.oanalistaambiental.pericia.ui.TelaAppReservaLegal
 import br.com.oanalistaambiental.pericia.ui.TelaCondicionantes
 import br.com.oanalistaambiental.pericia.ui.TelaConversorUnidades
 import br.com.oanalistaambiental.pericia.ui.TelaFichaVistoria
@@ -200,6 +201,18 @@ object Registro {
                 "condicionante exige. Taxa de produção assume mês de 30 dias e ano de 365 dias, " +
                 "convenção deste conversor, não de nenhum documento.",
             tela = { nav -> TelaConversorUnidades(nav.voltar) }
+        ),
+        Ferramenta(
+            id = "app_reserva_legal",
+            nome = "APP e Reserva Legal",
+            resumo = "Faixa de preservação por curso d'água/lago e percentual de Reserva Legal.",
+            grupo = Grupo.CAMPO,
+            icone = IconeGaveta.FOLHA,
+            limite = "É regra GERAL da Lei 12.651/2012 (Código Florestal), federal — não decide " +
+                "área consolidada, não confere CAR/PRA, e não substitui regra própria que o " +
+                "órgão estadual tenha fixado para o caso concreto. Reservatório artificial segue " +
+                "a faixa da própria licença do empreendimento, não esta conta.",
+            tela = { nav -> TelaAppReservaLegal(nav.voltar) }
         ),
         Ferramenta(
             id = "cadastros_ief",

@@ -48,7 +48,8 @@ enum class IconeGaveta {
     RELATORIO,
     CHECKLIST,
     SINO,
-    CONVERSOR
+    CONVERSOR,
+    FOLHA
 }
 
 @Composable
@@ -400,6 +401,19 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                     lineTo(w * 0.32f, h * 0.76f)
                 }
                 drawPath(pontaEsquerda, cor, style = Stroke(width = traco.width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            }
+
+            IconeGaveta.FOLHA -> {
+                // Folha com nervura central — vegetacao nativa (APP/Reserva Legal), nao a gota
+                // d'agua (AGUA, que e um circulo com ponta) nem o pino de mapa (PINO).
+                val folha = Path().apply {
+                    moveTo(w * 0.5f, h * 0.12f)
+                    cubicTo(w * 0.86f, h * 0.24f, w * 0.86f, h * 0.62f, w * 0.5f, h * 0.88f)
+                    cubicTo(w * 0.14f, h * 0.62f, w * 0.14f, h * 0.24f, w * 0.5f, h * 0.12f)
+                    close()
+                }
+                drawPath(folha, cor, style = traco)
+                drawLine(cor, Offset(w * 0.5f, h * 0.22f), Offset(w * 0.5f, h * 0.82f), traco.width * 0.8f, StrokeCap.Round)
             }
         }
     }
