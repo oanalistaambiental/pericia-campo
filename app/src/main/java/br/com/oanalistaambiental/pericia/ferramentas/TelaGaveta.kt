@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -69,34 +70,36 @@ fun TelaGaveta(
             )
         }
 
-        // A camera e as vistorias vem primeiro: dependem de estado que vive na Activity e nao
-        // passam pelo registro, mas entram na mesma grade dos itens que passam.
-        val itens = buildList {
-            add(
-                ItemGaveta(
-                    nome = "Câmera de perícia",
-                    icone = IconeGaveta.CAMERA,
-                    destaque = true,
-                    faltando = if (disponivel(Recurso.CAMERA)) emptyList() else listOf(Recurso.CAMERA),
-                    aoAbrir = irParaCamera
-                )
+        // A camera e as vistorias vem primeiro, dentro da propria secao de campo: dependem de
+        // estado que vive na Activity e nao passam pelo registro, mas sao trabalho de campo que
+        // uma pessoa faz tanto quanto medir ou fotografar um ponto.
+        val essenciaisDeCampo = listOf(
+            ItemGaveta(
+                nome = "Câmera de perícia",
+                icone = IconeGaveta.CAMERA,
+                destaque = true,
+                faltando = if (disponivel(Recurso.CAMERA)) emptyList() else listOf(Recurso.CAMERA),
+                aoAbrir = irParaCamera
+            ),
+            ItemGaveta(
+                nome = "Vistorias e laudos",
+                icone = IconeGaveta.PASTA,
+                faltando = emptyList(),
+                aoAbrir = irParaVistorias
             )
-            add(
+        )
+
+        // Agrupado por Grupo — nao pelo nome "campo"/"escritorio", mas pelo que a pessoa vai
+        // fazer ali: medir e registrar no local, ou enquadrar e consultar sentada. A mesma
+        // distincao que ja orientou a aba de recursos hidricos, agora valendo para a gaveta
+        // inteira, nao so para uma ferramenta.
+        val porGrupo = Registro.ferramentas.groupBy { it.grupo }.mapValues { (_, lista) ->
+            lista.map { f ->
                 ItemGaveta(
-                    nome = "Vistorias e laudos",
-                    icone = IconeGaveta.PASTA,
-                    faltando = emptyList(),
-                    aoAbrir = irParaVistorias
-                )
-            )
-            for (f in Registro.ferramentas) {
-                add(
-                    ItemGaveta(
-                        nome = f.nome,
-                        icone = f.icone,
-                        faltando = f.exige.filterNot(disponivel),
-                        aoAbrir = { abrir(f.id) }
-                    )
+                    nome = f.nome,
+                    icone = f.icone,
+                    faltando = f.exige.filterNot(disponivel),
+                    aoAbrir = { abrir(f.id) }
                 )
             }
         }
@@ -108,12 +111,32 @@ fun TelaGaveta(
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            items(itens) { item ->
+            item(span = { GridItemSpan(maxLineSpan) }) { CabecalhoSecao(Grupo.CAMPO.titulo) }
+            items(essenciaisDeCampo + porGrupo[Grupo.CAMPO].orEmpty()) { item ->
                 BotaoGaveta(item, aoTocar = { item.aoAbrir() })
             }
-            item { Spacer(Modifier.height(24.dp)) }
+            for (grupo in Grupo.entries) {
+                if (grupo == Grupo.CAMPO) continue
+                val doGrupo = porGrupo[grupo].orEmpty()
+                if (doGrupo.isEmpty()) continue
+                item(span = { GridItemSpan(maxLineSpan) }) { CabecalhoSecao(grupo.titulo) }
+                items(doGrupo) { item ->
+                    BotaoGaveta(item, aoTocar = { item.aoAbrir() })
+                }
+            }
+            item(span = { GridItemSpan(maxLineSpan) }) { Spacer(Modifier.height(24.dp)) }
         }
     }
+}
+
+@Composable
+private fun CabecalhoSecao(titulo: String) {
+    Text(
+        titulo,
+        color = Cores.textoFraco, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+        letterSpacing = 0.8.sp,
+        modifier = Modifier.padding(horizontal = 4.dp, vertical = 6.dp)
+    )
 }
 
 /** Um botao da grade. */
