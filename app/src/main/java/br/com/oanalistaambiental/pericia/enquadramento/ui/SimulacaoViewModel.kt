@@ -7,6 +7,8 @@ import androidx.lifecycle.viewModelScope
 import br.com.oanalistaambiental.pericia.enquadramento.geo.DeteccaoLocacional
 import br.com.oanalistaambiental.pericia.enquadramento.laudo.SimulacaoPdf
 import br.com.oanalistaambiental.pericia.enquadramento.norma.*
+import br.com.oanalistaambiental.pericia.taxas.TabelaTaxas
+import br.com.oanalistaambiental.pericia.taxas.TaxaUfemg
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -174,6 +176,9 @@ class SimulacaoViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    private val _tabelaTaxas = MutableStateFlow<TabelaTaxas?>(null)
+    val tabelaTaxas: StateFlow<TabelaTaxas?> = _tabelaTaxas
+
     init {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
@@ -182,6 +187,11 @@ class SimulacaoViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }.onSuccess { _regras.value = it }
              .onFailure { _erroBase.value = "Não foi possível carregar a base normativa: ${it.message}" }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                TaxaUfemg.carregar { getApplication<Application>().assets.open("taxas/ufemg_2026.json") }
+            }.onSuccess { _tabelaTaxas.value = it }
         }
     }
 

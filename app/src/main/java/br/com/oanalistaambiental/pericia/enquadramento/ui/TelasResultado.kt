@@ -2,8 +2,10 @@ package br.com.oanalistaambiental.pericia.enquadramento.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
@@ -27,6 +29,8 @@ import br.com.oanalistaambiental.pericia.enquadramento.norma.CasoEspecial
 import br.com.oanalistaambiental.pericia.enquadramento.norma.Decisoes
 import br.com.oanalistaambiental.pericia.enquadramento.norma.Dispensa
 import br.com.oanalistaambiental.pericia.enquadramento.norma.Grau
+import br.com.oanalistaambiental.pericia.taxas.FasesLicenciamento
+import br.com.oanalistaambiental.pericia.taxas.TabelaTaxas
 
 /* ------------------------------------------------------- CRITÉRIO LOCACIONAL */
 
@@ -268,6 +272,8 @@ fun TelaResultado(
     }
     val res by vm.resultado.collectAsState()
     val dica by vm.dica.collectAsState()
+    val tabelaTaxas by vm.tabelaTaxas.collectAsState()
+    val atividadeAtual by vm.atividade.collectAsState()
     val r = res ?: run {
         Column(Modifier.fillMaxSize().background(Cores.fundo).windowInsetsPadding(WindowInsets.safeDrawing)) {
             Cabecalho("Resultado", voltar = voltar)
@@ -342,6 +348,12 @@ fun TelaResultado(
                         "servicos.ibama.gov.br.",
                     TipoAviso.INFO
                 )
+
+                // Taxa de entrada no processo (DAE) — dado real da FEAM, tabelado por
+                // classe/modalidade/listagem. A "fase" (LP, LI, LO...) nao sai do enquadramento
+                // sozinho quando a modalidade tem mais de uma linha na tabela (LAT, LAC2): e
+                // decisao do processo, nao da simulacao, por isso a tela pergunta.
+                tabelaTaxas?.let { t -> BlocoTaxaEntrada(t, r.classe, r.modalidade.sigla, atividadeAtual?.codigo) }
 
                 // Art. 18 — o caso condicional ganha bloco proprio, e nao so uma linha de aviso.
                 // A condicao precisa caber inteira na tela: quem vai formalizar o processo tem
@@ -487,6 +499,78 @@ fun TelaResultado(
                 Spacer(Modifier.height(28.dp))
             }
         }
+    }
+}
+
+/**
+ * Taxa de entrada no processo (DAE) — dado real da FEAM, tabelado ano a ano por classe,
+ * modalidade e listagem da atividade (ver o pacote taxas, arquivo TaxaUfemg). Quando a modalidade tem mais de
+ * uma linha na tabela (LAT, LAC2), a tela pede pra escolher a fase — informação do processo,
+ * que o enquadramento sozinho não decide.
+ */
+@Composable
+private fun BlocoTaxaEntrada(
+    tabela: TabelaTaxas,
+    classe: Int,
+    modalidadeSigla: String,
+    codigoAtividade: String?
+) {
+    val opcoes = FasesLicenciamento.opcoes(modalidadeSigla)
+    if (opcoes.isEmpty()) return
+    var faseEscolhida by remember(modalidadeSigla) { mutableStateOf(opcoes.first().chave) }
+    val listagemG = codigoAtividade?.startsWith("G") == true
+
+    Rotulo("TAXA DE ENTRADA NO PROCESSO (DAE)")
+    Cartao {
+        if (opcoes.size > 1) {
+            Text(
+                "Fase que está sendo requerida:",
+                color = Cores.textoFraco, fontSize = 11.5.sp, letterSpacing = 0.5.sp
+            )
+            Spacer(Modifier.height(6.dp))
+            Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())) {
+                opcoes.forEach { op ->
+                    val ativo = op.chave == faseEscolhida
+                    Text(
+                        op.rotulo,
+                        color = if (ativo) Color.White else Cores.texto,
+                        fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .background(if (ativo) Cores.acento else Cores.superficie, RoundedCornerShape(6.dp))
+                            .clickable { faseEscolhida = op.chave }
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                }
+            }
+            Spacer(Modifier.height(12.dp))
+        }
+
+        val valor = tabela.licenciamento.valor(faseEscolhida, classe, listagemG)
+        if (valor == null) {
+            Text(
+                "A tabela oficial não traz valor para classe $classe nesta fase — confira " +
+                    "diretamente com a Unidade Regional.",
+                color = Cores.textoFraco, fontSize = 12.5.sp, lineHeight = 18.sp
+            )
+        } else {
+            Text(
+                "R$ %,.2f".format(java.util.Locale("pt", "BR"), valor),
+                color = Cores.texto, fontSize = 30.sp, fontWeight = FontWeight.Bold
+            )
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Listagem ${if (listagemG) "G — agrossilvipastoril" else "A a F — industrial, minerária e infraestrutura"}" +
+                    (if (codigoAtividade == null) " (sem atividade do catálogo escolhida — confira se é essa a listagem)" else ""),
+                color = Cores.textoFraco, fontSize = 11.sp, lineHeight = 16.sp
+            )
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(
+            "Fonte: ${tabela.licenciamento.fonte}. Valor de tabela, sujeito a atualização anual " +
+                "pela FEAM — confirme antes de emitir o DAE.",
+            color = Cores.textoFraco, fontSize = 10.5.sp, lineHeight = 15.sp
+        )
     }
 }
 

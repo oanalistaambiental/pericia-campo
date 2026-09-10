@@ -3,29 +3,421 @@
   "valor_ufemg": 5.7899,
   "fonte": "Resolução SEF-MG Nº 5.969, de 28/11/2025",
   "taxa_expediente_intervencao": [
-    {"codigo": "7.24.1", "especificacao": "Supressão de cobertura vegetal nativa, com ou sem destoca, para uso alternativo do solo", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
-    {"codigo": "7.24.2", "especificacao": "Intervenção com supressão de cobertura vegetal nativa em áreas de preservação permanente – APP", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
-    {"codigo": "7.24.3", "especificacao": "Destoca em área remanescente de supressão de vegetação nativa", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
-    {"codigo": "7.24.4", "especificacao": "Corte ou aproveitamento de árvores isoladas nativas vivas", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
-    {"codigo": "7.24.5", "especificacao": "Análise e vistoria de plano de manejo sustentável da vegetação nativa", "unidade": "hectare ou fração", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
-    {"codigo": "7.24.6", "especificacao": "Intervenção em área de preservação permanente – APP – sem supressão de cobertura vegetal nativa", "unidade": "hectare ou fração", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 30},
-    {"codigo": "7.24.7", "especificacao": "Supressão de maciço florestal de origem plantada com presença de sub-bosque nativo com rendimento lenhoso", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
-    {"codigo": "7.24.8", "especificacao": "Supressão de maciço florestal de origem plantada localizado em APP", "unidade": "hectare", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
-    {"codigo": "7.24.9", "especificacao": "Aproveitamento de material lenhoso", "unidade": "metro cúbico", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1},
-    {"codigo": "7.24.13", "especificacao": "Prorrogação de prazo de validade do DAIA", "unidade": "hectare ou fração", "fixo_ufemg": 124, "variavel_ufemg_por_unidade": 1}
+    {
+      "codigo": "7.24.1",
+      "especificacao": "Supressão de cobertura vegetal nativa, com ou sem destoca, para uso alternativo do solo",
+      "unidade": "hectare",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "7.24.2",
+      "especificacao": "Intervenção com supressão de cobertura vegetal nativa em áreas de preservação permanente – APP",
+      "unidade": "hectare",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "7.24.3",
+      "especificacao": "Destoca em área remanescente de supressão de vegetação nativa",
+      "unidade": "hectare",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "7.24.4",
+      "especificacao": "Corte ou aproveitamento de árvores isoladas nativas vivas",
+      "unidade": "hectare",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "7.24.5",
+      "especificacao": "Análise e vistoria de plano de manejo sustentável da vegetação nativa",
+      "unidade": "hectare ou fração",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "7.24.6",
+      "especificacao": "Intervenção em área de preservação permanente – APP – sem supressão de cobertura vegetal nativa",
+      "unidade": "hectare ou fração",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 30
+    },
+    {
+      "codigo": "7.24.7",
+      "especificacao": "Supressão de maciço florestal de origem plantada com presença de sub-bosque nativo com rendimento lenhoso",
+      "unidade": "hectare",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "7.24.8",
+      "especificacao": "Supressão de maciço florestal de origem plantada localizado em APP",
+      "unidade": "hectare",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "7.24.9",
+      "especificacao": "Aproveitamento de material lenhoso",
+      "unidade": "metro cúbico",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "7.24.13",
+      "especificacao": "Prorrogação de prazo de validade do DAIA",
+      "unidade": "hectare ou fração",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "—",
+      "especificacao": "Análise de Cadastro Ambiental Rural com vistoria, imóveis com área acima de 4 módulos fiscais",
+      "unidade": "hectare ou fração",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "—",
+      "especificacao": "Análise de processo de regularização de reserva legal através da compensação em unidades de conservação estaduais de domínio público",
+      "unidade": "hectare ou fração",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "—",
+      "especificacao": "Análise de processo de reserva legal para fins de averbação opcional ou alteração de localização",
+      "unidade": "hectare ou fração",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "—",
+      "especificacao": "Análise de Projeto Técnico de Reconstituição da Flora (PTRF) para imóveis com área acima de 4 módulos fiscais",
+      "unidade": "hectare ou fração",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    },
+    {
+      "codigo": "—",
+      "especificacao": "Análise de Projeto de Recuperação de Área Alterada ou Degradada (PRAD/PRADA) para imóveis com área acima de 4 módulos fiscais",
+      "unidade": "hectare ou fração",
+      "fixo_ufemg": 124,
+      "variavel_ufemg_por_unidade": 1
+    }
   ],
   "taxa_florestal": [
-    {"codigo": "1.00", "especificacao": "Lenha de floresta plantada", "unidade": "m³", "ufemg_por_unidade": 0.28},
-    {"codigo": "1.01", "especificacao": "Lenha de floresta nativa sob manejo sustentável", "unidade": "m³", "ufemg_por_unidade": 0.28},
-    {"codigo": "1.02", "especificacao": "Lenha de floresta nativa", "unidade": "m³", "ufemg_por_unidade": 1.4},
-    {"codigo": "2.00", "especificacao": "Madeira de floresta plantada", "unidade": "m³", "ufemg_por_unidade": 0.54},
-    {"codigo": "2.01", "especificacao": "Madeira de floresta nativa sob manejo sustentável", "unidade": "m³", "ufemg_por_unidade": 0.54},
-    {"codigo": "2.02", "especificacao": "Madeira de floresta nativa", "unidade": "m³", "ufemg_por_unidade": 9.35},
-    {"codigo": "3.00", "especificacao": "Carvão vegetal de floresta plantada", "unidade": "m³", "ufemg_por_unidade": 0.56},
-    {"codigo": "3.01", "especificacao": "Carvão vegetal de floresta nativa sob manejo sustentável", "unidade": "m³", "ufemg_por_unidade": 0.56},
-    {"codigo": "3.02", "especificacao": "Carvão vegetal de floresta nativa", "unidade": "m³", "ufemg_por_unidade": 2.8},
-    {"codigo": "4.00", "especificacao": "Produtos não madeireiros de floresta plantada", "unidade": "kg", "ufemg_por_unidade": 0.07},
-    {"codigo": "4.01", "especificacao": "Produtos não madeireiros de floresta nativa sob manejo sustentável", "unidade": "kg", "ufemg_por_unidade": 0.07},
-    {"codigo": "4.02", "especificacao": "Produtos não madeireiros de floresta nativa", "unidade": "kg", "ufemg_por_unidade": 0.37}
-  ]
+    {
+      "codigo": "1.00",
+      "especificacao": "Lenha de floresta plantada",
+      "unidade": "m³",
+      "ufemg_por_unidade": 0.28
+    },
+    {
+      "codigo": "1.01",
+      "especificacao": "Lenha de floresta nativa sob manejo sustentável",
+      "unidade": "m³",
+      "ufemg_por_unidade": 0.28
+    },
+    {
+      "codigo": "1.02",
+      "especificacao": "Lenha de floresta nativa",
+      "unidade": "m³",
+      "ufemg_por_unidade": 1.4
+    },
+    {
+      "codigo": "2.00",
+      "especificacao": "Madeira de floresta plantada",
+      "unidade": "m³",
+      "ufemg_por_unidade": 0.54
+    },
+    {
+      "codigo": "2.01",
+      "especificacao": "Madeira de floresta nativa sob manejo sustentável",
+      "unidade": "m³",
+      "ufemg_por_unidade": 0.54
+    },
+    {
+      "codigo": "2.02",
+      "especificacao": "Madeira de floresta nativa",
+      "unidade": "m³",
+      "ufemg_por_unidade": 9.35
+    },
+    {
+      "codigo": "3.00",
+      "especificacao": "Carvão vegetal de floresta plantada",
+      "unidade": "m³",
+      "ufemg_por_unidade": 0.56
+    },
+    {
+      "codigo": "3.01",
+      "especificacao": "Carvão vegetal de floresta nativa sob manejo sustentável",
+      "unidade": "m³",
+      "ufemg_por_unidade": 0.56
+    },
+    {
+      "codigo": "3.02",
+      "especificacao": "Carvão vegetal de floresta nativa",
+      "unidade": "m³",
+      "ufemg_por_unidade": 2.8
+    },
+    {
+      "codigo": "4.00",
+      "especificacao": "Produtos não madeireiros de floresta plantada",
+      "unidade": "kg",
+      "ufemg_por_unidade": 0.07
+    },
+    {
+      "codigo": "4.01",
+      "especificacao": "Produtos não madeireiros de floresta nativa sob manejo sustentável",
+      "unidade": "kg",
+      "ufemg_por_unidade": 0.07
+    },
+    {
+      "codigo": "4.02",
+      "especificacao": "Produtos não madeireiros de floresta nativa",
+      "unidade": "kg",
+      "ufemg_por_unidade": 0.37
+    }
+  ],
+  "taxa_licenciamento": {
+    "fonte": "FEAM — Custos tabelados para processos de Regularização Ambiental (Listagem A-F e G), a partir de 01/01/2026, Lei Estadual 22.796/2017",
+    "url_af": "https://feam.br/documents/d/feam/site-custos_tabelados_de_ra_a-f_2026-pdf",
+    "url_g": "https://feam.br/documents/d/feam/site-custos_de_analise_dos_processos_de_ia-2026-pdf",
+    "industrial_minerario_infra": {
+      "las_cadastro": {
+        "1": 289.5,
+        "2": 289.5
+      },
+      "las_ras": {
+        "1": 5899.91,
+        "2": 5899.91,
+        "3": 5899.91
+      },
+      "lat_lp": {
+        "3": 15974.33,
+        "4": 22366.38,
+        "5": 63897.34,
+        "6": 105434.08
+      },
+      "lat_li": {
+        "3": 9582.28,
+        "4": 12778.31,
+        "5": 44726.98,
+        "6": 63897.34
+      },
+      "lat_lic": {
+        "3": 33228.24,
+        "4": 45688.1,
+        "5": 141215.66,
+        "6": 220132.0
+      },
+      "lat_lo": {
+        "3": 20768.37,
+        "4": 27154.63,
+        "5": 51119.03,
+        "6": 70289.39
+      },
+      "lat_loc": {
+        "3": 60226.54,
+        "4": 80994.91,
+        "5": 207672.13,
+        "6": 311508.2
+      },
+      "lac1_lp_li_lo": {
+        "2": 32429.23,
+        "3": 32429.23,
+        "4": 43609.53,
+        "5": 111826.13,
+        "6": 167733.4
+      },
+      "lac1_loc": {
+        "2": 60226.54,
+        "3": 60226.54,
+        "4": 80994.91,
+        "5": 207672.13,
+        "6": 311508.2
+      },
+      "lac2_lp": {
+        "3": 15974.33,
+        "4": 22366.38,
+        "5": 63897.34,
+        "6": 105434.08
+      },
+      "lac2_lp_li": {
+        "3": 17890.79,
+        "4": 24601.29,
+        "5": 76038.76,
+        "6": 118530.83
+      },
+      "lac2_li_lo": {
+        "3": 21248.93,
+        "4": 27953.64,
+        "5": 67093.36,
+        "6": 93929.55
+      },
+      "lac2_lic": {
+        "3": 33228.24,
+        "4": 45688.1,
+        "5": 141215.66,
+        "6": 220132.0
+      },
+      "lac2_lic_lo": {
+        "3": 53996.61,
+        "4": 72842.73,
+        "5": 192334.69,
+        "6": 290421.38
+      },
+      "lac2_lo": {
+        "3": 20768.37,
+        "4": 27154.63,
+        "5": 51119.03,
+        "6": 70289.39
+      },
+      "lac2_loc": {
+        "2": 60226.54,
+        "3": 60226.54,
+        "4": 80994.91,
+        "5": 207672.13,
+        "6": 311508.2
+      },
+      "eia_rima": {
+        "3": 18475.57,
+        "4": 23964.4,
+        "5": 70289.39,
+        "6": 108630.1
+      },
+      "renovacao_lo": {
+        "2ou3": 20768.37,
+        "4": 27154.63,
+        "5": 51119.03,
+        "6": 70289.39
+      }
+    },
+    "agrosilvipastoril": {
+      "las_cadastro": {
+        "1": 173.7,
+        "2": 173.7
+      },
+      "las_ras": {
+        "1": 1991.73,
+        "2": 1991.73,
+        "3": 1991.73
+      },
+      "lat_lp": {
+        "3": 5755.16,
+        "4": 8516.94,
+        "5": 13785.75,
+        "6": 26355.62
+      },
+      "lat_li": {
+        "3": 3971.87,
+        "4": 5957.81,
+        "5": 9651.76,
+        "6": 18243.97
+      },
+      "lat_lic": {
+        "3": 12650.93,
+        "4": 18817.18,
+        "5": 30466.45,
+        "6": 44605.39
+      },
+      "lat_lo": {
+        "3": 4863.52,
+        "4": 6814.71,
+        "5": 11029.76,
+        "6": 22707.99
+      },
+      "lat_loc": {
+        "3": 6328.36,
+        "4": 8858.55,
+        "5": 14335.79,
+        "6": 29516.91
+      },
+      "lac1_lp_li_lo": {
+        "2": 10219.17,
+        "3": 10219.17,
+        "4": 14903.2,
+        "5": 24126.51,
+        "6": 47118.21
+      },
+      "lac1_loc": {
+        "2": 6328.36,
+        "3": 6328.36,
+        "4": 8858.55,
+        "5": 14335.79,
+        "6": 29516.91
+      },
+      "lac2_lp": {
+        "3": 5755.16,
+        "4": 8516.94,
+        "5": 13785.75,
+        "6": 26355.62
+      },
+      "lac2_lp_li": {
+        "3": 6814.71,
+        "4": 10132.33,
+        "5": 16408.58,
+        "6": 31224.93
+      },
+      "lac2_li_lo": {
+        "3": 6189.4,
+        "4": 8939.61,
+        "5": 14474.75,
+        "6": 28665.79
+      },
+      "lac2_lic": {
+        "3": 12650.93,
+        "4": 18817.18,
+        "5": 30466.45,
+        "6": 44605.39
+      },
+      "lac2_lic_lo": {
+        "3": 17514.45,
+        "4": 25631.89,
+        "5": 41496.21,
+        "6": 67313.38
+      },
+      "lac2_lo": {
+        "3": 4863.52,
+        "4": 6814.71,
+        "5": 11029.76,
+        "6": 22707.99
+      },
+      "lac2_loc": {
+        "2": 6328.36,
+        "3": 6328.36,
+        "4": 8858.55,
+        "5": 14335.79,
+        "6": 29516.91
+      },
+      "eia_rima": {
+        "3": 14191.04,
+        "4": 20276.23,
+        "5": 30408.55,
+        "6": 48658.32
+      },
+      "renovacao_lo": {
+        "2ou3": 3404.46,
+        "4": 4770.88,
+        "5": 7717.94,
+        "6": 15893.28
+      }
+    },
+    "diversos": {
+      "2via_certificado_licenciamento": 127.38,
+      "2via_certificado_outorga": 144.75,
+      "certidao_debito_florestal": 40.53,
+      "areia_fundicao_dn196_2014": 2559.14,
+      "pos_concessao_licenca": 5899.91,
+      "reprografia_por_folha": 0.58,
+      "fobi_emissao": 34.74,
+      "fobi_retificacao": 86.85,
+      "declaracoes_certidoes": 69.48,
+      "recurso_indeferimento": 868.49
+    }
+  }
 }
