@@ -19,6 +19,7 @@ import br.com.oanalistaambiental.pericia.dados.TiposOcorrencia
 import br.com.oanalistaambiental.pericia.exportacao.Exportador
 import br.com.oanalistaambiental.pericia.geo.CamadaInfo
 import br.com.oanalistaambiental.pericia.geo.CircunscricaoHidrografica
+import br.com.oanalistaambiental.pericia.geo.ConsultaOnline
 import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.ConsultaRestricao
 import br.com.oanalistaambiental.pericia.geo.PontoConsulta
@@ -448,6 +449,35 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                     "Não é 'sem restrição' — é sem leitura. Refaça o pacote de camadas."
             }
         }.onFailure { _mensagem.value = "Consulta de restrição falhou: ${it.message}" }
+
+        consultarRestricoesOnline(fotoId, foto)
+    }
+
+    /**
+     * Complemento AO VIVO da consulta offline — ver [ConsultaOnline]. Roda depois e a parte,
+     * nunca atrasa nem substitui o resultado offline: sem sinal (o caso normal em campo), esta
+     * funcao simplesmente nao acrescenta nada, em silencio.
+     */
+    private suspend fun consultarRestricoesOnline(fotoId: Long, foto: Foto): Unit = withContext(Dispatchers.IO) {
+        val online = runCatching {
+            ConsultaOnline.consultar(foto.lat, foto.lon, foto.precisaoM)
+        }.getOrNull() ?: return@withContext
+        if (online.isEmpty()) return@withContext
+
+        _ultimasRestricoes.value = _ultimasRestricoes.value + online
+        online.forEach { r ->
+            banco.inserirRestricao(
+                RegistroRestricao(
+                    fotoId = fotoId, camada = r.camadaNome, fonte = r.fonte,
+                    situacao = r.situacao.name, distanciaM = r.distanciaBordaM,
+                    atributos = r.atributos.entries.joinToString("; ") { "${it.key}=${it.value}" },
+                    pacoteVersao = r.proveniencia.pacoteVersao,
+                    uuidMetadado = r.proveniencia.uuidMetadado,
+                    dataExtracao = r.proveniencia.dataExtracao,
+                    toleranciaM = r.proveniencia.toleranciaSimplificacaoM
+                )
+            )
+        }
     }
 
     // ------------------------------------------------------------ ponto de retorno

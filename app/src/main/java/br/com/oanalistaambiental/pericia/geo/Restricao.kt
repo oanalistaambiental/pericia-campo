@@ -122,7 +122,7 @@ class ConsultaRestricao(
             var melhor: Pair<Double, Feicao>? = null
             for (f in candidatas) {
                 val geomUtm = projetarParaUtm(f.geometria, zona, sul)
-                val d = distanciaAssinada(geomUtm, pUtm, camada)
+                val d = distanciaAssinadaGeom(geomUtm, pUtm, camada.tipo, camada.raioM)
                 val atual = melhor
                 if (atual == null || d < atual.first) melhor = d to f
             }
@@ -156,27 +156,6 @@ class ConsultaRestricao(
     fun classificar(distanciaM: Double, precisaoM: Float): Situacao =
         classificar(distanciaM, precisaoM, folgaAvisoM)
 
-    /** Negativo dentro, positivo fora. Camada de pontos usa o raio de influencia declarado. */
-    private fun distanciaAssinada(geom: Geometry, ponto: org.locationtech.jts.geom.Point, camada: CamadaInfo): Double {
-        if (camada.tipo == "ponto") {
-            val raio = camada.raioM ?: 0.0
-            return geom.distance(ponto) - raio
-        }
-        val bruta = geom.boundary.distance(ponto)
-        return if (geom.contains(ponto)) -bruta else bruta
-    }
-
-    private fun projetarParaUtm(geom: Geometry, zona: Int, sul: Boolean): Geometry {
-        val copia = geom.copy()
-        copia.apply(CoordinateFilter { c ->
-            val p = Utm.projetar(c.y, c.x, zona, sul)   // GeoPackage guarda x=lon, y=lat
-            c.x = p.easting
-            c.y = p.northing
-        })
-        copia.geometryChanged()
-        return copia
-    }
-
     /** Camadas presentes no pacote instalado — usado na tela de configuracoes. */
     fun camadasInstaladas(): List<CamadaInfo> = camadasCache
 
@@ -200,4 +179,33 @@ class ConsultaRestricao(
             else -> Situacao.PROXIMO_AO_LIMITE
         }
     }
+}
+
+/**
+ * Negativo dentro, positivo fora. Camada de pontos usa o raio de influencia declarado.
+ *
+ * Extraida de [ConsultaRestricao] para [ConsultaOnline] reusar — a mesma conta vale para uma
+ * geometria vinda do pacote offline ou de uma resposta do WFS ao vivo, e duplicar era o tipo de
+ * coisa que ja divergiu neste projeto antes (ver `Utm.formatado()` do enquadra-mg antigo).
+ */
+internal fun distanciaAssinadaGeom(
+    geom: Geometry, ponto: org.locationtech.jts.geom.Point, tipo: String, raioM: Double?
+): Double {
+    if (tipo == "ponto") {
+        return geom.distance(ponto) - (raioM ?: 0.0)
+    }
+    val bruta = geom.boundary.distance(ponto)
+    return if (geom.contains(ponto)) -bruta else bruta
+}
+
+/** Reprojeta uma geometria em lon/lat (x=lon, y=lat, convencao do GeoPackage e do GeoJSON) para UTM. */
+internal fun projetarParaUtm(geom: Geometry, zona: Int, sul: Boolean): Geometry {
+    val copia = geom.copy()
+    copia.apply(CoordinateFilter { c ->
+        val p = Utm.projetar(c.y, c.x, zona, sul)
+        c.x = p.easting
+        c.y = p.northing
+    })
+    copia.geometryChanged()
+    return copia
 }
