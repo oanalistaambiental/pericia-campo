@@ -38,7 +38,8 @@ enum class IconeGaveta {
     CAMADAS,
     CALENDARIO,
     BACIA,
-    GLOSSARIO
+    GLOSSARIO,
+    ALTURA
 }
 
 @Composable
@@ -188,6 +189,19 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                     }
                     drawPath(onda, cor, style = traco)
                 }
+            }
+
+            IconeGaveta.ALTURA -> {
+                // Arvore esquematica (tronco + copa triangular) com uma seta vertical do chao
+                // ate o topo, e a base marcada — altura medida de baixo para cima.
+                drawLine(cor, Offset(w * 0.5f, h * 0.85f), Offset(w * 0.5f, h * 0.18f), traco.width, StrokeCap.Round)
+                val seta = Path().apply {
+                    moveTo(w * 0.36f, h * 0.32f)
+                    lineTo(w * 0.5f, h * 0.14f)
+                    lineTo(w * 0.64f, h * 0.32f)
+                }
+                drawPath(seta, cor, style = traco)
+                drawLine(cor, Offset(w * 0.28f, h * 0.85f), Offset(w * 0.72f, h * 0.85f), traco.width, StrokeCap.Round)
             }
 
             IconeGaveta.GLOSSARIO -> {

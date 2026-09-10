@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.oanalistaambiental.pericia.captura.Orientacoes
 import br.com.oanalistaambiental.pericia.dados.GlossarioSisema
+import br.com.oanalistaambiental.pericia.geo.AlturaTrigonometrica
 import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.PontosLocais
 import br.com.oanalistaambiental.pericia.geo.PrazoRenovacao
@@ -829,6 +830,85 @@ fun TelaBaciaHidrografica(vm: CapturaViewModel, voltar: () -> Unit) {
                     "estar numa CH não impede nada, é o recorte administrativo do lugar.\n\n" +
                     "Dado real do IGAM/SEMAD (base GEIRH), simplificado para caber no " +
                     "aplicativo — a fronteira exata pode variar alguns metros do original."
+            )
+        }
+    }
+}
+
+/**
+ * Altura por trigonometria: distância horizontal até a base + ângulo de elevação ao vivo até o
+ * topo (o mesmo sensor da bússola/clinômetro, `estadoCampo.orientacao.elevacaoGraus`).
+ */
+@Composable
+fun TelaAlturaTrigonometrica(vm: CapturaViewModel, voltar: () -> Unit) {
+    val o by vm.estadoCampo.orientacao.collectAsState()
+    var distanciaTexto by rememberSaveable { mutableStateOf("") }
+    val distancia = distanciaTexto.replace(',', '.').toDoubleOrNull()
+    val angulo = o.elevacaoGraus
+
+    Column(
+        Modifier.fillMaxSize().background(Cores.fundo)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+    ) {
+        Cabecalho("Altura por trigonometria", voltar)
+
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            OutlinedTextField(
+                value = distanciaTexto,
+                onValueChange = { distanciaTexto = it },
+                label = { Text("Distância horizontal até a base (m)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(20.dp))
+
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("ÂNGULO ATÉ O TOPO", color = Cores.textoFraco, fontSize = 10.5.sp, letterSpacing = 1.sp)
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    angulo?.let { "%.1f°".format(it) } ?: "—",
+                    color = Cores.texto, fontSize = 32.sp, fontWeight = FontWeight.Bold
+                )
+                Text(
+                    "Aponte a câmera para o topo do que está medindo",
+                    color = Cores.textoFraco, fontSize = 11.5.sp
+                )
+
+                Spacer(Modifier.height(28.dp))
+
+                when {
+                    distancia == null || distancia <= 0 -> Text(
+                        "Informe a distância horizontal até a base.",
+                        color = Cores.textoFraco, fontSize = 12.5.sp, textAlign = TextAlign.Center
+                    )
+                    angulo == null || angulo <= 0 -> Text(
+                        "Aponte a câmera para cima, até o topo do que está medindo.",
+                        color = Cores.textoFraco, fontSize = 12.5.sp, textAlign = TextAlign.Center
+                    )
+                    else -> {
+                        val r = remember(distancia, angulo) {
+                            AlturaTrigonometrica.calcular(distancia, angulo.toDouble())
+                        }
+                        Text(
+                            "%.1f m".format(r.alturaM),
+                            color = Cores.texto, fontSize = 44.sp, fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            "± %.1f m".format(r.incertezaM),
+                            color = Cores.atencaoClaro, fontSize = 14.sp, fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+
+            Ajuda(
+                "Como medir",
+                "Fique a uma distância horizontal conhecida da base do que quer medir — passos " +
+                    "contados, ou a medição de área do app até lá. Aponte a câmera para o topo e " +
+                    "leia o ângulo. A altura soma a elevação medida com 1,5 m de onde você " +
+                    "segura o aparelho — não é a altura do seu olho, é uma aproximação.\n\n" +
+                    "A incerteza cresce com a distância e perto de 90°: um grau de erro no " +
+                    "ângulo é pouco a 5 m e muito a 50 m. Para medida de precisão, use um " +
+                    "clinômetro dedicado."
             )
         }
     }

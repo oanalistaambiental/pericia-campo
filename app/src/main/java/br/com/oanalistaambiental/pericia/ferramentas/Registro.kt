@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.oanalistaambiental.pericia.enquadramento.ui.TelaEnquadramento
 import br.com.oanalistaambiental.pericia.ui.CapturaViewModel
+import br.com.oanalistaambiental.pericia.ui.TelaAlturaTrigonometrica
 import br.com.oanalistaambiental.pericia.ui.TelaBaciaHidrografica
 import br.com.oanalistaambiental.pericia.ui.TelaBussola
 import br.com.oanalistaambiental.pericia.ui.TelaGlossario
@@ -83,6 +84,17 @@ object Registro {
                 "substitui o enquadramento do órgão ambiental e não vincula a Administração " +
                 "Pública. A modalidade definitiva é a da Unidade Regional.",
             tela = { nav -> TelaEnquadramento(nav.voltar) }
+        ),
+        Ferramenta(
+            id = "altura_trigonometrica",
+            nome = "Altura por trigonometria",
+            resumo = "Distância até a base + ângulo até o topo — altura com incerteza declarada.",
+            grupo = Grupo.CAMPO,
+            icone = IconeGaveta.ALTURA,
+            limite = "O erro de um grau no ângulo vira erro grande em distâncias longas ou " +
+                "ângulos perto de 90° — a incerteza mostrada é estimada, não medida. Não " +
+                "substitui um clinômetro dedicado.",
+            tela = { nav -> TelaAlturaTrigonometrica(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(
             id = "bacia_hidrografica",
