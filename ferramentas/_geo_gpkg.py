@@ -73,6 +73,10 @@ def wkb_multipoligono(multipoligono):
     return b"".join(partes)
 
 
+def wkb_ponto(x, y):
+    return struct.pack("<B", 1) + struct.pack("<I", 1) + struct.pack("<dd", x, y)
+
+
 def blob_gpkg(wkb, srs_id):
     flags = 0b00000001  # bit0 = little endian; bits1-3 = 0 (sem envelope); bit4 = 0 (nao vazio)
     cabecalho = b"GP" + struct.pack("<B", 0) + struct.pack("<B", flags) + struct.pack("<i", srs_id)

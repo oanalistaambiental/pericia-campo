@@ -59,4 +59,38 @@ class GeoJsonTest {
         val json = JSONObject("""{"type":"FeatureCollection","features":[]}""")
         assertEquals(emptyList<Any>(), GeoJson.paraFeicoes(json))
     }
+
+    // ---------------------------------------------------------- curadoria de 10/09/2026
+
+    @Test
+    fun `Point vira geometria de ponto, no eixo lon-lat`() {
+        val json = JSONObject("""{"type":"Point","coordinates":[-44.0,-19.0]}""")
+        val geom = GeoJson.paraGeometria(json)!!
+        assertEquals(-44.0, geom.coordinate.x, 0.0001)
+        assertEquals(-19.0, geom.coordinate.y, 0.0001)
+    }
+
+    @Test
+    fun `MultiPoint de um ponto so vira ponto — caso real dos aerodromos`() {
+        val json = JSONObject("""{"type":"MultiPoint","coordinates":[[-47.966,-19.764]]}""")
+        val geom = GeoJson.paraGeometria(json)!!
+        assertEquals(-47.966, geom.coordinate.x, 0.0001)
+        assertEquals(-19.764, geom.coordinate.y, 0.0001)
+    }
+
+    @Test
+    fun `LineString vira linha com o comprimento certo`() {
+        val json = JSONObject("""{"type":"LineString","coordinates":[[-44.0,-19.0],[-44.0,-18.0]]}""")
+        val geom = GeoJson.paraGeometria(json)!!
+        assertEquals(2, geom.numPoints)
+        // 1 grau de latitude ~ 111.32 km — so confere que a linha tem comprimento nao nulo,
+        // a conta exata de distancia e feita em UTM em outro lugar (Restricao.kt).
+        assertTrue(geom.length > 0.0)
+    }
+
+    @Test
+    fun `tipo desconhecido devolve null, nao quebra nem inventa geometria`() {
+        val json = JSONObject("""{"type":"GeometryCollection","coordinates":[]}""")
+        assertEquals(null, GeoJson.paraGeometria(json))
+    }
 }

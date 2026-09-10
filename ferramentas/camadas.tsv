@@ -1,35 +1,51 @@
-# Camadas do grupo "Restrição Ambiental" do IDE-Sisema (geovisualizador, capturado em 30/08/2026).
-# prioridade: 1 = pacote BASE embarcado (estadual) | 2 = pacote REGIONAL sob demanda
-# tipo: poligono | ponto      raio_m: usado apenas quando tipo=ponto
-# tecnico: PREENCHER com o Name que sair do GetCapabilities (passo 1 do montar-pacote.sh)
+# Camadas do grupo "Restrição Ambiental" do IDE-Sisema (geovisualizador, capturado em 30/08/2026;
+# atualizado na curadoria de 10/09/2026, ver git log deste arquivo).
+# prioridade: 1 = pacote BASE embarcado (estadual) | 2 = pacote REGIONAL/online sob demanda
+# tipo: poligono | ponto | linha      raio_m: usado apenas quando tipo=ponto
+# tecnico: Name confirmado no GetCapabilities do WFS (https://geoserver.meioambiente.mg.gov.br/ows)
 #
 # Nao existe camada estadual de ZEE/Macrozoneamento Ambiental publicada neste WFS (conferido em
 # 09/09/2026): so ha zoneamento por Unidade de Conservacao especifica, uma tabela por UC. As 5
-# linhas abaixo sao as que o WFS publica hoje — nao e a lista completa das UCs de MG, so as que
-# tem zoneamento publicado neste servico.
+# linhas de "zoneamento_uc_pe_*" abaixo sao as que o WFS publica hoje — nao e a lista completa
+# das UCs de MG, so as que tem zoneamento publicado neste servico.
+#
+# "Áreas Protegidas" e "Zonas de Amortecimento" e "Corredores Ecológicos" (nomes genéricos que
+# apareciam aqui antes de 10/09/2026) na verdade sao VARIAS camadas reais cada uma — uma linha
+# por instancia real, mesmo padrao que zoneamento_uc_pe_* ja usava. Curadoria de 10/09/2026
+# resolveu os nomes tecnicos e quebrou cada uma nas linhas abaixo.
 #
 # prioridade	tabela	nome	fonte	tipo	raio_m	tecnico
-1	areas_protegidas	Áreas Protegidas	IEF/ICMBio	poligono		
-1	zonas_amortecimento	Zonas de Amortecimento de Unidades de Conservação	IEF	poligono		
-1	influencia_cavidades	Áreas de influência de cavidades	Cecav/Feam	poligono		
-1	ocorrencia_cavidades	Ocorrência de Cavidades	Cecav	ponto	250	
-1	mata_atlantica	Lei da Mata Atlântica	MMA	poligono		
-1	corredores_ecologicos	Corredores Ecológicos Legalmente Instituídos	IEF/PBH	poligono		
-1	drenagem_classe_especial	Áreas de Drenagem à Montante de Cursos d'água Classe Especial	Igam	poligono		
-1	enquadramento_corpos_agua	Enquadramentos de Corpos D'água	Igam	poligono		
-1	rios_preservacao_permanente	Rios de Preservação Permanente	Igam	poligono		
+1	influencia_cavidades	Áreas de influência de cavidades	Cecav/Feam	poligono
+1	ocorrencia_cavidades	Ocorrência de Cavidades	Cecav	ponto	250
+1	mata_atlantica	Lei da Mata Atlântica	MMA	poligono
+1	rios_preservacao_permanente	Rios de Preservação Permanente	Igam	poligono
 1	zoneamento_uc_pe_botumirim	Zoneamento — PE Botumirim	IEF	poligono		IDE:ide_2021_mg_zoneamento_uc_pe_botumirim_pol
 1	zoneamento_uc_pe_nova_baden	Zoneamento — PE Nova Baden	IEF	poligono		IDE:ide_2021_mg_zoneamento_uc_pe_nova_baden_pol
 1	zoneamento_uc_pe_serra_negra_mantiqueira	Zoneamento — PE Serra Negra da Mantiqueira	IEF	poligono		IDE:ide_2021_mg_zoneamento_uc_pe_serra_negra_mantiqueira_pol
 1	zoneamento_uc_pe_serra_sobrado	Zoneamento — PE Serra do Sobrado	IEF	poligono		IDE:ide_2021_mg_zoneamento_uc_pe_serra_sobrado_pol
 1	zoneamento_uc_pe_serra_verde	Zoneamento — PE Serra Verde	IEF	poligono		IDE:ide_2021_mg_zoneamento_uc_pe_serra_verde_pol
-1	terras_indigenas	Terras indígenas	Funai	poligono		
-1	raios_terras_indigenas	Raios de restrição de Terras Indígenas	Feam/Funai	poligono		
-1	quilombolas	Quilombolas	Incra	poligono		
-1	raios_quilombolas	Raios de restrição de Terras Quilombolas	Feam/Incra	poligono		
-2	reservas_biosfera	Reservas da Biosfera	IEF/MMA/UNESCO	poligono		
-2	sitios_ramsar	Sítios Ramsar	Igam	poligono		
-2	patrimonio_cultural	Patrimônio Cultural	Iepha-MG	poligono		
-2	conflito_recursos_hidricos	Conflito por Recursos Hídricos	Igam	poligono		
-2	seguranca_aeroportuaria	Áreas de Segurança Aeroportuária	Feam/Decea	poligono		
-2	marco_rio_sao_marcos	Marco regulatório da bacia do rio São Marcos	ANA/ADASA/Igam/Semad	poligono		
+1	terras_indigenas	Terras indígenas	Funai	poligono
+1	raios_terras_indigenas	Raios de restrição de Terras Indígenas	Feam/Funai	poligono
+1	quilombolas	Quilombolas	Incra	poligono
+1	raios_quilombolas	Raios de restrição de Terras Quilombolas	Feam/Incra	poligono
+1	reserva_biosfera_caatinga	Reserva da Biosfera da Caatinga	MMA/UNESCO	poligono		IDE:ide_2012_mg_reserva_biosfera_caatinga_pol
+1	reserva_biosfera_mata_atlantica	Reserva da Biosfera da Mata Atlântica	MMA/UNESCO	poligono		IDE:ide_2012_mg_reserva_biosfera_mata_atlantica_pol
+1	reserva_biosfera_serra_espinhaco	Reserva da Biosfera da Serra do Espinhaço	MMA/UNESCO	poligono		IDE:ide_2012_mg_reserva_biosfera_serra_espinhaco_pol
+1	sitios_ramsar	Sítios Ramsar	Igam	poligono		IDE:ide_2016_mg_sitios_ramsar_pol
+1	seguranca_aeroportuaria	Área de segurança aeroportuária	Feam/Decea	poligono		IDE:ide_2015_mg_areas_seguranca_aeroportuaria_pol
+1	aerodromos	Aeródromos	Decea	ponto	0	IDE:ide_0403_mg_aerodromos_pto
+1	uc_estaduais	Unidades de Conservação estaduais	IEF	poligono		IDE:ide_2010_mg_unidades_conservacao_estaduais_pol
+1	uc_federais	Unidades de Conservação federais	ICMBio	poligono		IDE:ide_2010_mg_unidades_conservacao_federais_pol
+1	uc_municipais	Unidades de Conservação municipais	Municípios	poligono		IDE:ide_2010_mg_unidades_conservacao_municipais_pol
+1	rppn	Reserva Particular do Patrimônio Natural (RPPN)	IEF	poligono		IDE:ide_2010_mg_reservas_particulares_patrimonio_natural_pol
+1	amortecimento_plano_manejo	Zona de amortecimento — plano de manejo	IEF	poligono		IDE:ide_2011_mg_amortecimento_uc_plano_manejo_pol
+1	amortecimento_raio_3km	Zona de amortecimento — raio de 3 km	IEF	poligono		IDE:ide_2011_mg_amortecimento_uc_raio_3km_pol
+1	corredor_espinhaco_serra_curral	Corredor Ecológico Espinhaço–Serra do Curral	IEF	poligono		IDE:ide_2013_mg_corredor_ecologico_espinhaco_serra_curral_pol
+1	corredor_serra_moeda_aredes	Corredor Ecológico Serra da Moeda–Aredes	IEF	poligono		IDE:ide_2013_mg_corredor_ecologico_serra_moeda_aredes_pol
+1	corredor_sossego_caratinga	Corredor Ecológico Sossêgo–Caratinga	IEF	poligono		IDE:ide_2013_mg_corredor_ecologico_sossego_caratinga_pol
+1	patrimonio_cultural	Área de influência do patrimônio cultural protegido	Iepha-MG	poligono		IDE:ide_2017_mg_ai_patrimonio_cultural_iepha_pol
+1	conflito_recursos_hidricos	Área de conflito por recursos hídricos	Igam	poligono		IDE:ide_2007_mg_area_conflito_recursos_hidricos_pol
+2	marco_rio_sao_marcos	Marco regulatório da bacia do rio São Marcos	ANA/ADASA/Igam/Semad	poligono
+2	drenagem_classe_especial_bacia	Bacia à montante de curso d'água classe especial	Igam	poligono		IDE:ide_2008_mg_bacia_enquadrada_classe_especial_pol
+2	drenagem_classe_especial_trecho	Trecho de curso d'água classe especial	Igam	linha		IDE:ide_2008_mg_trecho_enquadrada_classe_especial_lin
+2	potencialidade_cavidades	Potencialidade de ocorrência de cavidades	Cecav/Feam	poligono		IDE:ide_2002_mg_potencialidade_cavidades_pol

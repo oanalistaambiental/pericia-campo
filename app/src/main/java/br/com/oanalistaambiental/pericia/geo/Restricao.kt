@@ -191,7 +191,10 @@ class ConsultaRestricao(
 internal fun distanciaAssinadaGeom(
     geom: Geometry, ponto: org.locationtech.jts.geom.Point, tipo: String, raioM: Double?
 ): Double {
-    if (tipo == "ponto") {
+    // Ponto e linha nao tem "dentro": so existe estar mais perto ou mais longe. Confundir os
+    // dois com poligono faria uma linha (trecho de rio, p.ex.) usar `.boundary` — que para uma
+    // linha sao so as DUAS pontas — e quase sempre reportar "fora" mesmo em cima do trecho.
+    if (tipo == "ponto" || tipo == "linha") {
         return geom.distance(ponto) - (raioM ?: 0.0)
     }
     val bruta = geom.boundary.distance(ponto)

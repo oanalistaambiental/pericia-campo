@@ -43,8 +43,9 @@ object ConsultaOnline {
 
     /**
      * So as camadas com nome tecnico do WFS ja confirmado (verificado direto no
-     * GetCapabilities em 09/09/2026 — se o IDE-Sisema renomear a camada, a consulta passa a
-     * falhar em silencio para ela, do mesmo jeito que uma camada offline ausente).
+     * GetCapabilities em 09/09/2026 e ampliado em 10/09/2026 — se o IDE-Sisema renomear a
+     * camada, a consulta passa a falhar em silencio para ela, do mesmo jeito que uma camada
+     * offline ausente).
      */
     val camadas = listOf(
         CamadaOnline(
@@ -74,6 +75,90 @@ object ConsultaOnline {
         CamadaOnline(
             "influencia_cavidades", "Áreas de influência de cavidades — raio de 250 m", "Cecav/Feam/IDE-Sisema",
             "IDE:ide_2001_mg_raio_protecao_cavidades_pol"
+        ),
+        // --- curadoria de 10/09/2026: mesmas camadas do pacote offline (base-real.gpkg), mais
+        // as pesadas demais para embarcar (drenagem de classe especial, potencialidade de
+        // cavidades) — aqui o bbox pequeno por consulta torna viavel consultar mesmo uma
+        // camada estadual inteira grande.
+        CamadaOnline(
+            "reserva_biosfera_caatinga", "Reserva da Biosfera da Caatinga", "MMA/UNESCO/IDE-Sisema",
+            "IDE:ide_2012_mg_reserva_biosfera_caatinga_pol"
+        ),
+        CamadaOnline(
+            "reserva_biosfera_mata_atlantica", "Reserva da Biosfera da Mata Atlântica", "MMA/UNESCO/IDE-Sisema",
+            "IDE:ide_2012_mg_reserva_biosfera_mata_atlantica_pol"
+        ),
+        CamadaOnline(
+            "reserva_biosfera_serra_espinhaco", "Reserva da Biosfera da Serra do Espinhaço", "MMA/UNESCO/IDE-Sisema",
+            "IDE:ide_2012_mg_reserva_biosfera_serra_espinhaco_pol"
+        ),
+        CamadaOnline(
+            "sitios_ramsar", "Sítios Ramsar (zonas úmidas de importância internacional)", "Igam/IDE-Sisema",
+            "IDE:ide_2016_mg_sitios_ramsar_pol"
+        ),
+        CamadaOnline(
+            "seguranca_aeroportuaria", "Área de segurança aeroportuária", "Feam/Decea/IDE-Sisema",
+            "IDE:ide_2015_mg_areas_seguranca_aeroportuaria_pol"
+        ),
+        CamadaOnline(
+            "aerodromos", "Aeródromo próximo", "Decea/IDE-Sisema",
+            "IDE:ide_0403_mg_aerodromos_pto", tipo = "ponto", raioM = 0.0
+        ),
+        CamadaOnline(
+            "uc_estaduais", "Unidade de Conservação estadual", "IEF/IDE-Sisema",
+            "IDE:ide_2010_mg_unidades_conservacao_estaduais_pol"
+        ),
+        CamadaOnline(
+            "uc_federais", "Unidade de Conservação federal", "ICMBio/IDE-Sisema",
+            "IDE:ide_2010_mg_unidades_conservacao_federais_pol"
+        ),
+        CamadaOnline(
+            "uc_municipais", "Unidade de Conservação municipal", "Municípios/IDE-Sisema",
+            "IDE:ide_2010_mg_unidades_conservacao_municipais_pol"
+        ),
+        CamadaOnline(
+            "rppn", "Reserva Particular do Patrimônio Natural (RPPN)", "IEF/IDE-Sisema",
+            "IDE:ide_2010_mg_reservas_particulares_patrimonio_natural_pol"
+        ),
+        CamadaOnline(
+            "amortecimento_plano_manejo", "Zona de amortecimento — plano de manejo", "IEF/IDE-Sisema",
+            "IDE:ide_2011_mg_amortecimento_uc_plano_manejo_pol"
+        ),
+        CamadaOnline(
+            "amortecimento_raio_3km", "Zona de amortecimento — raio de 3 km", "IEF/IDE-Sisema",
+            "IDE:ide_2011_mg_amortecimento_uc_raio_3km_pol"
+        ),
+        CamadaOnline(
+            "corredor_espinhaco_serra_curral", "Corredor Ecológico Espinhaço–Serra do Curral", "IEF/IDE-Sisema",
+            "IDE:ide_2013_mg_corredor_ecologico_espinhaco_serra_curral_pol"
+        ),
+        CamadaOnline(
+            "corredor_serra_moeda_aredes", "Corredor Ecológico Serra da Moeda–Aredes", "IEF/IDE-Sisema",
+            "IDE:ide_2013_mg_corredor_ecologico_serra_moeda_aredes_pol"
+        ),
+        CamadaOnline(
+            "corredor_sossego_caratinga", "Corredor Ecológico Sossêgo–Caratinga", "IEF/IDE-Sisema",
+            "IDE:ide_2013_mg_corredor_ecologico_sossego_caratinga_pol"
+        ),
+        CamadaOnline(
+            "patrimonio_cultural", "Área de influência do patrimônio cultural protegido", "Iepha-MG/IDE-Sisema",
+            "IDE:ide_2017_mg_ai_patrimonio_cultural_iepha_pol"
+        ),
+        CamadaOnline(
+            "conflito_recursos_hidricos", "Área de conflito por recursos hídricos", "Igam/IDE-Sisema",
+            "IDE:ide_2007_mg_area_conflito_recursos_hidricos_pol"
+        ),
+        CamadaOnline(
+            "drenagem_classe_especial_bacia", "Bacia à montante de curso d'água classe especial", "Igam/IDE-Sisema",
+            "IDE:ide_2008_mg_bacia_enquadrada_classe_especial_pol"
+        ),
+        CamadaOnline(
+            "drenagem_classe_especial_trecho", "Trecho de curso d'água classe especial", "Igam/IDE-Sisema",
+            "IDE:ide_2008_mg_trecho_enquadrada_classe_especial_lin", tipo = "linha"
+        ),
+        CamadaOnline(
+            "potencialidade_cavidades", "Potencialidade de ocorrência de cavidades", "Cecav/Feam/IDE-Sisema",
+            "IDE:ide_2002_mg_potencialidade_cavidades_pol"
         ),
     )
 

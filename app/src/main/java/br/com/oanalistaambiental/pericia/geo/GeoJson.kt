@@ -9,9 +9,14 @@ import org.locationtech.jts.geom.LinearRing
 import org.locationtech.jts.geom.Polygon
 
 /**
- * GeoJSON -> JTS, so o suficiente para as camadas de restricao do IDE-Sisema (Polygon e
- * MultiPolygon). Kotlin puro, testavel sem aparelho nem rede — usado por [ConsultaOnline] para
- * ler a resposta do WFS ao vivo, do mesmo jeito que [GeoPacote] le o GeoPackage offline.
+ * GeoJSON -> JTS, so o suficiente para as camadas de restricao do IDE-Sisema (Polygon,
+ * MultiPolygon, Point/MultiPoint e LineString). Kotlin puro, testavel sem aparelho nem rede —
+ * usado por [ConsultaOnline] para ler a resposta do WFS ao vivo, do mesmo jeito que [GeoPacote]
+ * le o GeoPackage offline.
+ *
+ * Point/MultiPoint entrou pela camada de aerodromos e LineString pelos trechos de curso d'agua
+ * de classe especial — ambas sao consultadas so ao vivo (bbox pequeno), nunca embarcadas
+ * inteiras no pacote offline.
  */
 object GeoJson {
     private val gf = GeometryFactory()
@@ -24,9 +29,21 @@ object GeoJson {
                 val polys = (0 until coords.length()).map { poligono(coords.getJSONArray(it)) }
                 gf.createMultiPolygon(polys.toTypedArray())
             }
+            "Point" -> gf.createPoint(pontoDe(coords))
+            "MultiPoint" -> {
+                // O WFS as vezes devolve MultiPoint de um so ponto (ex.: aerodromos) — o
+                // primeiro ponto basta, e o unico caso real observado neste servico.
+                if (coords.length() == 0) null else gf.createPoint(pontoDe(coords.getJSONArray(0)))
+            }
+            "LineString" -> gf.createLineString(linhaDe(coords))
             else -> null
         }
     }
+
+    private fun pontoDe(par: JSONArray): Coordinate = Coordinate(par.getDouble(0), par.getDouble(1))
+
+    private fun linhaDe(pontos: JSONArray): Array<Coordinate> =
+        (0 until pontos.length()).map { pontoDe(pontos.getJSONArray(it)) }.toTypedArray()
 
     private fun poligono(aneis: JSONArray): Polygon {
         val shell = anel(aneis.getJSONArray(0))
