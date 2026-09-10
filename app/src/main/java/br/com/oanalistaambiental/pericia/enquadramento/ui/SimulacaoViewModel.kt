@@ -26,6 +26,20 @@ class SimulacaoViewModel(app: Application) : AndroidViewModel(app) {
     private val _atividade = MutableStateFlow<Atividade?>(null)
     val atividade: StateFlow<Atividade?> = _atividade
 
+    /** Dica da atividade atual, lida de `assets/norma/dicas/<codigo>.json`. Ver [Dicas]. */
+    private val _dica = MutableStateFlow<DicaAtividade?>(null)
+    val dica: StateFlow<DicaAtividade?> = _dica
+
+    private fun carregarDica(codigo: String) {
+        _dica.value = null
+        viewModelScope.launch(Dispatchers.IO) {
+            val d = Dicas.carregar(codigo) { nome ->
+                getApplication<Application>().assets.open("norma/dicas/$nome")
+            }
+            _dica.value = d
+        }
+    }
+
     private val _porte = MutableStateFlow<Grau?>(null)
     val porte: StateFlow<Grau?> = _porte
 
@@ -216,6 +230,7 @@ class SimulacaoViewModel(app: Application) : AndroidViewModel(app) {
     fun escolherAtividade(a: Atividade) {
         val trocou = _atividade.value?.codigo != a.codigo
         _atividade.value = a
+        if (trocou) carregarDica(a.codigo)
         _porte.value = null
         _valorInformado.value = null
         _dispensa.value = null

@@ -267,6 +267,7 @@ fun TelaResultado(
         }.onFailure { vm.avisar("Não foi possível abrir o navegador: ${it.message}") }
     }
     val res by vm.resultado.collectAsState()
+    val dica by vm.dica.collectAsState()
     val r = res ?: run {
         Column(Modifier.fillMaxSize().background(Cores.fundo).windowInsetsPadding(WindowInsets.safeDrawing)) {
             Cabecalho("Resultado", voltar = voltar)
@@ -303,6 +304,30 @@ fun TelaResultado(
                 }
 
                 r.avisos.forEach { Spacer(Modifier.height(8.dp)); Aviso(it, TipoAviso.ATENCAO) }
+
+                // Dicas de pareceres — dado, nao codigo (ver enquadramento/norma/Dicas.kt). A
+                // maioria das atividades ainda nao tem arquivo, e a ausencia precisa dizer isso
+                // explicitamente: silencio aqui seria indistinguivel de "sem padrao a apontar".
+                Rotulo("DICAS DE PARECERES")
+                Cartao {
+                    val d = dica
+                    if (d != null) {
+                        Text(d.texto, color = Cores.texto, fontSize = 13.sp, lineHeight = 19.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            "Extraído de ${d.pareceresConsultados} parecer(es) deferidos, em ${d.dataExtracao}. " +
+                                "Generaliza o padrão recorrente — não é a decisão de nenhum processo específico.",
+                            color = Cores.textoFraco, fontSize = 11.sp, lineHeight = 16.sp
+                        )
+                    } else {
+                        Text(
+                            "Ainda não lemos pareceres desta atividade — nenhuma dica disponível. " +
+                                "Isso não é indício de que a atividade não tem particularidades, " +
+                                "só de que a leitura ainda não chegou nela.",
+                            color = Cores.textoFraco, fontSize = 12.5.sp, lineHeight = 18.sp
+                        )
+                    }
+                }
 
                 // Art. 18 — o caso condicional ganha bloco proprio, e nao so uma linha de aviso.
                 // A condicao precisa caber inteira na tela: quem vai formalizar o processo tem
