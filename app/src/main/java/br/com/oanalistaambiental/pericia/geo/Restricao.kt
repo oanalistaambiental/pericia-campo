@@ -4,6 +4,8 @@ import org.locationtech.jts.geom.Coordinate
 import org.locationtech.jts.geom.CoordinateFilter
 import org.locationtech.jts.geom.Geometry
 import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.MultiPolygon
+import org.locationtech.jts.geom.Polygon
 import java.io.File
 import kotlin.math.cos
 
@@ -23,7 +25,16 @@ data class Restricao(
     /** Negativo = dentro do poligono. Em metros. */
     val distanciaBordaM: Double,
     val atributos: Map<String, String>,
-    val proveniencia: Proveniencia
+    val proveniencia: Proveniencia,
+    /**
+     * Anel externo do polígono mais próximo, em (lat, lon) — só para desenhar no mapinha de
+     * referência. Nulo para camada de ponto (aí [raioCirculoM] manda) e para toda situação FORA,
+     * porque extrair e carregar a geometria inteira de uma camada que só serve de contexto
+     * distante seria custo sem uso: ninguém desenha contorno de algo a quilômetros.
+     */
+    val contornoLatLon: List<DoubleArray>? = null,
+    /** Raio de influência da camada de ponto, em metros — desenha um círculo em vez de contorno. */
+    val raioCirculoM: Double? = null
 ) {
     /**
      * Texto para tela e para o laudo. A escolha das palavras nao e estilo: o app LOCALIZA,
@@ -143,13 +154,17 @@ class ConsultaRestricao(
             // laudo, mas so entra na lista quando explicitamente pedido.
             if (situacao == Situacao.FORA && !incluirFora) continue
 
+            // So vale desenhar contorno/circulo de quem esta perto o bastante para importar.
+            val relevante = situacao != Situacao.FORA
             achados += Restricao(
                 camadaNome = camada.nome,
                 fonte = camada.fonte,
                 situacao = situacao,
                 distanciaBordaM = dist,
                 atributos = feicao.atributos,
-                proveniencia = Proveniencia(versao, camada.uuid, camada.dataExtracao, camada.toleranciaM)
+                proveniencia = Proveniencia(versao, camada.uuid, camada.dataExtracao, camada.toleranciaM),
+                contornoLatLon = if (relevante && camada.tipo == "poligono") anelExternoLatLon(feicao.geometria) else null,
+                raioCirculoM = if (relevante && camada.tipo == "ponto") camada.raioM else null
             )
         }
         return achados.sortedBy { it.distanciaBordaM }
@@ -209,6 +224,25 @@ internal fun distanciaAssinadaGeom(
     }
     val bruta = geom.boundary.distance(ponto)
     return if (geom.contains(ponto)) -bruta else bruta
+}
+
+/**
+ * Anel externo do poligono, em (lat, lon), pronto para um `Polygon` do osmdroid.
+ *
+ * A geometria de origem esta em lon/lat (x=lon, y=lat — convencao do GeoPackage e do GeoJSON),
+ * por isso a troca de ordem aqui. MultiPoligono usa so a maior parte por area: e o desenho de
+ * referencia visual do laudo, nao o poligono oficial para calculo, e mostrar so um fragmento
+ * pequeno confundiria mais do que ajudaria.
+ */
+internal fun anelExternoLatLon(geom: Geometry): List<DoubleArray>? {
+    val poligono = when (geom) {
+        is Polygon -> geom
+        is MultiPolygon -> (0 until geom.numGeometries)
+            .map { geom.getGeometryN(it) as Polygon }
+            .maxByOrNull { it.area }
+        else -> null
+    } ?: return null
+    return poligono.exteriorRing.coordinates.map { doubleArrayOf(it.y, it.x) }
 }
 
 /** Reprojeta uma geometria em lon/lat (x=lon, y=lat, convencao do GeoPackage e do GeoJSON) para UTM. */

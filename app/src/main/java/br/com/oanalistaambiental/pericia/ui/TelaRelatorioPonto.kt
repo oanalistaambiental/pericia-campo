@@ -44,7 +44,9 @@ fun TelaRelatorioPonto(vm: CapturaViewModel, voltar: () -> Unit) {
         Cabecalho("Relatório do ponto", voltar)
         SeloPrecisao(p)
 
-        if (p.lat == null) {
+        val latAtual = p.lat
+        val lonAtual = p.lon
+        if (latAtual == null || lonAtual == null) {
             Vazio(
                 "Sem coordenada",
                 "Aguarde o GNSS fixar para consultar tudo o que se sabe deste ponto."
@@ -79,7 +81,7 @@ fun TelaRelatorioPonto(vm: CapturaViewModel, voltar: () -> Unit) {
                                 "nenhuma camada cobre esta região.",
                             color = Cores.textoFraco, fontSize = 12.sp, lineHeight = 16.sp
                         )
-                        else -> relatorio!!.forEach { r -> LinhaRestricaoRelatorio(r) }
+                        else -> relatorio!!.forEach { r -> LinhaRestricaoRelatorio(r, latAtual, lonAtual) }
                     }
                 }
             }
@@ -88,7 +90,7 @@ fun TelaRelatorioPonto(vm: CapturaViewModel, voltar: () -> Unit) {
 }
 
 @Composable
-private fun LinhaRestricaoRelatorio(r: Restricao) {
+private fun LinhaRestricaoRelatorio(r: Restricao, lat: Double, lon: Double) {
     val cor = when (r.situacao) {
         Situacao.DENTRO -> Cores.alerta
         Situacao.PROXIMO_AO_LIMITE -> Cores.atencao
@@ -98,10 +100,18 @@ private fun LinhaRestricaoRelatorio(r: Restricao) {
         Modifier.fillMaxWidth().padding(vertical = 4.dp)
             .background(cor, RoundedCornerShape(6.dp)).padding(10.dp)
     ) {
-        Text(r.frase(), color = androidx.compose.ui.graphics.Color.White, fontSize = 12.sp, lineHeight = 16.sp)
+        Text(r.frase(), color = Color.White, fontSize = 12.sp, lineHeight = 16.sp)
         Mono(
             "${r.fonte} · pacote ${r.proveniencia.pacoteVersao} · extraído ${r.proveniencia.dataExtracao}",
-            androidx.compose.ui.graphics.Color(0xB3FFFFFF), 9
+            Color(0xB3FFFFFF), 9
         )
+        if (r.contornoLatLon != null || r.raioCirculoM != null) {
+            Spacer(Modifier.height(8.dp))
+            MapaReferencia(
+                lat, lon,
+                contorno = r.contornoLatLon,
+                raioCirculoM = r.raioCirculoM
+            )
+        }
     }
 }
