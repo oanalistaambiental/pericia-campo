@@ -20,6 +20,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaPrazoRenovacao
 import br.com.oanalistaambiental.pericia.ui.TelaRecursosHidricos
 import br.com.oanalistaambiental.pericia.ui.TelaAppReservaLegal
 import br.com.oanalistaambiental.pericia.ui.TelaCondicionantes
+import br.com.oanalistaambiental.pericia.ui.TelaConferidorProva
 import br.com.oanalistaambiental.pericia.ui.TelaConversorUnidades
 import br.com.oanalistaambiental.pericia.ui.TelaFichaVistoria
 import br.com.oanalistaambiental.pericia.ui.TelaRelatorioPonto
@@ -258,6 +259,17 @@ object Registro {
             limite = "É referência educativa, não citação de dispositivo legal — o sentido " +
                 "pode variar em detalhe entre normas.",
             tela = { nav -> TelaGlossario(nav.voltar) }
+        ),
+        Ferramenta(
+            id = "conferidor_prova",
+            nome = "Conferidor de prova",
+            resumo = "Confere se um arquivo bate com o SHA-256 escrito num laudo — sem terminal.",
+            grupo = Grupo.APOIO,
+            icone = IconeGaveta.ESCUDO,
+            limite = "Só confere hash contra o texto colado — não sabe de onde veio o hash nem " +
+                "valida carimbo do tempo ou assinatura. Prova que o arquivo não mudou desde o " +
+                "cálculo, não prova quando o cálculo foi feito.",
+            tela = { nav -> TelaConferidorProva(nav.voltar) }
         ),
         Ferramenta(
             id = "configuracoes",

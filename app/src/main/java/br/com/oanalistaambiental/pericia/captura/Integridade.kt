@@ -1,6 +1,7 @@
 package br.com.oanalistaambiental.pericia.captura
 
 import java.io.File
+import java.io.InputStream
 import java.security.MessageDigest
 
 /**
@@ -32,6 +33,18 @@ object Integridade {
 
     fun sha256(bytes: ByteArray): String =
         MessageDigest.getInstance("SHA-256").digest(bytes).joinToString("") { "%02x".format(it) }
+
+    /** Mesma conta, para um arquivo escolhido de fora (SAF/Uri) — quem confere não precisa copiar antes. */
+    fun sha256(entrada: InputStream): String {
+        val md = MessageDigest.getInstance("SHA-256")
+        val buffer = ByteArray(64 * 1024)
+        while (true) {
+            val lidos = entrada.read(buffer)
+            if (lidos <= 0) break
+            md.update(buffer, 0, lidos)
+        }
+        return md.digest().joinToString("") { "%02x".format(it) }
+    }
 
     /**
      * Raiz de Merkle dos hashes da sessao, na ordem de captura.

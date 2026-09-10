@@ -49,7 +49,8 @@ enum class IconeGaveta {
     CHECKLIST,
     SINO,
     CONVERSOR,
-    FOLHA
+    FOLHA,
+    ESCUDO
 }
 
 @Composable
@@ -414,6 +415,27 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                 }
                 drawPath(folha, cor, style = traco)
                 drawLine(cor, Offset(w * 0.5f, h * 0.22f), Offset(w * 0.5f, h * 0.82f), traco.width * 0.8f, StrokeCap.Round)
+            }
+
+            IconeGaveta.ESCUDO -> {
+                // Escudo com marca de certo — conferir/autenticar, nao carteira (CARTEIRA, que e
+                // cadastro) nem relatorio (prancheta).
+                val escudo = Path().apply {
+                    moveTo(w * 0.5f, h * 0.1f)
+                    lineTo(w * 0.82f, h * 0.22f)
+                    lineTo(w * 0.82f, h * 0.48f)
+                    cubicTo(w * 0.82f, h * 0.72f, w * 0.68f, h * 0.84f, w * 0.5f, h * 0.92f)
+                    cubicTo(w * 0.32f, h * 0.84f, w * 0.18f, h * 0.72f, w * 0.18f, h * 0.48f)
+                    lineTo(w * 0.18f, h * 0.22f)
+                    close()
+                }
+                drawPath(escudo, cor, style = traco)
+                val certo = Path().apply {
+                    moveTo(w * 0.34f, h * 0.5f)
+                    lineTo(w * 0.46f, h * 0.62f)
+                    lineTo(w * 0.68f, h * 0.38f)
+                }
+                drawPath(certo, cor, style = Stroke(width = traco.width, cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
         }
     }
