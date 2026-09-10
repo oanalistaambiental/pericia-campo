@@ -119,12 +119,22 @@ class ConsultaRestricao(
                 continue
             }
 
+            // Uma feicao so, com coordenada malformada na origem do dado (a projecao ou o
+            // calculo de distancia do JTS reclama de coordenada invalida/NaN em vez de so
+            // devolver um numero ruim), nao pode travar a consulta inteira e derrubar TODAS as
+            // outras camadas que ainda nem foram processadas — mesmo raciocinio da falha de
+            // leitura acima: falha localizada vira aviso, nao mata o resto.
             var melhor: Pair<Double, Feicao>? = null
-            for (f in candidatas) {
-                val geomUtm = projetarParaUtm(f.geometria, zona, sul)
-                val d = distanciaAssinadaGeom(geomUtm, pUtm, camada.tipo, camada.raioM)
-                val atual = melhor
-                if (atual == null || d < atual.first) melhor = d to f
+            try {
+                for (f in candidatas) {
+                    val geomUtm = projetarParaUtm(f.geometria, zona, sul)
+                    val d = distanciaAssinadaGeom(geomUtm, pUtm, camada.tipo, camada.raioM)
+                    val atual = melhor
+                    if (atual == null || d < atual.first) melhor = d to f
+                }
+            } catch (e: Exception) {
+                camadasComFalha += camada.nome
+                continue
             }
 
             val (dist, feicao) = melhor ?: continue
