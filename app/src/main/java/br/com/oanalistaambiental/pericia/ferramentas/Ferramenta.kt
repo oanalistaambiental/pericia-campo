@@ -32,8 +32,8 @@ class Ferramenta(
 
 enum class Grupo(val titulo: String) {
     CAMPO("MEDIR E REGISTRAR"),
-    ENQUADRAR("ENQUADRAR E CONSULTAR"),
-    APOIO("APOIO")
+    ENQUADRAR("CONSULTAR E CALCULAR"),
+    APOIO("AJUSTES E APOIO")
 }
 
 /**
