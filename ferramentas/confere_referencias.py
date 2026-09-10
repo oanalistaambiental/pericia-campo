@@ -116,6 +116,82 @@ def checa_telas_sem_import(problemas):
                     f"o CI falha com \"Unresolved reference '{nome}'\"")
 
 
+def checa_comentarios_aninhados(problemas):
+    """
+    Kotlin, ao contrario de Java/C, aceita `/* */` ANINHADO. Um texto de comentario que contenha
+    a sequencia literal "/*" (por exemplo, tentando escrever "*\\/*" para descrever um MIME
+    coringa "*/*" sem fechar o bloco de verdade) abre um comentario DENTRO do comentario — o
+    `*/` que fecharia o bloco de fora so fecha o de dentro, e tudo que vem depois (a funcao
+    inteira, as vezes) vira comentario silenciosamente. Foi exatamente assim que
+    `exportacao/Exportador.kt` quebrou o CI sem nenhum erro visivel numa revisao manual: dois
+    "*\\/*" dentro de um KDoc.
+    """
+    for sub in ("captura", "dados", "geo", "taxas", "ui", "laudo", "ferramentas",
+                "enquadramento/norma", "enquadramento/ui", "enquadramento/laudo",
+                "enquadramento/geo", ""):
+        for f in arquivos(sub):
+            rel = os.path.relpath(f, RAIZ)
+            texto = open(f, encoding="utf-8").read()
+            i, n = 0, len(texto)
+            profundidade = 0
+            em_linha = False
+            em_string = False
+            tripla = False
+            while i < n:
+                c = texto[i]
+                if em_linha:
+                    if c == "\n":
+                        em_linha = False
+                    i += 1
+                    continue
+                if profundidade > 0:
+                    if texto[i:i + 2] == "/*":
+                        profundidade += 1
+                        i += 2
+                        continue
+                    if texto[i:i + 2] == "*/":
+                        profundidade -= 1
+                        i += 2
+                        continue
+                    i += 1
+                    continue
+                if em_string:
+                    if c == "\\" and not tripla:
+                        i += 2
+                        continue
+                    if (not tripla and c == '"') or (tripla and texto[i:i + 3] == '"""'):
+                        em_string = False
+                        i += 3 if tripla else 1
+                        continue
+                    i += 1
+                    continue
+                if texto[i:i + 2] == "//":
+                    em_linha = True
+                    i += 2
+                    continue
+                if texto[i:i + 2] == "/*":
+                    profundidade = 1
+                    i += 2
+                    continue
+                if texto[i:i + 3] == '"""':
+                    em_string = True
+                    tripla = True
+                    i += 3
+                    continue
+                if c == '"':
+                    em_string = True
+                    tripla = False
+                    i += 1
+                    continue
+                i += 1
+            if profundidade != 0:
+                problemas.append(
+                    f"{rel}: comentario de bloco '/* */' nao fecha direito (profundidade "
+                    f"{profundidade} no fim do arquivo) — procure \"/*\" dentro do TEXTO de um "
+                    f"comentario, provavelmente tentando escrever \"*/*\" escapado; o CI falha "
+                    f"engolindo codigo real como comentario, sem nenhum erro obvio")
+
+
 def main():
     problemas = []
     fornecedores = {}
@@ -171,6 +247,7 @@ def main():
                             f"\"'when' expression must be exhaustive\"")
 
     checa_telas_sem_import(problemas)
+    checa_comentarios_aninhados(problemas)
 
     if problemas:
         print("PROBLEMAS ENCONTRADOS:\n")

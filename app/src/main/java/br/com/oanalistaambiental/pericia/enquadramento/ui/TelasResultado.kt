@@ -112,10 +112,10 @@ fun TelaLocacional(vm: SimulacaoViewModel, avancar: () -> Unit, voltar: () -> Un
                     Spacer(Modifier.height(8.dp))
                     if (!pacoteInstalado) {
                         Text(
-                            "Nenhum pacote de camadas instalado neste aparelho. Sem ele, a " +
-                                "verificação por coordenada não tem o que consultar — marque os " +
-                                "critérios à mão, ou instale o arquivo .gpkg abaixo.",
-                            color = Cores.atencao, fontSize = 11.5.sp, lineHeight = 16.sp
+                            "Usando a base embarcada no aplicativo (a mesma da câmera de campo) — " +
+                                "cobre o estado inteiro, mas pode estar um pouco defasada. Para a " +
+                                "versão mais atual, instale o arquivo .gpkg oficial abaixo.",
+                            color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
                         )
                         Spacer(Modifier.height(8.dp))
                     }

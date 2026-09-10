@@ -475,37 +475,42 @@ object Exportador {
     // ------------------------------------------------------- compartilhamento
 
     /**
-     * @throws IllegalStateException quando nenhum dos arquivos existe mais.
+     * @param corpo Texto substantivo do envio (ex.: o resumo de uma ocorrência), antes do aviso
+     * padrão — vai em EXTRA_TEXT, então chega mesmo quando o app receptor ignora um anexo que
+     * não seja imagem (WhatsApp faz isso ao enviar foto(s) + um .txt juntos: o .txt some e só a
+     * imagem chega, então a pessoa nunca via a coordenada/descrição — o texto agora não depende
+     * de anexo nenhum para chegar).
      *
-     * Antes era `return` mudo: o perito tocava em "compartilhar originais", nao acontecia
-     * nada — nenhum seletor, nenhuma mensagem, nenhuma pista — e ele nao tinha como saber que
-     * os arquivos tinham sumido. Falha silenciosa e pior que erro.
+     * BUG corrigido: com mais de um arquivo o tipo virava sempre coringa total (qualquer
+     * categoria, qualquer subtipo), que o WhatsApp trata mal em alguns Android (o app nem
+     * aparece no seletor). Quando todos os arquivos são do mesmo tipo (o caso comum: só fotos),
+     * usa esse tipo especifico — o coringa total fica so para mistura de verdade.
+     *
+     * Lista de arquivos vazia é caso valido (ocorrência sem foto): compartilha só o texto.
      */
-    fun compartilhar(context: Context, arquivos: List<File>, assunto: String) {
+    fun compartilhar(context: Context, arquivos: List<File>, assunto: String, corpo: String? = null) {
         val existentes = arquivos.filter { it.exists() }
-        check(existentes.isNotEmpty()) {
-            "Nenhum dos ${arquivos.size} arquivos foi encontrado no aparelho."
-        }
         val faltando = arquivos.size - existentes.size
         val uris = ArrayList<Uri>(existentes.map {
             FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", it)
         })
 
-        val intent = if (uris.size == 1) {
-            Intent(Intent.ACTION_SEND).apply {
-                type = tipoDe(arquivos.first())
+        val intent = when {
+            existentes.isEmpty() -> Intent(Intent.ACTION_SEND).apply { type = "text/plain" }
+            existentes.size == 1 -> Intent(Intent.ACTION_SEND).apply {
+                type = tipoDe(existentes.first())
                 putExtra(Intent.EXTRA_STREAM, uris.first())
             }
-        } else {
-            Intent(Intent.ACTION_SEND_MULTIPLE).apply {
-                type = "*/*"
+            else -> Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+                type = existentes.map { tipoDe(it) }.toSet().singleOrNull() ?: "*/*"
                 putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
             }
         }
         intent.putExtra(Intent.EXTRA_SUBJECT, assunto)
         intent.putExtra(
             Intent.EXTRA_TEXT,
-            "Enviado pelo Perícia Campo.\n\n" +
+            (corpo?.let { "$it\n\n" } ?: "") +
+                "Enviado pelo Perícia Campo.\n\n" +
                 (if (faltando > 0)
                     "AVISO: $faltando arquivo(s) desta sessão não foram encontrados no " +
                         "aparelho e NÃO estão neste envio.\n\n"

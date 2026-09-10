@@ -134,6 +134,29 @@ class SimulacaoViewModel(app: Application) : AndroidViewModel(app) {
     fun conferirPacote() { _pacoteInstalado.value = arquivoPacote.exists() }
 
     /**
+     * Mesma ordem de fallback que a câmera de campo já usa (CapturaViewModel.abrirPacote):
+     * pacote oficial instalado (montar-pacote.sh ou "Instalar pacote de camadas" aqui) > base
+     * real embarcada (leve, sempre dentro do APK) > exemplo fictício (só se até a base real
+     * falhar). Antes "Verificar camadas neste ponto" só olhava `arquivoPacote` — quem nunca
+     * tinha instalado nada manualmente ficava sem verificação nenhuma, mesmo com a mesma base
+     * já embarcada e já funcionando na câmera de perícia.
+     */
+    private fun pacoteParaConsulta(): File =
+        if (arquivoPacote.exists()) arquivoPacote
+        else runCatching { copiarAssetPacote("base-real.gpkg") }.getOrElse { copiarAssetPacote("exemplo.gpkg") }
+
+    private fun copiarAssetPacote(nome: String): File {
+        val destino = File(getApplication<Application>().filesDir, "pacotes/$nome")
+        if (!destino.exists()) {
+            destino.parentFile?.mkdirs()
+            getApplication<Application>().assets.open("pacotes/$nome").use { entrada ->
+                destino.outputStream().use { saida -> entrada.copyTo(saida) }
+            }
+        }
+        return destino
+    }
+
+    /**
      * Instala o pacote de camadas a partir de um arquivo escolhido pelo usuario.
      *
      * ISTO NAO EXISTIA. `arquivoPacote` apontava para uma pasta que nenhuma tela sabia
@@ -351,12 +374,8 @@ class SimulacaoViewModel(app: Application) : AndroidViewModel(app) {
         val r = _regras.value ?: return
         ultimaCoordenada = lat to lon
         viewModelScope.launch(Dispatchers.IO) {
-            if (!arquivoPacote.exists()) {
-                _mensagem.value = "Pacote de camadas não instalado. Marque os critérios à mão."
-                return@launch
-            }
             runCatching {
-                DeteccaoLocacional.abrir(arquivoPacote).use { it.verificar(r, lat, lon) }
+                DeteccaoLocacional.abrir(pacoteParaConsulta()).use { it.verificar(r, lat, lon) }
             }.onSuccess { inc ->
                 _deteccao.value = inc
                 // Uma consulta nova SUBSTITUI a sugestao anterior em vez de somar a ela. O que
