@@ -1,5 +1,9 @@
 package br.com.oanalistaambiental.pericia.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -12,9 +16,11 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import br.com.oanalistaambiental.pericia.dados.Condicionante
 import java.io.File
 import java.time.LocalDate
@@ -36,11 +42,37 @@ private fun interpretarDataCondicionante(texto: String): LocalDate? =
 fun TelaCondicionantes(vm: CapturaViewModel, voltar: () -> Unit) {
     val condicionantes by vm.condicionantes.collectAsState()
     var novaAberta by rememberSaveable { mutableStateOf(false) }
+    val contexto = LocalContext.current
+
+    fun notificacoesOk() = ContextCompat.checkSelfPermission(
+        contexto, Manifest.permission.POST_NOTIFICATIONS
+    ) == PackageManager.PERMISSION_GRANTED
+    var permitido by remember { mutableStateOf(notificacoesOk()) }
+    val pedirNotificacao = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { permitido = notificacoesOk() }
 
     Column(
         Modifier.fillMaxSize().background(Cores.fundo).windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
         Cabecalho("Condicionantes e prazos", voltar)
+
+        if (!permitido) {
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                    .background(Cores.superficie, RoundedCornerShape(8.dp)).padding(12.dp)
+            ) {
+                Text(
+                    "Sem aviso de prazo. Ative as notificações para ser lembrado antes de vencer.",
+                    color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    "Ativar notificações", color = Cores.bomClaro, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable { pedirNotificacao.launch(Manifest.permission.POST_NOTIFICATIONS) }
+                )
+            }
+        }
 
         if (novaAberta) {
             NovaCondicionante(vm, aoTerminar = { novaAberta = false })

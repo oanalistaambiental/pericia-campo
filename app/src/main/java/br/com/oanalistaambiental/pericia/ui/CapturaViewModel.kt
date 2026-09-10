@@ -53,6 +53,7 @@ import br.com.oanalistaambiental.pericia.geo.PontoConsulta
 import br.com.oanalistaambiental.pericia.geo.PontoRetorno
 import br.com.oanalistaambiental.pericia.geo.Restricao
 import br.com.oanalistaambiental.pericia.laudo.LaudoPdf
+import br.com.oanalistaambiental.pericia.lembretes.LembreteCondicionante
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -577,13 +578,13 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                     fotoArquivo = destino.absolutePath
                     fotoSha256 = Integridade.sha256(destino)
                 }
-                banco.inserirCondicionante(
-                    Condicionante(
-                        descricao = descricao, formaCumprimento = formaCumprimento,
-                        prazoData = prazoData, criadaEm = System.currentTimeMillis(),
-                        fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256
-                    )
+                val condicionante = Condicionante(
+                    descricao = descricao, formaCumprimento = formaCumprimento,
+                    prazoData = prazoData, criadaEm = System.currentTimeMillis(),
+                    fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256
                 )
+                val id = banco.inserirCondicionante(condicionante)
+                LembreteCondicionante.agendar(getApplication<Application>(), condicionante.copy(id = id))
             }.onSuccess {
                 _condicionantes.value = banco.condicionantes()
                 _mensagem.value = "Condicionante salva."
@@ -594,6 +595,8 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     fun marcarCondicionanteCumprida(c: Condicionante, cumprida: Boolean) {
         viewModelScope.launch(Dispatchers.IO) {
             banco.marcarCondicionanteCumprida(c.id, cumprida)
+            if (cumprida) LembreteCondicionante.cancelar(getApplication<Application>(), c.id)
+            else LembreteCondicionante.agendar(getApplication<Application>(), c.copy(cumprida = false))
             _condicionantes.value = banco.condicionantes()
         }
     }
@@ -602,6 +605,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) {
             c.fotoArquivo?.let { runCatching { File(it).delete() } }
             banco.excluirCondicionante(c.id)
+            LembreteCondicionante.cancelar(getApplication<Application>(), c.id)
             _condicionantes.value = banco.condicionantes()
         }
     }

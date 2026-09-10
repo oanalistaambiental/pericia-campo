@@ -13,6 +13,12 @@
     <!-- Usada pelo osmdroid (mapinha de referência) para conferir se há rede antes de baixar
          um bloco de mapa — sem ela, a checagem interna da biblioteca pode falhar. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Aviso local de prazo de condicionante (ver ferramentas/condicionantes). Android 13+
+         exige essa permissao em tempo de execucao para qualquer notificacao aparecer. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- Alarme do AlarmManager nao sobrevive a reinicio do aparelho — sem isto, um prazo
+         cadastrado antes de reiniciar o celular nunca mais avisaria. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <uses-feature android:name="android.hardware.camera.any" android:required="true" />
     <uses-feature android:name="android.hardware.location.gps" android:required="true" />
@@ -38,6 +44,16 @@
                 android:name="android.app.shortcuts"
                 android:resource="@xml/shortcuts" />
         </activity>
+        <receiver
+            android:name=".lembretes.LembreteReceiver"
+            android:exported="false" />
+        <receiver
+            android:name=".lembretes.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
