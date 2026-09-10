@@ -87,6 +87,28 @@ object GlossarioSisema {
             "Registro público eletrônico do imóvel rural — obrigatório em nível federal."
         ),
         Termo(
+            "MTR", "Manifesto de Transporte de Resíduos",
+            "Sistema da DN COPAM 232/2019 que rastreia geradores, transportadores e " +
+                "destinadores de resíduos — vem com obrigações periódicas (DMR, cadastro " +
+                "anual) que costumam passar batidas."
+        ),
+        Termo(
+            "DMR", "Declaração de Movimentação de Resíduos",
+            "Relatório periódico (semestral) dentro do MTR, resumindo o que foi transportado " +
+                "e destinado no período."
+        ),
+        Termo(
+            "PRAD / PRADA", "Plano/Projeto de Recuperação de Área Degradada (ou Alterada)",
+            "PRAD é o termo nacional; PRADA é como o IEF chama a mesma peça em MG quando " +
+                "envolve Área de Preservação Permanente ou Reserva Legal. Detalha as ações " +
+                "para recuperar uma área degradada."
+        ),
+        Termo(
+            "PTRF", "Projeto Técnico de Reconstituição da Flora",
+            "Documento do IEF/MG que acompanha pedido de intervenção em APP ou Reserva Legal, " +
+                "detalhando como a vegetação suprimida será reposta."
+        ),
+        Termo(
             "CTF/APP", "Cadastro Técnico Federal de Atividades Potencialmente Poluidoras",
             "Cadastro do Ibama, em nível federal — pode ser exigido além do licenciamento " +
                 "estadual. Ver o aviso na tela de resultado do enquadramento."
