@@ -1,5 +1,6 @@
 package br.com.oanalistaambiental.pericia.ui
 
+import android.graphics.BitmapFactory
 import android.view.OrientationEventListener
 import android.view.Surface
 import androidx.camera.core.CameraSelector
@@ -8,6 +9,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,7 +22,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -30,6 +34,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import br.com.oanalistaambiental.pericia.captura.PosicaoMarcaDagua
 import br.com.oanalistaambiental.pericia.geo.Utm
 import kotlinx.coroutines.delay
 import java.io.File
@@ -52,7 +57,8 @@ import java.io.File
 fun TelaCamera(
     vm: CapturaViewModel,
     irParaSessoes: () -> Unit,
-    irParaFerramentas: () -> Unit
+    irParaFerramentas: () -> Unit,
+    irParaConfiguracoes: () -> Unit
 ) {
     val contexto = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -154,6 +160,8 @@ fun TelaCamera(
 
         AndroidView(modifier = Modifier.fillMaxSize(), factory = { previewView })
 
+        PreviaMarcaDagua(vm)
+
         if (!cameraPronta) {
             Column(
                 Modifier.align(Alignment.Center).padding(32.dp),
@@ -186,6 +194,7 @@ fun TelaCamera(
                 .windowInsetsPadding(WindowInsets.statusBars)
         ) {
             BarraSessao(vm, irParaSessoes)
+            BlocoMarcaDagua(vm, irParaConfiguracoes)
             BlocoPrecisao(vm)
             BlocoRestricoes(vm)
             BlocoGuia(vm)
@@ -273,6 +282,71 @@ fun TelaCamera(
 }
 
 // ---------------------------------------------------------------- blocos isolados
+
+/**
+ * Prévia da marca d'água sobre o visor, no canto e proporção que ela vai sair na foto — "quase
+ * já selecionada", como pedido. É aproximada, não pixel a pixel: a faixa superior e a inferior
+ * do visor (sessão, precisão, bússola, botão do obturador) ocupam espaço de verdade que a FOTO
+ * final não tem, então a margem aqui é generosa de propósito, para não ficar atrás dos botões.
+ */
+@Composable
+private fun BoxScope.PreviaMarcaDagua(vm: CapturaViewModel) {
+    val contexto = LocalContext.current
+    val temMarca by vm.temMarcaDagua.collectAsState()
+    val posicao by vm.posicaoMarcaDagua.collectAsState()
+    val versao by vm.versaoMarcaDagua.collectAsState()
+    if (!temMarca) return
+
+    val bitmap = remember(versao) {
+        runCatching {
+            val arquivo = File(contexto.filesDir, "marca_dagua.png")
+            BitmapFactory.decodeFile(arquivo.absolutePath)?.asImageBitmap()
+        }.getOrNull()
+    } ?: return
+
+    val alinhamento = when (posicao) {
+        PosicaoMarcaDagua.SUPERIOR_ESQUERDA -> Alignment.TopStart
+        PosicaoMarcaDagua.SUPERIOR_DIREITA -> Alignment.TopEnd
+        PosicaoMarcaDagua.INFERIOR_ESQUERDA -> Alignment.BottomStart
+        PosicaoMarcaDagua.INFERIOR_DIREITA -> Alignment.BottomEnd
+    }
+    val superior = posicao == PosicaoMarcaDagua.SUPERIOR_ESQUERDA || posicao == PosicaoMarcaDagua.SUPERIOR_DIREITA
+    Image(
+        bitmap, contentDescription = "Prévia da marca d'água",
+        modifier = Modifier.align(alinhamento)
+            .padding(
+                top = if (superior) 128.dp else 0.dp,
+                bottom = if (!superior) 210.dp else 0.dp,
+                start = 14.dp, end = 14.dp
+            )
+            .widthIn(max = 72.dp).heightIn(max = 72.dp)
+            .alpha(0.8f)
+    )
+}
+
+/**
+ * Atalho para a marca d'água direto da câmera — pedido de Francisco para não precisar ir até
+ * Configurações toda vez. Some sozinho depois de alguns segundos quando já tem marca definida,
+ * para não ocupar a tela de vistoria à toa; sem marca, fica fixo como convite a configurar.
+ */
+@Composable
+private fun BlocoMarcaDagua(vm: CapturaViewModel, irParaConfiguracoes: () -> Unit) {
+    val temMarca by vm.temMarcaDagua.collectAsState()
+    var visivel by remember(temMarca) { mutableStateOf(true) }
+    LaunchedEffect(temMarca) {
+        if (temMarca) { delay(4000); visivel = false }
+    }
+    if (!visivel) return
+
+    Text(
+        if (temMarca) "Marca d'água ativa — toque para trocar a posição"
+        else "Adicionar marca d'água (brasão, logo) ›",
+        color = Color.White, fontSize = 11.5.sp, fontWeight = FontWeight.Medium,
+        modifier = Modifier.fillMaxWidth().background(Cores.veuEscuro)
+            .clickable { irParaConfiguracoes() }
+            .padding(horizontal = 14.dp, vertical = 7.dp)
+    )
+}
 
 @Composable
 private fun BarraSessao(vm: CapturaViewModel, irParaSessoes: () -> Unit) {

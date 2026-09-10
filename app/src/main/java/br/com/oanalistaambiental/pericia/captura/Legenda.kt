@@ -16,6 +16,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/** Canto onde a marca d'água entra na cópia com legenda — e no visor da câmera, ao vivo. */
+enum class PosicaoMarcaDagua { SUPERIOR_ESQUERDA, SUPERIOR_DIREITA, INFERIOR_ESQUERDA, INFERIOR_DIREITA }
+
 /**
  * Grava a legenda tecnica sobre uma CÓPIA da imagem.
  *
@@ -49,7 +52,8 @@ object Legenda {
         destino: File,
         foto: Foto,
         sessaoTitulo: String,
-        marcaDagua: File? = null
+        marcaDagua: File? = null,
+        posicaoMarcaDagua: PosicaoMarcaDagua = PosicaoMarcaDagua.SUPERIOR_DIREITA
     ): File {
         // BUG corrigido: a imagem era decodificada em tamanho cheio e mutavel (ARGB_8888).
         // Um sensor de 50 MP vira ~200 MB de bitmap, e ainda mais 200 MB quando ha rotacao a
@@ -118,7 +122,13 @@ object Legenda {
         }
 
         if (marcaDagua != null && marcaDagua.exists()) {
-            desenharMarcaDagua(canvas, marcaDagua, largura, padding)
+            // Nas posicoes INFERIOR, a marca entra ACIMA da barra da legenda tecnica — nunca
+            // por cima do texto (coordenada, data, hash). E o "reajustado as outras
+            // informacoes" pedido: as duas convivem, nenhuma cobre a outra.
+            val limiteInferior = if (posicaoMarcaDagua == PosicaoMarcaDagua.INFERIOR_ESQUERDA ||
+                posicaoMarcaDagua == PosicaoMarcaDagua.INFERIOR_DIREITA
+            ) copia.height - alturaBarra else copia.height.toFloat()
+            desenharMarcaDagua(canvas, marcaDagua, largura, padding, posicaoMarcaDagua, limiteInferior)
         }
 
         FileOutputStream(destino).use { copia.compress(Bitmap.CompressFormat.JPEG, 92, it) }
@@ -127,11 +137,18 @@ object Legenda {
     }
 
     /**
-     * Desenha o brasão/logo no canto superior direito, em transparência de marca d'água — não
-     * some se falhar: uma marca ilegível ou corrompida não pode derrubar a legenda técnica
-     * inteira, que é o que importa para o laudo.
+     * Desenha o brasão/logo no canto escolhido, em transparência de marca d'água — não some se
+     * falhar: uma marca ilegível ou corrompida não pode derrubar a legenda técnica inteira, que
+     * é o que importa para o laudo.
+     *
+     * [limiteInferiorY] é até onde a marca pode descer — a altura da cópia inteira nas posições
+     * superiores, ou o topo da barra da legenda nas inferiores, para as duas nunca se
+     * sobrepor.
      */
-    private fun desenharMarcaDagua(canvas: Canvas, arquivo: File, larguraCopia: Int, margem: Float) {
+    private fun desenharMarcaDagua(
+        canvas: Canvas, arquivo: File, larguraCopia: Int, margem: Float,
+        posicao: PosicaoMarcaDagua, limiteInferiorY: Float
+    ) {
         runCatching {
             val bruta = BitmapFactory.decodeFile(arquivo.absolutePath) ?: return@runCatching
             val ladoMaximo = larguraCopia * FRACAO_MARCA_DAGUA
@@ -144,8 +161,17 @@ object Legenda {
             } else bruta
 
             val paint = Paint().apply { isAntiAlias = true; isFilterBitmap = true; alpha = 200 }
-            val x = larguraCopia - redimensionada.width - margem
-            canvas.drawBitmap(redimensionada, x, margem, paint)
+            val x = when (posicao) {
+                PosicaoMarcaDagua.SUPERIOR_ESQUERDA, PosicaoMarcaDagua.INFERIOR_ESQUERDA -> margem
+                PosicaoMarcaDagua.SUPERIOR_DIREITA, PosicaoMarcaDagua.INFERIOR_DIREITA ->
+                    larguraCopia - redimensionada.width - margem
+            }
+            val y = when (posicao) {
+                PosicaoMarcaDagua.SUPERIOR_ESQUERDA, PosicaoMarcaDagua.SUPERIOR_DIREITA -> margem
+                PosicaoMarcaDagua.INFERIOR_ESQUERDA, PosicaoMarcaDagua.INFERIOR_DIREITA ->
+                    limiteInferiorY - redimensionada.height - margem
+            }
+            canvas.drawBitmap(redimensionada, x, y, paint)
             redimensionada.recycle()
         }
     }

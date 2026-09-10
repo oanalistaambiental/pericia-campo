@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 4) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 5) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -59,8 +59,28 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 4)
                 lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
                 instante INTEGER NOT NULL
             )""")
+        db.execSQL("""
+            CREATE TABLE caminhamento_ponto (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sessao_id INTEGER NOT NULL,
+                lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL NOT NULL,
+                instante INTEGER NOT NULL,
+                FOREIGN KEY(sessao_id) REFERENCES sessao(id)
+            )""")
+        db.execSQL("""
+            CREATE TABLE audio (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sessao_id INTEGER NOT NULL,
+                arquivo TEXT NOT NULL,
+                duracao_s INTEGER NOT NULL,
+                instante_inicio INTEGER NOT NULL,
+                sha256 TEXT NOT NULL,
+                FOREIGN KEY(sessao_id) REFERENCES sessao(id)
+            )""")
         db.execSQL("CREATE INDEX idx_foto_sessao ON foto(sessao_id)")
         db.execSQL("CREATE INDEX idx_restricao_foto ON restricao(foto_id)")
+        db.execSQL("CREATE INDEX idx_caminhamento_sessao ON caminhamento_ponto(sessao_id)")
+        db.execSQL("CREATE INDEX idx_audio_sessao ON audio(sessao_id)")
     }
 
     /**
@@ -82,6 +102,28 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 4)
                     lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
                     instante INTEGER NOT NULL
                 )""")
+        }
+        if (old < 5) {
+            db.execSQL("""
+                CREATE TABLE caminhamento_ponto (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    sessao_id INTEGER NOT NULL,
+                    lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL NOT NULL,
+                    instante INTEGER NOT NULL,
+                    FOREIGN KEY(sessao_id) REFERENCES sessao(id)
+                )""")
+            db.execSQL("""
+                CREATE TABLE audio (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    sessao_id INTEGER NOT NULL,
+                    arquivo TEXT NOT NULL,
+                    duracao_s INTEGER NOT NULL,
+                    instante_inicio INTEGER NOT NULL,
+                    sha256 TEXT NOT NULL,
+                    FOREIGN KEY(sessao_id) REFERENCES sessao(id)
+                )""")
+            db.execSQL("CREATE INDEX idx_caminhamento_sessao ON caminhamento_ponto(sessao_id)")
+            db.execSQL("CREATE INDEX idx_audio_sessao ON audio(sessao_id)")
         }
     }
 
@@ -229,6 +271,57 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 4)
 
     fun excluirPonto(id: Long) {
         writableDatabase.delete("ponto", "id=?", arrayOf(id.toString()))
+    }
+
+    // ---- modo vistoria: caminhamento georreferenciado ----
+
+    fun inserirPontoCaminhamento(p: PontoCaminhamento): Long =
+        writableDatabase.insert("caminhamento_ponto", null, ContentValues().apply {
+            put("sessao_id", p.sessaoId); put("lat", p.lat); put("lon", p.lon)
+            put("precisao_m", p.precisaoM); put("instante", p.instante)
+        })
+
+    fun pontosCaminhamento(sessaoId: Long): List<PontoCaminhamento> {
+        val out = mutableListOf<PontoCaminhamento>()
+        readableDatabase.rawQuery(
+            "SELECT id, sessao_id, lat, lon, precisao_m, instante FROM caminhamento_ponto" +
+                " WHERE sessao_id=? ORDER BY instante, id",
+            arrayOf(sessaoId.toString())
+        ).use { c ->
+            while (c.moveToNext()) out += PontoCaminhamento(
+                id = c.getLong(0), sessaoId = c.getLong(1), lat = c.getDouble(2), lon = c.getDouble(3),
+                precisaoM = c.getFloat(4), instante = c.getLong(5)
+            )
+        }
+        return out
+    }
+
+    // ---- modo vistoria: audio ----
+
+    fun inserirAudio(a: AudioGravado): Long =
+        writableDatabase.insert("audio", null, ContentValues().apply {
+            put("sessao_id", a.sessaoId); put("arquivo", a.arquivo)
+            put("duracao_s", a.duracaoSegundos); put("instante_inicio", a.instanteInicio)
+            put("sha256", a.sha256)
+        })
+
+    fun audiosDaSessao(sessaoId: Long): List<AudioGravado> {
+        val out = mutableListOf<AudioGravado>()
+        readableDatabase.rawQuery(
+            "SELECT id, sessao_id, arquivo, duracao_s, instante_inicio, sha256 FROM audio" +
+                " WHERE sessao_id=? ORDER BY instante_inicio",
+            arrayOf(sessaoId.toString())
+        ).use { c ->
+            while (c.moveToNext()) out += AudioGravado(
+                id = c.getLong(0), sessaoId = c.getLong(1), arquivo = c.getString(2),
+                duracaoSegundos = c.getInt(3), instanteInicio = c.getLong(4), sha256 = c.getString(5)
+            )
+        }
+        return out
+    }
+
+    fun excluirAudio(id: Long) {
+        writableDatabase.delete("audio", "id=?", arrayOf(id.toString()))
     }
 
     fun foto(id: Long): Foto? =

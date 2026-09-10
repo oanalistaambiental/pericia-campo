@@ -259,7 +259,8 @@ private fun App(abrirNaCamera: Boolean = false) {
             Rota.CAMERA -> TelaCamera(
                 vm,
                 irParaSessoes = { rota = Rota.SESSOES },
-                irParaFerramentas = { rota = Rota.GAVETA }
+                irParaFerramentas = { rota = Rota.GAVETA },
+                irParaConfiguracoes = { ferramentaId = "configuracoes"; rota = Rota.FERRAMENTA }
             )
             Rota.SESSOES -> TelaSessoes(
                 vm,

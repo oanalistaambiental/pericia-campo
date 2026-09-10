@@ -29,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.oanalistaambiental.pericia.captura.Orientacoes
+import br.com.oanalistaambiental.pericia.captura.PosicaoMarcaDagua
 import br.com.oanalistaambiental.pericia.dados.GlossarioSisema
 import br.com.oanalistaambiental.pericia.geo.AlturaTrigonometrica
 import br.com.oanalistaambiental.pericia.geo.ImportadorCoordenada
@@ -859,6 +860,8 @@ private fun MarcaDaguaConfig(vm: CapturaViewModel) {
         ActivityResultContracts.GetContent()
     ) { uri -> if (uri != null) vm.definirMarcaDagua(uri) }
 
+    val posicaoAtual by vm.posicaoMarcaDagua.collectAsState()
+
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
         if (temMarca && preview != null) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -869,11 +872,46 @@ private fun MarcaDaguaConfig(vm: CapturaViewModel) {
                 )
                 Spacer(Modifier.width(12.dp))
                 Text(
-                    "Entra em todas as fotos a partir de agora, no canto superior direito.",
+                    "Entra em todas as fotos a partir de agora, na posição escolhida abaixo.",
                     color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp,
                     modifier = Modifier.weight(1f)
                 )
             }
+            Spacer(Modifier.height(12.dp))
+            Text("POSIÇÃO NA FOTO", color = Cores.textoFraco, fontSize = 10.sp, letterSpacing = 1.sp)
+            Spacer(Modifier.height(6.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Box(Modifier.weight(1f)) {
+                        SeletorPosicao(
+                            "Sup. esquerda", posicaoAtual == PosicaoMarcaDagua.SUPERIOR_ESQUERDA
+                        ) { vm.definirPosicaoMarcaDagua(PosicaoMarcaDagua.SUPERIOR_ESQUERDA) }
+                    }
+                    Box(Modifier.weight(1f)) {
+                        SeletorPosicao(
+                            "Sup. direita", posicaoAtual == PosicaoMarcaDagua.SUPERIOR_DIREITA
+                        ) { vm.definirPosicaoMarcaDagua(PosicaoMarcaDagua.SUPERIOR_DIREITA) }
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Box(Modifier.weight(1f)) {
+                        SeletorPosicao(
+                            "Inf. esquerda", posicaoAtual == PosicaoMarcaDagua.INFERIOR_ESQUERDA
+                        ) { vm.definirPosicaoMarcaDagua(PosicaoMarcaDagua.INFERIOR_ESQUERDA) }
+                    }
+                    Box(Modifier.weight(1f)) {
+                        SeletorPosicao(
+                            "Inf. direita", posicaoAtual == PosicaoMarcaDagua.INFERIOR_DIREITA
+                        ) { vm.definirPosicaoMarcaDagua(PosicaoMarcaDagua.INFERIOR_DIREITA) }
+                    }
+                }
+            }
+            Text(
+                "Nas posições inferiores, a marca entra ACIMA da faixa de coordenada/data — " +
+                    "as duas nunca se sobrepõem.",
+                color = Cores.textoFraco, fontSize = 10.5.sp, lineHeight = 15.sp,
+                modifier = Modifier.padding(top = 6.dp)
+            )
             Spacer(Modifier.height(10.dp))
             Row {
                 Box(Modifier.weight(1f)) {
@@ -896,6 +934,22 @@ private fun MarcaDaguaConfig(vm: CapturaViewModel) {
             Spacer(Modifier.height(10.dp))
             BotaoLargo("Escolher imagem (brasão, logo)") { escolher.launch("image/*") }
         }
+    }
+}
+
+@Composable
+private fun SeletorPosicao(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit) {
+    Box(
+        Modifier.fillMaxWidth()
+            .background(if (selecionado) Cores.bom else Cores.superficie, RoundedCornerShape(6.dp))
+            .clickable { aoEscolher() }
+            .padding(vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            rotulo, color = if (selecionado) Color.White else Cores.textoFraco,
+            fontSize = 12.sp, fontWeight = if (selecionado) FontWeight.SemiBold else FontWeight.Normal
+        )
     }
 }
 

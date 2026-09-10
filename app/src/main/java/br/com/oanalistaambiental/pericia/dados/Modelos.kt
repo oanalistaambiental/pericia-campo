@@ -14,6 +14,34 @@ data class PontoSalvo(
     val instante: Long
 )
 
+/**
+ * Um ponto do caminhamento georreferenciado do MODO VISTORIA — o trajeto percorrido durante a
+ * sessão, não um vértice marcado a mão como na medição de área. Marcado sozinho, por tempo, a
+ * cada leitura de GNSS enquanto o caminhamento está ativo.
+ */
+data class PontoCaminhamento(
+    val id: Long = 0,
+    val sessaoId: Long,
+    val lat: Double,
+    val lon: Double,
+    val precisaoM: Float,
+    val instante: Long
+)
+
+/**
+ * Um áudio gravado durante a sessão (MODO VISTORIA) — arquivo íntegro, com hash calculado na
+ * hora de parar a gravação, mesma regra de cadeia de custódia da foto. Não tem transcrição nem
+ * resumo automático: isso é responsabilidade de quem ouve, por enquanto.
+ */
+data class AudioGravado(
+    val id: Long = 0,
+    val sessaoId: Long,
+    val arquivo: String,
+    val duracaoSegundos: Int,
+    val instanteInicio: Long,
+    val sha256: String
+)
+
 data class Sessao(
     val id: Long = 0,
     val titulo: String,

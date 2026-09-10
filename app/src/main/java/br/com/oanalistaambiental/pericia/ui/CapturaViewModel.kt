@@ -3,6 +3,7 @@ package br.com.oanalistaambiental.pericia.ui
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.media.MediaRecorder
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,11 +14,15 @@ import br.com.oanalistaambiental.pericia.carimbo.ClienteTsa
 import br.com.oanalistaambiental.pericia.captura.ConferenciaSessao
 import br.com.oanalistaambiental.pericia.captura.Integridade
 import br.com.oanalistaambiental.pericia.captura.Legenda
+import br.com.oanalistaambiental.pericia.captura.PosicaoMarcaDagua
 import br.com.oanalistaambiental.pericia.captura.ProvaFoto
+import br.com.oanalistaambiental.pericia.captura.SalvarGaleria
+import br.com.oanalistaambiental.pericia.dados.AudioGravado
 import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.CadastrosIef
 import br.com.oanalistaambiental.pericia.dados.CadastrosIefCarregador
 import br.com.oanalistaambiental.pericia.dados.Foto
+import br.com.oanalistaambiental.pericia.dados.PontoCaminhamento
 import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
 import br.com.oanalistaambiental.pericia.dados.PontoSalvo
 import br.com.oanalistaambiental.pericia.dados.Sessao
@@ -26,6 +31,7 @@ import br.com.oanalistaambiental.pericia.taxas.TabelaTaxas
 import br.com.oanalistaambiental.pericia.taxas.TaxaUfemg
 import br.com.oanalistaambiental.pericia.exportacao.Exportador
 import br.com.oanalistaambiental.pericia.geo.CamadaInfo
+import br.com.oanalistaambiental.pericia.geo.Caminhamento
 import br.com.oanalistaambiental.pericia.geo.CircunscricaoHidrografica
 import br.com.oanalistaambiental.pericia.geo.ConsultaOnline
 import br.com.oanalistaambiental.pericia.geo.Medicao
@@ -35,9 +41,11 @@ import br.com.oanalistaambiental.pericia.geo.PontoRetorno
 import br.com.oanalistaambiental.pericia.geo.Restricao
 import br.com.oanalistaambiental.pericia.laudo.LaudoPdf
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -57,6 +65,32 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _ultimasRestricoes = MutableStateFlow<List<Restricao>>(emptyList())
     val ultimasRestricoes: StateFlow<List<Restricao>> = _ultimasRestricoes
+
+    // ---- modo vistoria: caminhamento ----
+
+    private val _caminhamentoAtivo = MutableStateFlow(false)
+    val caminhamentoAtivo: StateFlow<Boolean> = _caminhamentoAtivo
+
+    private val _pontosCaminhamento = MutableStateFlow<List<PontoCaminhamento>>(emptyList())
+    val pontosCaminhamento: StateFlow<List<PontoCaminhamento>> = _pontosCaminhamento
+
+    private var jobCaminhamento: Job? = null
+
+    // ---- modo vistoria: audio ----
+
+    private val _gravandoAudio = MutableStateFlow(false)
+    val gravandoAudio: StateFlow<Boolean> = _gravandoAudio
+
+    private val _duracaoAudioSegundos = MutableStateFlow(0)
+    val duracaoAudioSegundos: StateFlow<Int> = _duracaoAudioSegundos
+
+    private val _audiosDaSessao = MutableStateFlow<List<AudioGravado>>(emptyList())
+    val audiosDaSessao: StateFlow<List<AudioGravado>> = _audiosDaSessao
+
+    private var gravador: MediaRecorder? = null
+    private var arquivoAudioAtual: File? = null
+    private var instanteInicioAudio: Long = 0
+    private var jobTiqueAudio: Job? = null
 
     private val _mensagem = MutableStateFlow<String?>(null)
     val mensagem: StateFlow<String?> = _mensagem
@@ -177,6 +211,18 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         estadoCampo.economiaDeBateria = novo
         estadoCampo.parar()
         estadoCampo.iniciar()
+    }
+
+    /** Canto onde a marca d'água entra — mesma escolha vale para a prévia ao vivo da câmera. */
+    private val _posicaoMarcaDagua = MutableStateFlow(
+        runCatching { PosicaoMarcaDagua.valueOf(prefs.getString("posicao_marca_dagua", null) ?: "") }
+            .getOrDefault(PosicaoMarcaDagua.SUPERIOR_DIREITA)
+    )
+    val posicaoMarcaDagua: StateFlow<PosicaoMarcaDagua> = _posicaoMarcaDagua
+
+    fun definirPosicaoMarcaDagua(posicao: PosicaoMarcaDagua) {
+        _posicaoMarcaDagua.value = posicao
+        prefs.edit().putString("posicao_marca_dagua", posicao.name).apply()
     }
 
     /**
@@ -382,6 +428,10 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     override fun onCleared() {
         estadoCampo.parar()
         runCatching { consulta?.close() }
+        jobCaminhamento?.cancel()
+        jobTiqueAudio?.cancel()
+        runCatching { gravador?.stop() }
+        runCatching { gravador?.release() }
         super.onCleared()
     }
 
@@ -509,6 +559,181 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     fun pastaDaSessao(sessaoId: Long): File =
         File(getApplication<Application>().filesDir, "sessoes/$sessaoId").apply { mkdirs() }
 
+    // ------------------------------------------------------------------ modo vistoria: caminhamento
+
+    /** Recarrega os pontos do caminhamento já gravados desta sessão — chamar ao abrir a tela. */
+    fun carregarCaminhamento(sessaoId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _pontosCaminhamento.value = banco.pontosCaminhamento(sessaoId)
+        }
+    }
+
+    /**
+     * Marca UM ponto por leitura de GNSS, não um rastro contínuo — mesma lógica da medição de
+     * área: leitura contínua a 1 Hz por uma vistoria de horas encheria o banco de ruído sem
+     * melhorar o traçado. O intervalo aqui é por TEMPO (a cada [INTERVALO_CAMINHAMENTO_MS]),
+     * não por toque, porque ninguém vai parar e tocar a cada passo durante horas de campo — é
+     * exatamente a diferença de proposta entre as duas ferramentas.
+     */
+    fun iniciarCaminhamento(sessaoId: Long) {
+        if (_caminhamentoAtivo.value) {
+            _mensagem.value = "Já existe um caminhamento em andamento — talvez de outra sessão. Pare antes de iniciar outro."
+            return
+        }
+        _caminhamentoAtivo.value = true
+        jobCaminhamento = viewModelScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                val p = estadoCampo.posicao.value
+                if (p.temPosicao) {
+                    val ponto = PontoCaminhamento(
+                        sessaoId = sessaoId, lat = p.lat!!, lon = p.lon!!,
+                        precisaoM = p.precisaoM ?: 999f, instante = System.currentTimeMillis()
+                    )
+                    banco.inserirPontoCaminhamento(ponto)
+                    _pontosCaminhamento.value = _pontosCaminhamento.value + ponto
+                }
+                kotlinx.coroutines.delay(INTERVALO_CAMINHAMENTO_MS)
+            }
+        }
+    }
+
+    fun pararCaminhamento() {
+        jobCaminhamento?.cancel()
+        jobCaminhamento = null
+        _caminhamentoAtivo.value = false
+    }
+
+    fun exportarCaminhamento(formato: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val ctx = getApplication<Application>()
+            val pontos = _pontosCaminhamento.value
+            if (pontos.isEmpty()) { _mensagem.value = "Nenhum ponto de caminhamento para exportar."; return@launch }
+            val pasta = File(ctx.filesDir, "caminhamentos").apply { mkdirs() }
+            val base = "caminhamento-${System.currentTimeMillis()}"
+            runCatching {
+                val arquivo: File = when (formato) {
+                    "gpx" -> Exportador.gpxCaminhamento(pontos, File(pasta, "$base.gpx"))
+                    "kml" -> Exportador.kmlCaminhamento(pontos, File(pasta, "$base.kml"))
+                    "csv" -> Exportador.csvCaminhamento(pontos, File(pasta, "$base.csv"))
+                    else -> throw IllegalArgumentException("Formato desconhecido: $formato")
+                }
+                withContext(Dispatchers.Main) {
+                    Exportador.compartilhar(ctx, listOf(arquivo), "Caminhamento da vistoria")
+                }
+            }.onFailure { _mensagem.value = "Falha ao exportar: ${it.message}" }
+        }
+    }
+
+    // ------------------------------------------------------------------ modo vistoria: audio
+
+    /** Recarrega os áudios já gravados desta sessão — chamar ao abrir a tela. */
+    fun carregarAudios(sessaoId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _audiosDaSessao.value = banco.audiosDaSessao(sessaoId)
+        }
+    }
+
+    /**
+     * Grava em M4A (AAC), no mesmo padrão de qualidade de voz de um gravador comum — não é
+     * áudio de estúdio, é prova de campo. Para sozinha em 1 hora
+     * ([DURACAO_MAXIMA_AUDIO_MS]) e SALVA o que já gravou até lá — nunca descarta silenciosamente
+     * por estourar o teto.
+     *
+     * NÃO faz: transcrição nem resumo automático. O áudio fica íntegro, com hash calculado ao
+     * parar — é matéria-prima para o parecer, não o parecer pronto.
+     */
+    fun iniciarGravacaoAudio(sessaoId: Long) {
+        if (_gravandoAudio.value) {
+            _mensagem.value = "Já existe uma gravação em andamento — talvez de outra sessão. Pare antes de iniciar outra."
+            return
+        }
+        val pasta = File(pastaDaSessao(sessaoId), "audio").apply { mkdirs() }
+        val arquivo = File(pasta, "audio-${System.currentTimeMillis()}.m4a")
+        val rec = criarMediaRecorder().apply {
+            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            setAudioEncodingBitRate(96_000)
+            setAudioSamplingRate(44_100)
+            setMaxDuration(DURACAO_MAXIMA_AUDIO_MS)
+            setOutputFile(arquivo.absolutePath)
+            setOnInfoListener { _, what, _ ->
+                if (what == MediaRecorder.MEDIA_RECORDER_INFO_MAX_DURATION_REACHED) {
+                    _mensagem.value = "Gravação atingiu 1 hora e foi salva automaticamente."
+                    pararGravacaoAudio(sessaoId)
+                }
+            }
+            try {
+                prepare()
+                start()
+            } catch (e: Exception) {
+                _mensagem.value = "Falha ao iniciar a gravação: ${e.message}"
+                runCatching { release() }
+                return
+            }
+        }
+        gravador = rec
+        arquivoAudioAtual = arquivo
+        instanteInicioAudio = System.currentTimeMillis()
+        _gravandoAudio.value = true
+        _duracaoAudioSegundos.value = 0
+        jobTiqueAudio = viewModelScope.launch(Dispatchers.IO) {
+            while (isActive) {
+                kotlinx.coroutines.delay(1_000)
+                _duracaoAudioSegundos.value = ((System.currentTimeMillis() - instanteInicioAudio) / 1000).toInt()
+            }
+        }
+    }
+
+    fun pararGravacaoAudio(sessaoId: Long) {
+        val rec = gravador ?: return
+        val arquivo = arquivoAudioAtual
+        jobTiqueAudio?.cancel()
+        jobTiqueAudio = null
+        val duracaoS = ((System.currentTimeMillis() - instanteInicioAudio) / 1000).toInt()
+        runCatching { rec.stop() }
+        runCatching { rec.release() }
+        gravador = null
+        _gravandoAudio.value = false
+
+        if (arquivo != null && arquivo.exists() && duracaoS > 0) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val hash = Integridade.sha256(arquivo)
+                val audio = AudioGravado(
+                    sessaoId = sessaoId, arquivo = arquivo.absolutePath, duracaoSegundos = duracaoS,
+                    instanteInicio = instanteInicioAudio, sha256 = hash
+                )
+                banco.inserirAudio(audio)
+                _audiosDaSessao.value = banco.audiosDaSessao(sessaoId)
+            }
+        }
+        arquivoAudioAtual = null
+    }
+
+    fun excluirAudio(sessaoId: Long, audio: AudioGravado) {
+        runCatching { File(audio.arquivo).delete() }
+        banco.excluirAudio(audio.id)
+        _audiosDaSessao.value = _audiosDaSessao.value.filterNot { it.id == audio.id }
+    }
+
+    fun compartilharAudio(audio: AudioGravado) {
+        val arquivo = File(audio.arquivo)
+        if (!arquivo.exists()) { _mensagem.value = "Arquivo de áudio não encontrado no aparelho."; return }
+        runCatching {
+            Exportador.compartilhar(getApplication(), listOf(arquivo), "Áudio da vistoria")
+        }.onFailure { _mensagem.value = "Falha ao compartilhar: ${it.message}" }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun criarMediaRecorder(): MediaRecorder {
+        val ctx = getApplication<Application>()
+        return if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+            MediaRecorder(ctx)
+        } else {
+            MediaRecorder()
+        }
+    }
+
     // ------------------------------------------------------------------ captura
 
     fun registrarCaptura(original: File) {
@@ -564,9 +789,13 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             runCatching {
                 val destino = File(original.parentFile, original.nameWithoutExtension + "_legenda.jpg")
                 val marca = arquivoMarcaDagua().takeIf { it.exists() }
-                Legenda.gerar(original, destino, comId, sessao.titulo, marca)
+                Legenda.gerar(original, destino, comId, sessao.titulo, marca, _posicaoMarcaDagua.value)
                 // BUG corrigido: o caminho da copia nunca era gravado, e o laudo usava o original.
                 banco.atualizarLegenda(fotoId, destino.absolutePath)
+                // A copia (com legenda e marca d'agua) vai tambem para a galeria publica do
+                // aparelho — o ORIGINAL, que tem o hash, nunca sai da pasta interna do app.
+                // Pedido de Francisco: achar a foto so pela galeria, sem precisar exportar.
+                SalvarGaleria.salvar(getApplication(), destino, "Perícia Campo")
             }.onFailure { _mensagem.value = "Legenda não gerada: ${it.message}" }
 
             if (posValida) consultarRestricoes(fotoId, comId)
@@ -981,4 +1210,9 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun limparMensagem() { _mensagem.value = null }
+
+    private companion object {
+        const val INTERVALO_CAMINHAMENTO_MS = 15_000L
+        const val DURACAO_MAXIMA_AUDIO_MS = 60 * 60 * 1000
+    }
 }

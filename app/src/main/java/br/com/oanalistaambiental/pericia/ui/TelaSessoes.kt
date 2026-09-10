@@ -1,5 +1,9 @@
 package br.com.oanalistaambiental.pericia.ui
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,14 +19,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import br.com.oanalistaambiental.pericia.carimbo.CarimboTempo
 import br.com.oanalistaambiental.pericia.captura.ConferenciaSessao
 import br.com.oanalistaambiental.pericia.captura.Integridade
+import br.com.oanalistaambiental.pericia.dados.AudioGravado
 import br.com.oanalistaambiental.pericia.dados.Foto
 import br.com.oanalistaambiental.pericia.dados.Sessao
+import br.com.oanalistaambiental.pericia.geo.Caminhamento
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -148,7 +156,11 @@ fun TelaDetalheSessao(
     val tsaUrl by vm.tsaUrl.collectAsState()
     val tsaCredenciada by vm.tsaCredenciada.collectAsState()
 
-    LaunchedEffect(sessao.id) { vm.carregarFotos(sessao.id) }
+    LaunchedEffect(sessao.id) {
+        vm.carregarFotos(sessao.id)
+        vm.carregarCaminhamento(sessao.id)
+        vm.carregarAudios(sessao.id)
+    }
 
     val comRestricao = remember(restricoes) {
         restricoes.values.count { lista -> lista.any { it.situacao == "DENTRO" } }
@@ -190,6 +202,8 @@ fun TelaDetalheSessao(
                         Cores.texto
                     )
                 }
+
+                ModoVistoria(vm, sessao)
 
                 Rotulo("EXPORTAR")
                 Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -400,6 +414,165 @@ private fun Indicador(valor: String, rotulo: String, cor: Color) {
     Column {
         Text(valor, color = cor, fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Text(rotulo, color = Cores.textoFraco, fontSize = 10.sp, letterSpacing = 0.6.sp)
+    }
+}
+
+/**
+ * MODO VISTORIA: caminhamento georreferenciado (trajeto percorrido, não vértice a vértice como
+ * a medição de área) e gravação de áudio — dois toggles independentes, os dois presos à sessão
+ * aberta. Pedido de Francisco: registrar automaticamente por onde se passou durante a vistoria,
+ * início e fim inclusive, e poder gravar a conversa técnica para elaborar o parecer depois.
+ *
+ * NÃO faz: transcrição nem resumo do áudio — fica para uma rodada futura, com um serviço de IA
+ * a decidir. O áudio sai íntegro, com hash, e é matéria-prima, não parecer pronto.
+ */
+@Composable
+private fun ModoVistoria(vm: CapturaViewModel, sessao: Sessao) {
+    val contexto = LocalContext.current
+    val sessaoAberta = sessao.fechadaEm == null
+
+    val caminhamentoAtivo by vm.caminhamentoAtivo.collectAsState()
+    val pontos by vm.pontosCaminhamento.collectAsState()
+
+    val gravandoAudio by vm.gravandoAudio.collectAsState()
+    val duracaoAudio by vm.duracaoAudioSegundos.collectAsState()
+    val audios by vm.audiosDaSessao.collectAsState()
+    var confirmarExclusaoAudio by remember { mutableStateOf<Long?>(null) }
+
+    var temPermissaoAudio by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(contexto, Manifest.permission.RECORD_AUDIO) ==
+                PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val pedirPermissaoAudio = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { concedida ->
+        temPermissaoAudio = concedida
+        if (concedida) vm.iniciarGravacaoAudio(sessao.id)
+    }
+
+    Rotulo("MODO VISTORIA")
+    Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
+        // ---- caminhamento ----
+        Column(
+            Modifier.fillMaxWidth().background(Cores.superficie, RoundedCornerShape(8.dp)).padding(14.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Caminhamento", color = Cores.texto, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f))
+                if (caminhamentoAtivo) {
+                    Text("● GRAVANDO", color = Cores.alertaClaro, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Marca automaticamente a posição a cada 15 s enquanto ativo — o trajeto " +
+                    "percorrido na vistoria, com início e fim, não um vértice por toque.",
+                color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+            )
+            if (pontos.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Row {
+                    Mono("${pontos.size} pontos", Cores.texto, 11)
+                    Spacer(Modifier.width(14.dp))
+                    Mono(Caminhamento.distanciaFormatada(Caminhamento.distanciaTotalM(pontos)), Cores.texto, 11)
+                    Spacer(Modifier.width(14.dp))
+                    Mono(Caminhamento.duracaoFormatada(Caminhamento.duracaoSegundos(pontos)), Cores.texto, 11)
+                }
+            }
+            Spacer(Modifier.height(10.dp))
+            if (!sessaoAberta) {
+                Text(
+                    "Sessão fechada — não é possível caminhar mais nela.",
+                    color = Cores.textoFraco, fontSize = 11.sp
+                )
+            } else if (caminhamentoAtivo) {
+                BotaoLargo("Parar caminhamento") { vm.pararCaminhamento() }
+            } else {
+                BotaoLargo("Iniciar caminhamento", principal = true) { vm.iniciarCaminhamento(sessao.id) }
+            }
+            if (pontos.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(Modifier.weight(1f)) { BotaoLargo("GPX") { vm.exportarCaminhamento("gpx") } }
+                    Box(Modifier.weight(1f)) { BotaoLargo("KML") { vm.exportarCaminhamento("kml") } }
+                    Box(Modifier.weight(1f)) { BotaoLargo("CSV") { vm.exportarCaminhamento("csv") } }
+                }
+            }
+        }
+
+        // ---- audio ----
+        Column(
+            Modifier.fillMaxWidth().background(Cores.superficie, RoundedCornerShape(8.dp)).padding(14.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Gravação de áudio", color = Cores.texto, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f))
+                if (gravandoAudio) {
+                    Mono(Caminhamento.duracaoFormatada(duracaoAudio.toLong()), Cores.alertaClaro, 12)
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Text(
+                "Para sozinha em 1 hora e salva o que gravou até lá. Não transcreve nem resume — " +
+                    "fica íntegra, com hash, para você ouvir depois e escrever o parecer.",
+                color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+            )
+            if (!temPermissaoAudio && !gravandoAudio) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Grave só com quem está presente ciente — informe que a visita está sendo " +
+                        "gravada antes de começar.",
+                    color = Cores.atencaoClaro, fontSize = 10.5.sp, lineHeight = 15.sp
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            if (!sessaoAberta) {
+                Text(
+                    "Sessão fechada — não é possível gravar mais nela.",
+                    color = Cores.textoFraco, fontSize = 11.sp
+                )
+            } else if (gravandoAudio) {
+                BotaoLargo("Parar gravação") { vm.pararGravacaoAudio(sessao.id) }
+            } else {
+                BotaoLargo("Iniciar gravação", principal = true) {
+                    if (temPermissaoAudio) vm.iniciarGravacaoAudio(sessao.id)
+                    else pedirPermissaoAudio.launch(Manifest.permission.RECORD_AUDIO)
+                }
+            }
+            if (audios.isNotEmpty()) {
+                Spacer(Modifier.height(10.dp))
+                audios.forEach { a ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(
+                                fmt.format(Date(a.instanteInicio)) + " — " +
+                                    Caminhamento.duracaoFormatada(a.duracaoSegundos.toLong()),
+                                color = Cores.texto, fontSize = 12.sp
+                            )
+                        }
+                        Text(
+                            "compartilhar", color = Cores.bomClaro, fontSize = 11.5.sp,
+                            modifier = Modifier.clickable { vm.compartilharAudio(a) }.padding(8.dp)
+                        )
+                        Text(
+                            if (confirmarExclusaoAudio == a.id) "confirmar?" else "excluir",
+                            color = Cores.alertaClaro, fontSize = 11.5.sp,
+                            modifier = Modifier.clickable {
+                                if (confirmarExclusaoAudio == a.id) {
+                                    vm.excluirAudio(sessao.id, a); confirmarExclusaoAudio = null
+                                } else confirmarExclusaoAudio = a.id
+                            }.padding(8.dp)
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

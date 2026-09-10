@@ -6,8 +6,10 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.Foto
+import br.com.oanalistaambiental.pericia.dados.PontoCaminhamento
 import br.com.oanalistaambiental.pericia.dados.PontoSalvo
 import br.com.oanalistaambiental.pericia.dados.Sessao
+import br.com.oanalistaambiental.pericia.geo.Caminhamento
 import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.Utm
 import java.io.File
@@ -370,6 +372,74 @@ object Exportador {
         return destino
     }
 
+    // ------------------------------------------------------------------ modo vistoria: caminhamento
+
+    /**
+     * O trajeto do MODO VISTORIA como TRACK do GPX (`<trk><trkseg><trkpt>`), não rota — é
+     * exatamente o que um `<trk>` representa: onde alguém esteve, na ordem em que esteve, com
+     * hora em cada ponto. A medição de área usa `<rte>` porque aquilo é um contorno fechado
+     * marcado a dedo; isto é um caminho aberto gravado sozinho.
+     */
+    fun gpxCaminhamento(pontos: List<PontoCaminhamento>, destino: File): File {
+        val sb = StringBuilder()
+        sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append("\n")
+        sb.append("""<gpx version="1.1" creator="Kit de Pericia Ambiental" """)
+            .append("""xmlns="http://www.topografix.com/GPX/1/1">""").append("\n")
+        sb.append("<trk><name>Caminhamento da vistoria</name><trkseg>\n")
+        pontos.forEach { p ->
+            sb.append("""<trkpt lat="%.7f" lon="%.7f">""".format(Locale.US, p.lat, p.lon)).append("\n")
+            sb.append("<time>").append(fmtIso.get()!!.format(Date(p.instante))).append("</time>\n")
+            sb.append("</trkpt>\n")
+        }
+        sb.append("</trkseg></trk>\n")
+        sb.append("</gpx>\n")
+        destino.writeText(sb.toString(), Charsets.UTF_8)
+        return destino
+    }
+
+    fun kmlCaminhamento(pontos: List<PontoCaminhamento>, destino: File): File {
+        val sb = StringBuilder()
+        sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append("\n")
+        sb.append("""<kml xmlns="http://www.opengis.net/kml/2.2"><Document>""").append("\n")
+        sb.append("<Placemark>\n")
+        sb.append("<name>").append(xml("Caminhamento da vistoria")).append("</name>\n")
+        val desc = "Distância: ${Caminhamento.distanciaFormatada(Caminhamento.distanciaTotalM(pontos))}\n" +
+            "Duração: ${Caminhamento.duracaoFormatada(Caminhamento.duracaoSegundos(pontos))}\n" +
+            "Pontos: ${pontos.size}"
+        sb.append("<description>").append(xml(desc)).append("</description>\n")
+        sb.append("<LineString><coordinates>\n")
+        pontos.forEach { p -> sb.append("%.7f,%.7f,0 ".format(Locale.US, p.lon, p.lat)) }
+        sb.append("\n</coordinates></LineString>\n")
+        sb.append("</Placemark>\n")
+        sb.append("</Document></kml>\n")
+        destino.writeText(sb.toString(), Charsets.UTF_8)
+        return destino
+    }
+
+    fun csvCaminhamento(pontos: List<PontoCaminhamento>, destino: File): File {
+        val sb = StringBuilder()
+        sb.append("ordem;data_hora;latitude;longitude;datum;utm_zona;utm_e;utm_n;precisao_m\n")
+        pontos.forEachIndexed { i, p ->
+            val utm = Utm.projetar(p.lat, p.lon)
+            sb.append(
+                listOf(
+                    "${i + 1}",
+                    fmtBr.get()!!.format(Date(p.instante)),
+                    "%.7f".format(Locale.US, p.lat),
+                    "%.7f".format(Locale.US, p.lon),
+                    "SIRGAS 2000 (EPSG:4674)",
+                    "${utm.zona}${if (utm.hemisferioSul) "S" else "N"}",
+                    "%.2f".format(Locale.US, utm.easting),
+                    "%.2f".format(Locale.US, utm.northing),
+                    "%.1f".format(Locale.US, p.precisaoM)
+                ).joinToString(";") { escapar(it) }
+            )
+            sb.append("\n")
+        }
+        destino.writeBytes(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()) + sb.toString().toByteArray(Charsets.UTF_8))
+        return destino
+    }
+
     // ------------------------------------------------------- compartilhamento
 
     /**
@@ -429,6 +499,7 @@ object Exportador {
         // e mensagem recusam anexo de tipo desconhecido — o documento existia e nao chegava.
         "txt" -> "text/plain"
         "jpg", "jpeg" -> "image/jpeg"
+        "m4a" -> "audio/mp4"
         else -> "*/*"
     }
 }
