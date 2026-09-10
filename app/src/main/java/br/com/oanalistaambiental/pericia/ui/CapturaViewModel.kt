@@ -73,6 +73,17 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     private val _ultimasRestricoes = MutableStateFlow<List<Restricao>>(emptyList())
     val ultimasRestricoes: StateFlow<List<Restricao>> = _ultimasRestricoes
 
+    /**
+     * Diferente de [ultimasRestricoes] (que só guarda alerta — DENTRO/PRÓXIMO, para não poluir
+     * a câmera): aqui entra TODA camada do pacote, inclusive as que o ponto está longe (FORA) —
+     * é o "relatório do ponto" pedido, uma resposta completa sobre o que já se sabe do lugar,
+     * não só o que precisa de atenção.
+     */
+    private val _relatorioPonto = MutableStateFlow<List<Restricao>?>(null)
+    val relatorioPonto: StateFlow<List<Restricao>?> = _relatorioPonto
+    private val _consultandoRelatorio = MutableStateFlow(false)
+    val consultandoRelatorio: StateFlow<Boolean> = _consultandoRelatorio
+
     // ---- modo vistoria: caminhamento ----
 
     private val _caminhamentoAtivo = MutableStateFlow(false)
@@ -1099,6 +1110,25 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                     toleranciaM = r.proveniencia.toleranciaSimplificacaoM
                 )
             )
+        }
+    }
+
+    /**
+     * "Relatório do ponto" — TODA camada do pacote offline contra a coordenada atual, incluindo
+     * as que o ponto está longe (FORA), mais o que o servidor online souber a mais. Diferente da
+     * consulta que roda ao fotografar: aqui a pessoa pediu explicitamente uma resposta completa,
+     * então "fora" também é informação, não ruído a esconder.
+     */
+    fun consultarRelatorioPonto(lat: Double, lon: Double, precisaoM: Float) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _consultandoRelatorio.value = true
+            val ponto = PontoConsulta(lat, lon, precisaoM, System.currentTimeMillis())
+            val offline = runCatching {
+                consulta?.consultar(ponto, incluirFora = true) ?: emptyList()
+            }.getOrDefault(emptyList())
+            val online = runCatching { ConsultaOnline.consultar(lat, lon, precisaoM) }.getOrDefault(emptyList())
+            _relatorioPonto.value = (offline + online).sortedBy { it.distanciaBordaM }
+            _consultandoRelatorio.value = false
         }
     }
 

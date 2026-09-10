@@ -18,6 +18,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaMedicao
 import br.com.oanalistaambiental.pericia.ui.TelaOcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.ui.TelaPrazoRenovacao
 import br.com.oanalistaambiental.pericia.ui.TelaRecursosHidricos
+import br.com.oanalistaambiental.pericia.ui.TelaRelatorioPonto
 
 /**
  * A gaveta, em um lugar so.
@@ -140,6 +141,18 @@ object Registro {
                 "Recurso Potencial Explotável, sem tabela pública) nem valores próprios de Área " +
                 "de Restrição e Controle por superexplotação.",
             tela = { nav -> TelaRecursosHidricos(vmCaptura(), nav.voltar) }
+        ),
+        Ferramenta(
+            id = "relatorio_ponto",
+            nome = "Relatório do ponto",
+            resumo = "Bacia, todas as camadas de restrição e vedação — tudo que o app sabe daqui.",
+            grupo = Grupo.CAMPO,
+            icone = IconeGaveta.RELATORIO,
+            exige = setOf(Recurso.GNSS),
+            limite = "Consulta o pacote de camadas instalado (offline) e, quando há sinal, um " +
+                "complemento online — camada ausente do pacote e sem alcance do complemento não " +
+                "aparece aqui, e silêncio não é o mesmo que ausência de restrição real.",
+            tela = { nav -> TelaRelatorioPonto(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(
             id = "prazo_renovacao",

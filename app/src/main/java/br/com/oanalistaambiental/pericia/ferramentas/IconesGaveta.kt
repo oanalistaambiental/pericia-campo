@@ -44,7 +44,8 @@ enum class IconeGaveta {
     MOEDA,
     CARTEIRA,
     ALERTA,
-    AGUA
+    AGUA,
+    RELATORIO
 }
 
 @Composable
@@ -312,6 +313,28 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                     }
                     drawPath(p, cor, style = traco)
                 }
+            }
+
+            IconeGaveta.RELATORIO -> {
+                // Prancheta: retangulo com o "clipe" no topo e linhas de texto dentro — leitura
+                // consolidada, nao cadastro (CARTEIRA) nem norma (GLOSSARIO).
+                drawRoundRect(
+                    color = cor,
+                    topLeft = Offset(w * 0.16f, h * 0.16f),
+                    size = Size(w * 0.68f, h * 0.72f),
+                    cornerRadius = CornerRadius(w * 0.06f, w * 0.06f),
+                    style = traco
+                )
+                drawRoundRect(
+                    color = cor,
+                    topLeft = Offset(w * 0.38f, h * 0.1f),
+                    size = Size(w * 0.24f, h * 0.12f),
+                    cornerRadius = CornerRadius(w * 0.03f, w * 0.03f),
+                    style = traco
+                )
+                drawLine(cor, Offset(w * 0.28f, h * 0.42f), Offset(w * 0.72f, h * 0.42f), traco.width, StrokeCap.Round)
+                drawLine(cor, Offset(w * 0.28f, h * 0.56f), Offset(w * 0.72f, h * 0.56f), traco.width, StrokeCap.Round)
+                drawLine(cor, Offset(w * 0.28f, h * 0.7f), Offset(w * 0.56f, h * 0.7f), traco.width, StrokeCap.Round)
             }
         }
     }
