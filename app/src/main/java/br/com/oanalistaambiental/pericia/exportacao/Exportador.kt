@@ -15,12 +15,20 @@ import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.Utm
 import java.io.File
 import java.io.FileOutputStream
+import java.io.InputStream
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+
+/** Resultado de [Exportador.restaurarBackup] — nunca lança, sempre devolve um dos dois. */
+sealed class ResultadoRestauracao {
+    data class Sucesso(val pastasRestauradas: Int) : ResultadoRestauracao()
+    data class Falha(val motivo: String) : ResultadoRestauracao()
+}
 
 /**
  * Exportacao: CSV, KMZ e compartilhamento.
@@ -538,8 +546,8 @@ object Exportador {
      * produzido pela pessoa, pesa muito mais que o resto somado, e refazer é só "Recarregar
      * pacote" — não é perda de prova nenhuma.
      *
-     * Só cria o arquivo — restaurar um backup é um passo à parte, que ainda não existe: exige
-     * cuidado maior (substituir um banco em uso sem corromper nada).
+     * Só cria o arquivo — restaurar é [restaurarBackup], que existe à parte por causa do
+     * cuidado maior: substituir um banco em uso sem corromper nada.
      */
     fun criarBackup(context: Context, saida: OutputStream) {
         ZipOutputStream(saida).use { zip ->
@@ -547,12 +555,83 @@ object Exportador {
             if (banco.exists()) adicionarArquivoAoZip(zip, banco, "banco/pericia.db")
 
             val raiz = context.filesDir
-            listOf("sessoes", "ocorrencias", "captacoes", "pontos", "medicoes", "caminhamentos").forEach { nome ->
+            listOf(
+                "sessoes", "ocorrencias", "captacoes", "pontos", "medicoes", "caminhamentos",
+                "condicionantes"
+            ).forEach { nome ->
                 val pasta = File(raiz, nome)
                 if (pasta.exists()) adicionarPastaAoZip(zip, pasta, "dados/$nome")
             }
             val marca = File(raiz, "marca_dagua.png")
             if (marca.exists()) adicionarArquivoAoZip(zip, marca, "dados/marca_dagua.png")
+        }
+    }
+
+    /**
+     * Restaura um backup criado por [criarBackup]. Extrai para uma pasta temporária e CONFERE
+     * que existe `banco/pericia.db` antes de tocar em qualquer arquivo real — se o zip vier
+     * incompleto ou não for um backup deste app, nada é sobrescrito. Guarda uma cópia de
+     * segurança do banco atual antes de trocar, mesmo assim: restaurar é o tipo de ação que só
+     * se erra uma vez.
+     *
+     * `fecharBanco` deve fechar a conexão SQLite aberta antes de substituir o arquivo —
+     * `SQLiteOpenHelper.close()` é seguro de chamar mesmo em uso; a próxima leitura reabre
+     * sozinha. Ainda assim, quem chama deve orientar a pessoa a fechar e reabrir o app: StateFlow
+     * já carregado em memória não vai reler o banco novo sozinho.
+     */
+    fun restaurarBackup(context: Context, entrada: InputStream, fecharBanco: () -> Unit): ResultadoRestauracao {
+        val temp = File(context.cacheDir, "restauracao-${System.currentTimeMillis()}").apply { mkdirs() }
+        try {
+            var achouBanco = false
+            ZipInputStream(entrada).use { zip ->
+                var item = zip.nextEntry
+                while (item != null) {
+                    val destino = File(temp, item.name)
+                    // Zip Slip: uma entrada com "../" no nome poderia escrever fora da pasta
+                    // temporária. Recusa o backup inteiro em vez de tentar limpar o nome.
+                    if (!destino.canonicalPath.startsWith(temp.canonicalPath + File.separator)) {
+                        return ResultadoRestauracao.Falha("Backup com caminho de arquivo inválido: ${item.name}")
+                    }
+                    if (item.isDirectory) {
+                        destino.mkdirs()
+                    } else {
+                        destino.parentFile?.mkdirs()
+                        destino.outputStream().use { saida -> zip.copyTo(saida) }
+                        if (item.name == "banco/pericia.db") achouBanco = true
+                    }
+                    zip.closeEntry()
+                    item = zip.nextEntry
+                }
+            }
+            if (!achouBanco) {
+                return ResultadoRestauracao.Falha(
+                    "Esse arquivo não parece ser um backup deste app — falta o banco de dados."
+                )
+            }
+
+            val bancoAtual = context.getDatabasePath("pericia.db")
+            if (bancoAtual.exists()) {
+                val seguranca = File(context.filesDir, "antes_de_restaurar_${System.currentTimeMillis()}.db")
+                runCatching { bancoAtual.copyTo(seguranca, overwrite = true) }
+            }
+
+            fecharBanco()
+            File(temp, "banco/pericia.db").copyTo(bancoAtual, overwrite = true)
+
+            var pastas = 0
+            File(temp, "dados").listFiles()?.forEach { origem ->
+                if (origem.isDirectory) {
+                    origem.copyRecursively(File(context.filesDir, origem.name), overwrite = true)
+                    pastas++
+                } else {
+                    origem.copyTo(File(context.filesDir, origem.name), overwrite = true)
+                }
+            }
+            return ResultadoRestauracao.Sucesso(pastas)
+        } catch (e: Exception) {
+            return ResultadoRestauracao.Falha(e.message ?: "Falha desconhecida ao restaurar.")
+        } finally {
+            temp.deleteRecursively()
         }
     }
 

@@ -43,6 +43,7 @@ import br.com.oanalistaambiental.pericia.dados.TiposOcorrencia
 import br.com.oanalistaambiental.pericia.taxas.TabelaTaxas
 import br.com.oanalistaambiental.pericia.taxas.TaxaUfemg
 import br.com.oanalistaambiental.pericia.exportacao.Exportador
+import br.com.oanalistaambiental.pericia.exportacao.ResultadoRestauracao
 import br.com.oanalistaambiental.pericia.geo.CamadaInfo
 import br.com.oanalistaambiental.pericia.geo.FormatoCoordenada
 import br.com.oanalistaambiental.pericia.geo.Caminhamento
@@ -869,6 +870,25 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             }.onFailure {
                 _mensagem.value = "Falha ao criar backup: ${it.message}"
             }
+        }
+    }
+
+    /**
+     * Restaura um backup por cima dos dados atuais. Quem chama já deve ter confirmado com a
+     * pessoa que isso substitui tudo — aqui só executa. Depois de restaurar, a instrução é
+     * fechar e reabrir o app: os StateFlows já carregados em memória não releem o banco novo
+     * sozinhos, e tentar recarregar cada um aqui é mais risco (esquecer algum) do que pedir o
+     * reinício, que resolve todos de uma vez.
+     */
+    fun restaurarBackup(uri: Uri, aoConcluir: (ResultadoRestauracao) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val ctx = getApplication<Application>()
+            val resultado = runCatching {
+                val entrada = ctx.contentResolver.openInputStream(uri)
+                    ?: return@runCatching ResultadoRestauracao.Falha("Não foi possível abrir o arquivo escolhido.")
+                entrada.use { Exportador.restaurarBackup(ctx, it, fecharBanco = { banco.close() }) }
+            }.getOrElse { ResultadoRestauracao.Falha(it.message ?: "Falha desconhecida ao restaurar.") }
+            aoConcluir(resultado)
         }
     }
 

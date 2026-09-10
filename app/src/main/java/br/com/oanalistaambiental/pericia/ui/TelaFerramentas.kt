@@ -1,6 +1,7 @@
 package br.com.oanalistaambiental.pericia.ui
 
 import android.graphics.BitmapFactory
+import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -14,6 +15,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -21,6 +23,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -35,6 +38,7 @@ import androidx.compose.ui.unit.sp
 import br.com.oanalistaambiental.pericia.captura.Orientacoes
 import br.com.oanalistaambiental.pericia.captura.PosicaoMarcaDagua
 import br.com.oanalistaambiental.pericia.dados.GlossarioSisema
+import br.com.oanalistaambiental.pericia.exportacao.ResultadoRestauracao
 import br.com.oanalistaambiental.pericia.geo.AlturaTrigonometrica
 import br.com.oanalistaambiental.pericia.geo.FormatoCoordenada
 import br.com.oanalistaambiental.pericia.geo.ImportadorCoordenada
@@ -999,6 +1003,14 @@ private fun BackupConfig(vm: CapturaViewModel) {
         ActivityResultContracts.CreateDocument("application/zip")
     ) { uri -> if (uri != null) vm.criarBackup(uri) }
 
+    var uriParaRestaurar by remember { mutableStateOf<Uri?>(null) }
+    var restaurando by remember { mutableStateOf(false) }
+    var resultadoRestauracao by remember { mutableStateOf<ResultadoRestauracao?>(null) }
+
+    val escolherArquivo = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri -> if (uri != null) uriParaRestaurar = uri }
+
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
         Text(
             "Gera um arquivo .zip com o banco de dados e todos os arquivos de campo — se o " +
@@ -1012,6 +1024,71 @@ private fun BackupConfig(vm: CapturaViewModel) {
             val agora = SimpleDateFormat("yyyy-MM-dd_HHmm", Locale.US).format(Date())
             criarArquivo.launch("pericia-campo-backup-$agora.zip")
         }
+
+        Spacer(Modifier.height(18.dp))
+        Text(
+            "Restaurar substitui TUDO que está no aparelho agora pelo conteúdo do backup " +
+                "escolhido — sem como desfazer, além de reinstalar de outro backup depois.",
+            color = Cores.atencaoClaro, fontSize = 11.5.sp, lineHeight = 16.sp
+        )
+        Spacer(Modifier.height(10.dp))
+        BotaoLargo("Restaurar backup (.zip)", habilitado = !restaurando) {
+            escolherArquivo.launch(arrayOf("application/zip", "*/*"))
+        }
+        if (restaurando) {
+            Spacer(Modifier.height(8.dp))
+            Text("Restaurando…", color = Cores.textoFraco, fontSize = 11.5.sp)
+        }
+    }
+
+    uriParaRestaurar?.let { uri ->
+        AlertDialog(
+            onDismissRequest = { uriParaRestaurar = null },
+            title = { Text("Restaurar este backup?") },
+            text = {
+                Text(
+                    "Isso substitui TODOS os dados atuais do app — sessões, fotos, condicionantes, " +
+                        "fichas, tudo — pelo conteúdo deste arquivo. Uma cópia de segurança do " +
+                        "banco atual fica guardada, mas o caminho de volta é manual. Depois de " +
+                        "restaurar, feche e abra o app de novo para ver os dados restaurados."
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val alvo = uri
+                    uriParaRestaurar = null
+                    restaurando = true
+                    vm.restaurarBackup(alvo) { resultado ->
+                        restaurando = false
+                        resultadoRestauracao = resultado
+                    }
+                }) { Text("Restaurar") }
+            },
+            dismissButton = { TextButton(onClick = { uriParaRestaurar = null }) { Text("Cancelar") } }
+        )
+    }
+
+    resultadoRestauracao?.let { resultado ->
+        AlertDialog(
+            onDismissRequest = { resultadoRestauracao = null },
+            title = {
+                Text(if (resultado is ResultadoRestauracao.Sucesso) "Backup restaurado" else "Não restaurou")
+            },
+            text = {
+                Text(
+                    when (resultado) {
+                        is ResultadoRestauracao.Sucesso ->
+                            "Banco de dados e ${resultado.pastasRestauradas} pasta(s) de arquivos " +
+                                "substituídos. Feche e abra o app agora para ver os dados restaurados."
+                        is ResultadoRestauracao.Falha ->
+                            "Nada foi alterado. ${resultado.motivo}"
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { resultadoRestauracao = null }) { Text("OK") }
+            }
+        )
     }
 }
 
