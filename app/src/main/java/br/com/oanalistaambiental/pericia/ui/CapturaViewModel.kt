@@ -565,7 +565,8 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     /** Grava uma condicionante com prazo, opcionalmente com a foto do parecer que a originou. */
     fun salvarCondicionante(
-        descricao: String, formaCumprimento: String?, prazoData: Long, fotoOriginal: File?
+        descricao: String, formaCumprimento: String?, prazoData: Long, fotoOriginal: File?,
+        diasAntecedencia: Int = 15
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
@@ -581,7 +582,8 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 val condicionante = Condicionante(
                     descricao = descricao, formaCumprimento = formaCumprimento,
                     prazoData = prazoData, criadaEm = System.currentTimeMillis(),
-                    fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256
+                    fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256,
+                    diasAntecedencia = diasAntecedencia
                 )
                 val id = banco.inserirCondicionante(condicionante)
                 LembreteCondicionante.agendar(getApplication<Application>(), condicionante.copy(id = id))
@@ -589,6 +591,42 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 _condicionantes.value = banco.condicionantes()
                 _mensagem.value = "Condicionante salva."
             }.onFailure { _mensagem.value = "Falha ao salvar condicionante: ${it.message}" }
+        }
+    }
+
+    /**
+     * Atualiza uma condicionante já salva. Foto nova (se vier) substitui e apaga a antiga; sem
+     * foto nova, mantém a que já estava — editar descrição não deve exigir refotografar o parecer.
+     */
+    fun atualizarCondicionante(
+        existente: Condicionante,
+        descricao: String, formaCumprimento: String?, prazoData: Long, diasAntecedencia: Int,
+        novaFotoOriginal: File?
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                var fotoArquivo = existente.fotoArquivo
+                var fotoSha256 = existente.fotoSha256
+                if (novaFotoOriginal != null && novaFotoOriginal.exists()) {
+                    existente.fotoArquivo?.let { runCatching { File(it).delete() } }
+                    val pasta = File(getApplication<Application>().filesDir, "condicionantes").apply { mkdirs() }
+                    val destino = File(pasta, "parecer-${System.currentTimeMillis()}.jpg")
+                    novaFotoOriginal.copyTo(destino, overwrite = true)
+                    fotoArquivo = destino.absolutePath
+                    fotoSha256 = Integridade.sha256(destino)
+                }
+                val atualizada = existente.copy(
+                    descricao = descricao, formaCumprimento = formaCumprimento,
+                    prazoData = prazoData, diasAntecedencia = diasAntecedencia,
+                    fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256
+                )
+                banco.atualizarCondicionante(atualizada)
+                LembreteCondicionante.cancelar(getApplication<Application>(), atualizada.id)
+                LembreteCondicionante.agendar(getApplication<Application>(), atualizada)
+            }.onSuccess {
+                _condicionantes.value = banco.condicionantes()
+                _mensagem.value = "Condicionante atualizada."
+            }.onFailure { _mensagem.value = "Falha ao atualizar condicionante: ${it.message}" }
         }
     }
 

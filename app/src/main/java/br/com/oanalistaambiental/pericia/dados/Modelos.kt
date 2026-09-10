@@ -128,7 +128,10 @@ data class Condicionante(
     val criadaEm: Long,
     val cumprida: Boolean = false,
     val fotoArquivo: String? = null,
-    val fotoSha256: String? = null
+    val fotoSha256: String? = null,
+    /** Quantos dias antes do prazo o aviso local dispara — por condicionante, não global: uma
+     *  renovação de licença pede mais antecedência que um DMR mensal. */
+    val diasAntecedencia: Int = 15
 )
 
 data class Sessao(

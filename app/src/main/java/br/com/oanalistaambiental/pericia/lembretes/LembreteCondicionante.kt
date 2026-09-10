@@ -9,13 +9,12 @@ import android.content.Intent
 import br.com.oanalistaambiental.pericia.dados.Condicionante
 
 private const val CANAL_ID = "prazos"
-private const val DIAS_ANTECEDENCIA = 15L
 private const val UM_DIA_MS = 24L * 60 * 60 * 1000
 
 /**
  * Aviso local de prazo de condicionante — sem servidor, sem conta, só `AlarmManager` +
  * `NotificationManager` no próprio aparelho. Um alarme por condicionante, disparado
- * [DIAS_ANTECEDENCIA] dias antes do prazo cadastrado.
+ * [Condicionante.diasAntecedencia] dias antes do prazo cadastrado.
  */
 object LembreteCondicionante {
 
@@ -38,7 +37,7 @@ object LembreteCondicionante {
      */
     fun agendar(context: Context, condicionante: Condicionante) {
         if (condicionante.id <= 0L || condicionante.cumprida) return
-        val disparo = condicionante.prazoData - DIAS_ANTECEDENCIA * UM_DIA_MS
+        val disparo = condicionante.prazoData - condicionante.diasAntecedencia * UM_DIA_MS
         if (disparo <= System.currentTimeMillis()) return
         garantirCanal(context)
         val gerenciador = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager

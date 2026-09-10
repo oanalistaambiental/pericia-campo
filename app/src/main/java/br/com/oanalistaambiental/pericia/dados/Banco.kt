@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 10) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 11) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -126,7 +126,8 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 10
                 criada_em INTEGER NOT NULL,
                 cumprida INTEGER NOT NULL DEFAULT 0,
                 foto_arquivo TEXT,
-                foto_sha256 TEXT
+                foto_sha256 TEXT,
+                dias_antecedencia INTEGER NOT NULL DEFAULT 15
             )""")
         db.execSQL("CREATE INDEX idx_foto_sessao ON foto(sessao_id)")
         db.execSQL("CREATE INDEX idx_restricao_foto ON restricao(foto_id)")
@@ -244,6 +245,9 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 10
                     foto_arquivo TEXT,
                     foto_sha256 TEXT
                 )""")
+        }
+        if (old < 11) {
+            db.execSQL("ALTER TABLE condicionante ADD COLUMN dias_antecedencia INTEGER NOT NULL DEFAULT 15")
         }
     }
 
@@ -600,23 +604,33 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 10
     // ---- condicionantes e prazos ----
 
     fun inserirCondicionante(c: Condicionante): Long =
-        writableDatabase.insert("condicionante", null, ContentValues().apply {
-            put("descricao", c.descricao); put("forma_cumprimento", c.formaCumprimento)
-            put("prazo_data", c.prazoData); put("criada_em", c.criadaEm)
-            put("cumprida", if (c.cumprida) 1 else 0)
-            put("foto_arquivo", c.fotoArquivo); put("foto_sha256", c.fotoSha256)
-        })
+        writableDatabase.insert("condicionante", null, valoresCondicionante(c))
+
+    /** Atualiza tudo, menos `cumprida` — isso tem ação própria, `marcarCondicionanteCumprida`. */
+    fun atualizarCondicionante(c: Condicionante) {
+        writableDatabase.update(
+            "condicionante", valoresCondicionante(c), "id=?", arrayOf(c.id.toString())
+        )
+    }
+
+    private fun valoresCondicionante(c: Condicionante) = ContentValues().apply {
+        put("descricao", c.descricao); put("forma_cumprimento", c.formaCumprimento)
+        put("prazo_data", c.prazoData); put("criada_em", c.criadaEm)
+        put("cumprida", if (c.cumprida) 1 else 0)
+        put("foto_arquivo", c.fotoArquivo); put("foto_sha256", c.fotoSha256)
+        put("dias_antecedencia", c.diasAntecedencia)
+    }
 
     fun condicionantes(): List<Condicionante> {
         val out = mutableListOf<Condicionante>()
         readableDatabase.rawQuery(
             "SELECT id, descricao, forma_cumprimento, prazo_data, criada_em, cumprida," +
-                " foto_arquivo, foto_sha256 FROM condicionante ORDER BY prazo_data ASC", null
+                " foto_arquivo, foto_sha256, dias_antecedencia FROM condicionante ORDER BY prazo_data ASC", null
         ).use { c ->
             while (c.moveToNext()) out += Condicionante(
                 id = c.getLong(0), descricao = c.getString(1), formaCumprimento = c.getString(2),
                 prazoData = c.getLong(3), criadaEm = c.getLong(4), cumprida = c.getInt(5) != 0,
-                fotoArquivo = c.getString(6), fotoSha256 = c.getString(7)
+                fotoArquivo = c.getString(6), fotoSha256 = c.getString(7), diasAntecedencia = c.getInt(8)
             )
         }
         return out
