@@ -163,8 +163,17 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     // ------------------------------------------------------------------ pacote
 
-    private fun abrirPacote() {
+    /**
+     * Recarrega o pacote de camadas.
+     *
+     * Publica de proposito: alem da chamada em `init`, a tela de configuracoes pode chamar de
+     * novo depois que o perito copia `mg-base.gpkg` para o aparelho. Sem isso, quem instalasse
+     * o pacote real com o app ja aberto so veria o efeito depois de forcar o app a fechar — o
+     * pacote so era lido uma vez, na criacao do ViewModel.
+     */
+    fun abrirPacote() {
         viewModelScope.launch(Dispatchers.IO) {
+            runCatching { consulta?.close() }
             runCatching {
                 val arquivo = if (arquivoPacote.exists()) arquivoPacote else copiarExemploSeNecessario()
                 val c = ConsultaRestricao.abrir(arquivo)

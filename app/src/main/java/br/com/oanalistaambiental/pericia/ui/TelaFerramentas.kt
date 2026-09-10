@@ -532,6 +532,18 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                 )
 
                 Rotulo("PACOTE DE CAMADAS")
+                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+                    BotaoLargo("Recarregar pacote") {
+                        vm.abrirPacote()
+                        vm.avisar("Recarregando o pacote de camadas…")
+                    }
+                    Text(
+                        "Use depois de copiar um pacote novo para o aparelho — sem isto, o app " +
+                            "só lê o arquivo de novo ao reabrir.",
+                        color = Cores.textoFraco, fontSize = 11.sp, lineHeight = 15.sp,
+                        modifier = Modifier.padding(top = 6.dp)
+                    )
+                }
                 if (camadas.isEmpty()) {
                     Column(
                         Modifier.padding(16.dp).fillMaxWidth()
