@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Perícia Campo</string>
+    <string name="atalho_camera_curto">Câmera</string>
+    <string name="atalho_camera_longo">Câmera de perícia</string>
 </resources>

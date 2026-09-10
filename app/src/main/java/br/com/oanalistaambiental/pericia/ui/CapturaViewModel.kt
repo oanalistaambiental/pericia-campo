@@ -15,8 +15,10 @@ import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.Foto
 import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
 import br.com.oanalistaambiental.pericia.dados.Sessao
+import br.com.oanalistaambiental.pericia.dados.TiposOcorrencia
 import br.com.oanalistaambiental.pericia.exportacao.Exportador
 import br.com.oanalistaambiental.pericia.geo.CamadaInfo
+import br.com.oanalistaambiental.pericia.geo.CircunscricaoHidrografica
 import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.ConsultaRestricao
 import br.com.oanalistaambiental.pericia.geo.PontoConsulta
@@ -48,6 +50,10 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _mensagem = MutableStateFlow<String?>(null)
     val mensagem: StateFlow<String?> = _mensagem
+
+    /** Dado, nao codigo (ver `dados/Modelos.kt`): comeca com o padrao embutido, ate o asset carregar. */
+    private val _tiposOcorrencia = MutableStateFlow(TiposOcorrencia.padrao)
+    val tiposOcorrencia: StateFlow<List<String>> = _tiposOcorrencia
 
     private val _fotosDaSessao = MutableStateFlow<List<Foto>>(emptyList())
     val fotosDaSessao: StateFlow<List<Foto>> = _fotosDaSessao
@@ -182,6 +188,40 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         return destino
     }
 
+    // ------------------------------------------------------------------ circunscricao hidrografica
+
+    /**
+     * Copia unica do pacote de Circunscricoes Hidrograficas (dado real do IGAM), do mesmo jeito
+     * que [copiarExemploSeNecessario] copia o pacote de exemplo — sempre embarcado, nunca
+     * opcional, porque cobre o estado inteiro e nao depende de instalar nada em campo.
+     */
+    private fun copiarBaciasSeNecessario(): File {
+        val destino = File(getApplication<Application>().filesDir, "pacotes/circunscricoes-hidrograficas.gpkg")
+        if (!destino.exists()) {
+            destino.parentFile?.mkdirs()
+            getApplication<Application>().assets.open("pacotes/circunscricoes-hidrograficas.gpkg").use { entrada ->
+                destino.outputStream().use { saida -> entrada.copyTo(saida) }
+            }
+        }
+        return destino
+    }
+
+    private val _bacia = MutableStateFlow<CircunscricaoHidrografica.Info?>(null)
+    val bacia: StateFlow<CircunscricaoHidrografica.Info?> = _bacia
+
+    private val _consultandoBacia = MutableStateFlow(false)
+    val consultandoBacia: StateFlow<Boolean> = _consultandoBacia
+
+    fun consultarBaciaHidrografica(lat: Double, lon: Double) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _consultandoBacia.value = true
+            _bacia.value = runCatching {
+                CircunscricaoHidrografica.localizar(copiarBaciasSeNecessario(), lat, lon)
+            }.getOrNull()
+            _consultandoBacia.value = false
+        }
+    }
+
     init {
         recarregar()
         // O GNSS NAO e iniciado aqui: sem permissao a chamada e recusada em silencio e nada
@@ -189,6 +229,11 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         estadoCampo.economiaDeBateria = _economiaDeBateria.value
         abrirPacote()
         observarPosicaoParaRetorno()
+        viewModelScope.launch(Dispatchers.IO) {
+            _tiposOcorrencia.value = TiposOcorrencia.carregar {
+                getApplication<Application>().assets.open("tipos_ocorrencia.json")
+            }
+        }
     }
 
     override fun onCleared() {

@@ -74,6 +74,11 @@ data class RegistroRestricao(
 
 /** Tipos de ocorrencia do formulario rapido de pericia. */
 object TiposOcorrencia {
+    /**
+     * Usado quando `assets/tipos_ocorrencia.json` falta ou vem corrompido — o app nunca abre o
+     * formulário rápido sem opção nenhuma. Fora isso, quem manda é o arquivo: acrescentar uma
+     * categoria passou a ser editar dado, não recompilar o app.
+     */
     val padrao = listOf(
         "Dano à APP",
         "Corte irregular de vegetação",
@@ -84,4 +89,10 @@ object TiposOcorrencia {
         "Lançamento de efluente",
         "Outro"
     )
+
+    fun carregar(abrir: () -> java.io.InputStream): List<String> = runCatching {
+        val texto = abrir().bufferedReader().use { it.readText() }
+        val arr = org.json.JSONArray(texto)
+        (0 until arr.length()).map { arr.getString(it) }
+    }.getOrNull()?.takeIf { it.isNotEmpty() } ?: padrao
 }

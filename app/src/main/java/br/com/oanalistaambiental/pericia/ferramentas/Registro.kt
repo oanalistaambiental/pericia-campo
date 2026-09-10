@@ -4,7 +4,9 @@ import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import br.com.oanalistaambiental.pericia.enquadramento.ui.TelaEnquadramento
 import br.com.oanalistaambiental.pericia.ui.CapturaViewModel
+import br.com.oanalistaambiental.pericia.ui.TelaBaciaHidrografica
 import br.com.oanalistaambiental.pericia.ui.TelaBussola
+import br.com.oanalistaambiental.pericia.ui.TelaGlossario
 import br.com.oanalistaambiental.pericia.ui.TelaClinometro
 import br.com.oanalistaambiental.pericia.ui.TelaConfiguracoes
 import br.com.oanalistaambiental.pericia.ui.TelaIrParaCoordenada
@@ -83,6 +85,18 @@ object Registro {
             tela = { nav -> TelaEnquadramento(nav.voltar) }
         ),
         Ferramenta(
+            id = "bacia_hidrografica",
+            nome = "Bacia hidrográfica",
+            resumo = "Em que Circunscrição Hidrográfica (CH) o ponto atual cai — dado do IGAM.",
+            grupo = Grupo.CAMPO,
+            icone = IconeGaveta.BACIA,
+            exige = setOf(Recurso.GNSS),
+            limite = "Fronteira simplificada a partir da base do IGAM — pode variar alguns " +
+                "metros do limite oficial. Não é indício de restrição, só contexto para " +
+                "outorga.",
+            tela = { nav -> TelaBaciaHidrografica(vmCaptura(), nav.voltar) }
+        ),
+        Ferramenta(
             id = "prazo_renovacao",
             nome = "Prazo de renovação",
             resumo = "Data-limite para protocolar a renovação, 120 dias antes do vencimento.",
@@ -91,6 +105,16 @@ object Registro {
             limite = "Faz só a conta do art. 12 da DN COPAM 217/2017. Não conhece condicionante " +
                 "nem prazo específico do processo — confirme com a Unidade Regional.",
             tela = { nav -> TelaPrazoRenovacao(nav.voltar) }
+        ),
+        Ferramenta(
+            id = "glossario",
+            nome = "Glossário do SISEMA",
+            resumo = "Siglas do licenciamento ambiental em MG — SEMAD, FEAM, IGAM, IEF e mais.",
+            grupo = Grupo.ENQUADRAR,
+            icone = IconeGaveta.GLOSSARIO,
+            limite = "É referência educativa, não citação de dispositivo legal — o sentido " +
+                "pode variar em detalhe entre normas.",
+            tela = { nav -> TelaGlossario(nav.voltar) }
         ),
         Ferramenta(
             id = "configuracoes",

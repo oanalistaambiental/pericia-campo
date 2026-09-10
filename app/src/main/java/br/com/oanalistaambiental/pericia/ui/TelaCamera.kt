@@ -30,7 +30,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import br.com.oanalistaambiental.pericia.dados.TiposOcorrencia
 import br.com.oanalistaambiental.pericia.geo.Utm
 import kotlinx.coroutines.delay
 import java.io.File
@@ -431,6 +430,7 @@ private fun BotaoOcorrencia(vm: CapturaViewModel, aoTocar: () -> Unit) {
 private fun FormularioRapido(vm: CapturaViewModel, aoFechar: () -> Unit) {
     val selecionado by vm.tipoOcorrencia.collectAsState()
     val obs by vm.observacao.collectAsState()
+    val tipos by vm.tiposOcorrencia.collectAsState()
 
     Column(
         Modifier.fillMaxWidth().padding(12.dp)
@@ -440,7 +440,7 @@ private fun FormularioRapido(vm: CapturaViewModel, aoFechar: () -> Unit) {
         Text("TIPO DE OCORRÊNCIA", color = Cores.textoFraco, fontSize = 11.sp, letterSpacing = 1.sp)
         Spacer(Modifier.height(8.dp))
         LazyColumn(Modifier.heightIn(max = 200.dp)) {
-            items(TiposOcorrencia.padrao) { tipo ->
+            items(tipos) { tipo ->
                 Text(
                     tipo,
                     color = if (selecionado == tipo) Cores.bomClaro else Cores.texto,

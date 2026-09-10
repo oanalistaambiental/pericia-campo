@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.oanalistaambiental.pericia.captura.Orientacoes
+import br.com.oanalistaambiental.pericia.dados.GlossarioSisema
 import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.PontosLocais
 import br.com.oanalistaambiental.pericia.geo.PrazoRenovacao
@@ -755,6 +756,106 @@ private fun Linha(rotulo: String, valor: String, cor: Color) {
         Mono(valor, cor, 12)
     }
     HorizontalDivider(color = Cores.linha)
+}
+
+/**
+ * Em que Circunscricao Hidrografica (CH) o ponto atual cai — dado real do IGAM.
+ *
+ * Consulta automaticamente a cada posicao nova, do mesmo jeito que o alerta de restricao ja
+ * faz — so que sem virar aviso: estar numa CH nao e restricao, e contexto para uma conversa de
+ * outorga.
+ */
+@Composable
+fun TelaBaciaHidrografica(vm: CapturaViewModel, voltar: () -> Unit) {
+    val p by vm.estadoCampo.posicao.collectAsState()
+    val bacia by vm.bacia.collectAsState()
+    val consultando by vm.consultandoBacia.collectAsState()
+
+    LaunchedEffect(p.lat, p.lon) {
+        val lat = p.lat
+        val lon = p.lon
+        if (lat != null && lon != null) vm.consultarBaciaHidrografica(lat, lon)
+    }
+
+    Column(
+        Modifier.fillMaxSize().background(Cores.fundo)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+    ) {
+        Cabecalho("Bacia hidrográfica", voltar)
+        SeloPrecisao(p)
+
+        Column(
+            Modifier.fillMaxWidth().padding(top = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            when {
+                p.lat == null -> Vazio(
+                    "Sem coordenada",
+                    "Aguarde o GNSS fixar para consultar a Circunscrição Hidrográfica do ponto."
+                )
+                consultando && bacia == null -> Text(
+                    "Consultando…", color = Cores.textoFraco, fontSize = 13.sp
+                )
+                bacia == null -> Vazio(
+                    "Fora de qualquer CH mapeada",
+                    "O ponto atual não caiu em nenhuma Circunscrição Hidrográfica de Minas " +
+                        "Gerais — comum perto da divisa com outro estado."
+                )
+                else -> {
+                    val b = bacia!!
+                    Text(b.sigla, color = Cores.texto, fontSize = 44.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        b.nome.substringAfter(": ").ifBlank { b.nome },
+                        color = Cores.bomClaro, fontSize = 16.sp, fontWeight = FontWeight.SemiBold,
+                        textAlign = TextAlign.Center, modifier = Modifier.padding(horizontal = 24.dp)
+                    )
+                    Spacer(Modifier.height(20.dp))
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                        Campo(
+                            "Comitê de bacia (CBH)",
+                            if (b.temComiteDeBacia) (b.situacaoComite ?: "sim") else "não instalado"
+                        )
+                        b.areaKm2?.let { Campo("Área da CH", "%.0f km²".format(it)) }
+                        b.decreto?.let { Campo("Decreto de criação", it) }
+                    }
+                }
+            }
+
+            Ajuda(
+                "O que é uma Circunscrição Hidrográfica",
+                "É a unidade de planejamento e gestão de recursos hídricos que o IGAM usa em " +
+                    "Minas Gerais — a referência para saber a quem procurar antes de uma " +
+                    "conversa de outorga. Não é indício de restrição nenhuma, só contexto: " +
+                    "estar numa CH não impede nada, é o recorte administrativo do lugar.\n\n" +
+                    "Dado real do IGAM/SEMAD (base GEIRH), simplificado para caber no " +
+                    "aplicativo — a fronteira exata pode variar alguns metros do original."
+            )
+        }
+    }
+}
+
+/** Glossário de siglas do SISEMA — referência, sem busca por enquanto: a lista cabe na tela. */
+@Composable
+fun TelaGlossario(voltar: () -> Unit) {
+    Column(
+        Modifier.fillMaxSize().background(Cores.fundo)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+    ) {
+        Cabecalho("Glossário do SISEMA", voltar)
+        LazyColumn(Modifier.weight(1f)) {
+            items(GlossarioSisema.termos) { t ->
+                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                    Text(t.sigla, color = Cores.bomClaro, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(2.dp))
+                    Text(t.significado, color = Cores.texto, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(4.dp))
+                    Text(t.descricao, color = Cores.textoFraco, fontSize = 12.sp, lineHeight = 17.sp)
+                }
+                HorizontalDivider(color = Cores.linha)
+            }
+            item { Spacer(Modifier.height(24.dp)) }
+        }
+    }
 }
 
 @Composable

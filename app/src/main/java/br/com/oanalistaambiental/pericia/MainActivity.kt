@@ -42,10 +42,18 @@ import br.com.oanalistaambiental.pericia.ui.*
 import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
+    companion object {
+        /** Mesma action declarada em res/xml/shortcuts.xml — mantenha as duas em sincronia. */
+        const val ACAO_ABRIR_CAMERA = "br.com.oanalistaambiental.pericia.ABRIR_CAMERA"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // targetSdk 35+ impoe edge-to-edge: sem isto o conteudo desenha sob a barra de status.
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        // So vale na abertura fria, vinda do atalho estatico do launcher (mantido pressionado
+        // no icone). Reabrir o app depois, do jeito normal, cai na gaveta como sempre.
+        val abrirNaCamera = intent?.action == ACAO_ABRIR_CAMERA
         setContent {
             MaterialTheme(
                 colorScheme = darkColorScheme(
@@ -55,7 +63,7 @@ class MainActivity : ComponentActivity() {
                     onSurface = Cores.texto
                 )
             ) {
-                Surface(color = Cores.fundo) { App() }
+                Surface(color = Cores.fundo) { App(abrirNaCamera) }
             }
         }
     }
@@ -71,14 +79,17 @@ class MainActivity : ComponentActivity() {
 private enum class Rota { GAVETA, CAMERA, SESSOES, DETALHE, FERRAMENTA }
 
 @Composable
-private fun App() {
+private fun App(abrirNaCamera: Boolean = false) {
     val vm: CapturaViewModel = viewModel()
     val contexto = LocalContext.current
     /**
      * `rememberSaveable`, nao `remember`. Com `remember`, girar o aparelho recriava a Activity
      * e jogava o perito de volta na camera no meio do que estivesse fazendo.
+     *
+     * O valor inicial olha [abrirNaCamera] (atalho estatico do launcher): so importa na
+     * primeira composicao, entao nao precisa entrar na chave do `rememberSaveable`.
      */
-    var rota by rememberSaveable { mutableStateOf(Rota.GAVETA) }
+    var rota by rememberSaveable { mutableStateOf(if (abrirNaCamera) Rota.CAMERA else Rota.GAVETA) }
     /** Id da ferramenta aberta, quando [rota] e FERRAMENTA. */
     var ferramentaId by rememberSaveable { mutableStateOf<String?>(null) }
 

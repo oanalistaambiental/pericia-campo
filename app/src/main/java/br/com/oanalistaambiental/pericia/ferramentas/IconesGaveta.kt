@@ -36,7 +36,9 @@ enum class IconeGaveta {
     ALVO,
     ENQUADRAMENTO,
     CAMADAS,
-    CALENDARIO
+    CALENDARIO,
+    BACIA,
+    GLOSSARIO
 }
 
 @Composable
@@ -167,6 +169,47 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                 drawLine(cor, Offset(w * 0.70f, h * 0.1f), Offset(w * 0.70f, h * 0.24f), traco.width, StrokeCap.Round)
                 // Marca de um dia destacado, o prazo.
                 drawCircle(cor, w * 0.07f, Offset(w * 0.6f, h * 0.6f), style = Fill)
+            }
+
+            IconeGaveta.BACIA -> {
+                // Tres ondas empilhadas — agua, sem ser o alvo da regua nem o losango de camadas.
+                for (i in 0..2) {
+                    val cy = h * (0.32f + i * 0.22f)
+                    val onda = Path().apply {
+                        moveTo(w * 0.1f, cy)
+                        var x = w * 0.1f
+                        var lado = -1f
+                        while (x < w * 0.9f) {
+                            val fimSeg = kotlin.math.min(x + w * 0.2f, w * 0.9f)
+                            quadraticTo(x + (fimSeg - x) / 2, cy + lado * h * 0.06f, fimSeg, cy)
+                            x = fimSeg
+                            lado = -lado
+                        }
+                    }
+                    drawPath(onda, cor, style = traco)
+                }
+            }
+
+            IconeGaveta.GLOSSARIO -> {
+                // Livro aberto: duas paginas, lombada ao centro.
+                val lombada = Offset(w * 0.5f, h * 0.16f)
+                val pE = Path().apply {
+                    moveTo(lombada.x, lombada.y)
+                    lineTo(w * 0.12f, h * 0.24f)
+                    lineTo(w * 0.12f, h * 0.82f)
+                    lineTo(lombada.x, h * 0.74f)
+                    close()
+                }
+                val pD = Path().apply {
+                    moveTo(lombada.x, lombada.y)
+                    lineTo(w * 0.88f, h * 0.24f)
+                    lineTo(w * 0.88f, h * 0.82f)
+                    lineTo(lombada.x, h * 0.74f)
+                    close()
+                }
+                drawPath(pE, cor, style = traco)
+                drawPath(pD, cor, style = traco)
+                drawLine(cor, lombada, Offset(lombada.x, h * 0.74f), traco.width * 0.8f)
             }
 
             IconeGaveta.CAMADAS -> {
