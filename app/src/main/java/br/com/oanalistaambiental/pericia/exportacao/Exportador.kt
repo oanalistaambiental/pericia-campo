@@ -6,6 +6,7 @@ import android.net.Uri
 import androidx.core.content.FileProvider
 import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.Foto
+import br.com.oanalistaambiental.pericia.dados.PontoSalvo
 import br.com.oanalistaambiental.pericia.dados.Sessao
 import br.com.oanalistaambiental.pericia.geo.Utm
 import java.io.File
@@ -208,6 +209,73 @@ object Exportador {
         return destino
     }
 
+    // ------------------------------------------------------------------ pontos avulsos
+
+    /**
+     * Exportacao dos pontos SALVOS (marca e guarda, nao presos a foto nem a medicao) — GPX,
+     * KML puro (sem imagem, ao contrario do KMZ das fotos) e CSV, para quem prefere abrir numa
+     * planilha.
+     */
+    fun gpxPontos(pontos: List<PontoSalvo>, destino: File): File {
+        val sb = StringBuilder()
+        sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append("\n")
+        sb.append("""<gpx version="1.1" creator="Kit de Pericia Ambiental" """)
+            .append("""xmlns="http://www.topografix.com/GPX/1/1">""").append("\n")
+        pontos.forEach { p ->
+            sb.append("""<wpt lat="%.7f" lon="%.7f">""".format(Locale.US, p.lat, p.lon)).append("\n")
+            sb.append("<time>").append(fmtIso.get()!!.format(Date(p.instante))).append("</time>\n")
+            sb.append("<name>").append(xml(p.nome)).append("</name>\n")
+            sb.append("</wpt>\n")
+        }
+        sb.append("</gpx>\n")
+        destino.writeText(sb.toString(), Charsets.UTF_8)
+        return destino
+    }
+
+    fun kmlPontos(pontos: List<PontoSalvo>, destino: File): File {
+        val sb = StringBuilder()
+        sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append("\n")
+        sb.append("""<kml xmlns="http://www.opengis.net/kml/2.2"><Document>""").append("\n")
+        pontos.forEach { p ->
+            val utm = Utm.projetar(p.lat, p.lon)
+            sb.append("<Placemark>\n")
+            sb.append("<name>").append(xml(p.nome)).append("</name>\n")
+            sb.append("<description>").append(xml("UTM SIRGAS 2000: ${utm.formatado()}")).append("</description>\n")
+            sb.append("<TimeStamp><when>").append(fmtIso.get()!!.format(Date(p.instante))).append("</when></TimeStamp>\n")
+            sb.append("<Point><coordinates>")
+                .append("%.7f,%.7f".format(Locale.US, p.lon, p.lat))
+                .append("</coordinates></Point>\n")
+            sb.append("</Placemark>\n")
+        }
+        sb.append("</Document></kml>\n")
+        destino.writeText(sb.toString(), Charsets.UTF_8)
+        return destino
+    }
+
+    fun csvPontos(pontos: List<PontoSalvo>, destino: File): File {
+        val sb = StringBuilder()
+        sb.append("nome;data_hora;latitude;longitude;datum;utm_zona;utm_e;utm_n;precisao_m\n")
+        pontos.forEach { p ->
+            val utm = Utm.projetar(p.lat, p.lon)
+            sb.append(
+                listOf(
+                    p.nome,
+                    fmtBr.get()!!.format(Date(p.instante)),
+                    "%.7f".format(Locale.US, p.lat),
+                    "%.7f".format(Locale.US, p.lon),
+                    "SIRGAS 2000 (EPSG:4674)",
+                    "${utm.zona}${if (utm.hemisferioSul) "S" else "N"}",
+                    "%.2f".format(Locale.US, utm.easting),
+                    "%.2f".format(Locale.US, utm.northing),
+                    p.precisaoM?.let { "%.1f".format(Locale.US, it) } ?: ""
+                ).joinToString(";") { escapar(it) }
+            )
+            sb.append("\n")
+        }
+        destino.writeBytes(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()) + sb.toString().toByteArray(Charsets.UTF_8))
+        return destino
+    }
+
     // ------------------------------------------------------- compartilhamento
 
     /**
@@ -261,6 +329,7 @@ object Exportador {
         "pdf" -> "application/pdf"
         "csv" -> "text/csv"
         "kmz" -> "application/vnd.google-earth.kmz"
+        "kml" -> "application/vnd.google-earth.kml+xml"
         "gpx" -> "application/gpx+xml"
         // Sem isto a prova de integridade saia como "*/*", e varios aplicativos de e-mail
         // e mensagem recusam anexo de tipo desconhecido — o documento existia e nao chegava.

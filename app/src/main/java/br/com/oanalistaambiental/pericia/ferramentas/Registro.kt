@@ -8,6 +8,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaAlturaTrigonometrica
 import br.com.oanalistaambiental.pericia.ui.TelaBaciaHidrografica
 import br.com.oanalistaambiental.pericia.ui.TelaBussola
 import br.com.oanalistaambiental.pericia.ui.TelaGlossario
+import br.com.oanalistaambiental.pericia.ui.TelaPontosSalvos
 import br.com.oanalistaambiental.pericia.ui.TelaClinometro
 import br.com.oanalistaambiental.pericia.ui.TelaConfiguracoes
 import br.com.oanalistaambiental.pericia.ui.TelaIrParaCoordenada
@@ -84,6 +85,17 @@ object Registro {
                 "substitui o enquadramento do órgão ambiental e não vincula a Administração " +
                 "Pública. A modalidade definitiva é a da Unidade Regional.",
             tela = { nav -> TelaEnquadramento(nav.voltar) }
+        ),
+        Ferramenta(
+            id = "pontos_salvos",
+            nome = "Pontos salvos",
+            resumo = "Marca e guarda a posição atual — não presa a foto nem a medição.",
+            grupo = Grupo.CAMPO,
+            icone = IconeGaveta.PINO,
+            exige = setOf(Recurso.GNSS),
+            limite = "Guarda só coordenada e nome — sem hash nem cadeia de custódia. Para prova " +
+                "de campo, use a câmera de perícia.",
+            tela = { nav -> TelaPontosSalvos(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(
             id = "altura_trigonometrica",

@@ -1,5 +1,19 @@
 package br.com.oanalistaambiental.pericia.dados
 
+/**
+ * Um ponto avulso, marcado a partir da posicao do GNSS ou de uma coordenada digitada — nao
+ * preso a foto nem a sessao. Existe para o "marca e guarda" que faltava: hoje so se salva
+ * coordenada junto de uma foto ou dentro de um caminhamento de medicao.
+ */
+data class PontoSalvo(
+    val id: Long = 0,
+    val nome: String,
+    val lat: Double,
+    val lon: Double,
+    val precisaoM: Float?,
+    val instante: Long
+)
+
 data class Sessao(
     val id: Long = 0,
     val titulo: String,

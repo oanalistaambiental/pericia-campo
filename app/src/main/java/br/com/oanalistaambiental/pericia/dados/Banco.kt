@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 3) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 4) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -52,6 +52,13 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 3)
                 data_extracao TEXT, tolerancia_m REAL,
                 FOREIGN KEY(foto_id) REFERENCES foto(id)
             )""")
+        db.execSQL("""
+            CREATE TABLE ponto (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
+                instante INTEGER NOT NULL
+            )""")
         db.execSQL("CREATE INDEX idx_foto_sessao ON foto(sessao_id)")
         db.execSQL("CREATE INDEX idx_restricao_foto ON restricao(foto_id)")
     }
@@ -66,6 +73,15 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 3)
             db.execSQL("ALTER TABLE sessao ADD COLUMN carimbo_instante INTEGER")
             db.execSQL("ALTER TABLE sessao ADD COLUMN carimbo_autoridade TEXT")
             db.execSQL("ALTER TABLE sessao ADD COLUMN carimbo_credenciado INTEGER NOT NULL DEFAULT 0")
+        }
+        if (old < 4) {
+            db.execSQL("""
+                CREATE TABLE ponto (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
+                    instante INTEGER NOT NULL
+                )""")
         }
     }
 
@@ -188,6 +204,31 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 3)
                 " ORDER BY instante DESC LIMIT ?", arrayOf(limite.toString())
         ).use { c -> while (c.moveToNext()) out += lerFoto(c) }
         return out
+    }
+
+    // ---- pontos avulsos ----
+
+    fun salvarPonto(p: PontoSalvo): Long =
+        writableDatabase.insert("ponto", null, ContentValues().apply {
+            put("nome", p.nome); put("lat", p.lat); put("lon", p.lon)
+            put("precisao_m", p.precisaoM); put("instante", p.instante)
+        })
+
+    fun pontosSalvos(): List<PontoSalvo> {
+        val out = mutableListOf<PontoSalvo>()
+        readableDatabase.rawQuery(
+            "SELECT id, nome, lat, lon, precisao_m, instante FROM ponto ORDER BY instante DESC", null
+        ).use { c ->
+            while (c.moveToNext()) out += PontoSalvo(
+                id = c.getLong(0), nome = c.getString(1), lat = c.getDouble(2), lon = c.getDouble(3),
+                precisaoM = if (c.isNull(4)) null else c.getFloat(4), instante = c.getLong(5)
+            )
+        }
+        return out
+    }
+
+    fun excluirPonto(id: Long) {
+        writableDatabase.delete("ponto", "id=?", arrayOf(id.toString()))
     }
 
     fun foto(id: Long): Foto? =

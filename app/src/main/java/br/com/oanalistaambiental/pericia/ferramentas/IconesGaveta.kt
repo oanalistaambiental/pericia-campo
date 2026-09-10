@@ -39,7 +39,8 @@ enum class IconeGaveta {
     CALENDARIO,
     BACIA,
     GLOSSARIO,
-    ALTURA
+    ALTURA,
+    PINO
 }
 
 @Composable
@@ -189,6 +190,20 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                     }
                     drawPath(onda, cor, style = traco)
                 }
+            }
+
+            IconeGaveta.PINO -> {
+                // Pino de mapa: circulo (a cabeca) com uma ponta triangular descendo ate o chao.
+                val c = Offset(w * 0.5f, h * 0.34f)
+                val r = w * 0.22f
+                drawCircle(cor, r, c, style = traco)
+                val ponta = Path().apply {
+                    moveTo(c.x - r * 0.55f, c.y + r * 0.75f)
+                    lineTo(c.x, h * 0.86f)
+                    lineTo(c.x + r * 0.55f, c.y + r * 0.75f)
+                }
+                drawPath(ponta, cor, style = traco)
+                drawCircle(cor, r * 0.34f, c, style = Fill)
             }
 
             IconeGaveta.ALTURA -> {

@@ -499,6 +499,8 @@ private fun GuiaAteCoordenada(vm: CapturaViewModel, alvo: CapturaViewModel.Alvo,
 
         Spacer(Modifier.height(16.dp))
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+            BotaoLargo("Salvar este ponto") { vm.salvarPonto(alvo.rotulo, alvo.lat, alvo.lon, null) }
+            Spacer(Modifier.height(8.dp))
             BotaoLargo("Definir outra coordenada", aoClicar = aoTrocar)
         }
 
@@ -910,6 +912,89 @@ fun TelaAlturaTrigonometrica(vm: CapturaViewModel, voltar: () -> Unit) {
                     "ângulo é pouco a 5 m e muito a 50 m. Para medida de precisão, use um " +
                     "clinômetro dedicado."
             )
+        }
+    }
+}
+
+/**
+ * Marcar e guardar a posição ATUAL do GNSS, avulsa — não presa a foto nem a caminhamento de
+ * medição. Existe porque hoje só se salva coordenada junto de uma foto ou dentro do polígono da
+ * medição de área; às vezes o que se quer é só marcar um ponto e seguir.
+ */
+@Composable
+fun TelaPontosSalvos(vm: CapturaViewModel, voltar: () -> Unit) {
+    val p by vm.estadoCampo.posicao.collectAsState()
+    val pontos by vm.pontosSalvos.collectAsState()
+    var nome by rememberSaveable { mutableStateOf("") }
+    var confirmarExclusao by rememberSaveable { mutableStateOf<Long?>(null) }
+
+    Column(
+        Modifier.fillMaxSize().background(Cores.fundo)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+    ) {
+        Cabecalho("Pontos salvos", voltar)
+        SeloPrecisao(p)
+
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            OutlinedTextField(
+                value = nome,
+                onValueChange = { nome = it },
+                label = { Text("Nome do ponto (opcional)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(10.dp))
+            BotaoLargo("Salvar este ponto", principal = true, habilitado = p.temPosicao) {
+                vm.salvarPonto(nome, p.lat!!, p.lon!!, p.precisaoM)
+                nome = ""
+            }
+            if (!p.temPosicao) {
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    "Aguarde o GNSS fixar para salvar.",
+                    color = Cores.atencaoClaro, fontSize = 11.5.sp
+                )
+            }
+        }
+
+        if (pontos.isNotEmpty()) {
+            Rotulo("EXPORTAR ${pontos.size} PONTO(S)")
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.weight(1f)) { BotaoLargo("GPX") { vm.exportarPontos("gpx") } }
+                Box(Modifier.weight(1f)) { BotaoLargo("KML") { vm.exportarPontos("kml") } }
+                Box(Modifier.weight(1f)) { BotaoLargo("CSV") { vm.exportarPontos("csv") } }
+            }
+        }
+
+        if (pontos.isEmpty()) {
+            Vazio(
+                "Nenhum ponto salvo",
+                "Toque em \"Salvar este ponto\" quando estiver no local que quer registrar."
+            )
+        } else {
+            LazyColumn(Modifier.weight(1f)) {
+                items(pontos) { pt ->
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(pt.nome, color = Cores.texto, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
+                            Spacer(Modifier.height(2.dp))
+                            Mono("%.6f, %.6f".format(java.util.Locale.US, pt.lat, pt.lon), Cores.textoFraco, 10)
+                        }
+                        Text(
+                            if (confirmarExclusao == pt.id) "confirmar?" else "excluir",
+                            color = Cores.alertaClaro, fontSize = 12.sp,
+                            modifier = Modifier.clickable {
+                                if (confirmarExclusao == pt.id) { vm.excluirPonto(pt.id); confirmarExclusao = null }
+                                else confirmarExclusao = pt.id
+                            }.padding(8.dp)
+                        )
+                    }
+                    HorizontalDivider(color = Cores.linha)
+                }
+                item { Spacer(Modifier.height(24.dp)) }
+            }
         }
     }
 }

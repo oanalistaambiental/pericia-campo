@@ -14,6 +14,7 @@ import br.com.oanalistaambiental.pericia.captura.ProvaFoto
 import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.Foto
 import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
+import br.com.oanalistaambiental.pericia.dados.PontoSalvo
 import br.com.oanalistaambiental.pericia.dados.Sessao
 import br.com.oanalistaambiental.pericia.dados.TiposOcorrencia
 import br.com.oanalistaambiental.pericia.exportacao.Exportador
@@ -191,6 +192,54 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
      * que [copiarExemploSeNecessario] copia o pacote de exemplo — sempre embarcado, nunca
      * opcional, porque cobre o estado inteiro e nao depende de instalar nada em campo.
      */
+    // ------------------------------------------------------------------ pontos avulsos
+
+    private val _pontosSalvos = MutableStateFlow<List<PontoSalvo>>(emptyList())
+    val pontosSalvos: StateFlow<List<PontoSalvo>> = _pontosSalvos
+
+    private fun recarregarPontos() {
+        viewModelScope.launch(Dispatchers.IO) { _pontosSalvos.value = banco.pontosSalvos() }
+    }
+
+    /** Marca e guarda a posicao ATUAL do GNSS (ou uma coordenada ja lida, ex.: a digitada em
+     * "ir para uma coordenada") — nao presa a foto nem a um caminhamento de medicao. */
+    fun salvarPonto(nome: String, lat: Double, lon: Double, precisaoM: Float?) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val rotulo = nome.ifBlank {
+                "Ponto " + java.text.SimpleDateFormat("dd/MM HH:mm", java.util.Locale("pt", "BR"))
+                    .format(java.util.Date())
+            }
+            banco.salvarPonto(PontoSalvo(nome = rotulo, lat = lat, lon = lon, precisaoM = precisaoM, instante = System.currentTimeMillis()))
+            recarregarPontos()
+            _mensagem.value = "Ponto salvo: $rotulo"
+        }
+    }
+
+    fun excluirPonto(id: Long) {
+        viewModelScope.launch(Dispatchers.IO) { banco.excluirPonto(id); recarregarPontos() }
+    }
+
+    fun exportarPontos(formato: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val ctx = getApplication<Application>()
+            val pontos = _pontosSalvos.value
+            if (pontos.isEmpty()) { _mensagem.value = "Nenhum ponto salvo para exportar."; return@launch }
+            val pasta = File(ctx.filesDir, "pontos").apply { mkdirs() }
+            val base = "pontos-salvos-${System.currentTimeMillis()}"
+            runCatching {
+                val arquivo: File = when (formato) {
+                    "gpx" -> Exportador.gpxPontos(pontos, File(pasta, "$base.gpx"))
+                    "kml" -> Exportador.kmlPontos(pontos, File(pasta, "$base.kml"))
+                    "csv" -> Exportador.csvPontos(pontos, File(pasta, "$base.csv"))
+                    else -> throw IllegalArgumentException("Formato desconhecido: $formato")
+                }
+                withContext(Dispatchers.Main) {
+                    Exportador.compartilhar(ctx, listOf(arquivo), "Pontos salvos")
+                }
+            }.onFailure { _mensagem.value = "Falha ao exportar: ${it.message}" }
+        }
+    }
+
     private val _bacia = MutableStateFlow<CircunscricaoHidrografica.Info?>(null)
     val bacia: StateFlow<CircunscricaoHidrografica.Info?> = _bacia
 
@@ -216,6 +265,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         estadoCampo.economiaDeBateria = _economiaDeBateria.value
         abrirPacote()
         observarPosicaoParaRetorno()
+        recarregarPontos()
         viewModelScope.launch(Dispatchers.IO) {
             _tiposOcorrencia.value = TiposOcorrencia.carregar {
                 getApplication<Application>().assets.open("tipos_ocorrencia.json")
