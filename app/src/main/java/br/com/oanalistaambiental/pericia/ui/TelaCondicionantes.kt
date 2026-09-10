@@ -7,9 +7,11 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -24,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import br.com.oanalistaambiental.pericia.dados.Condicionante
+import br.com.oanalistaambiental.pericia.dados.Empreendimento
 import br.com.oanalistaambiental.pericia.ocr.LeitorDeTexto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -46,10 +49,15 @@ private fun interpretarDataCondicionante(texto: String): LocalDate? =
 @Composable
 fun TelaCondicionantes(vm: CapturaViewModel, voltar: () -> Unit) {
     val condicionantes by vm.condicionantes.collectAsState()
+    val empreendimentos by vm.empreendimentos.collectAsState()
     var novaAberta by rememberSaveable { mutableStateOf(false) }
     var editandoId by rememberSaveable { mutableStateOf<Long?>(null) }
+    var filtroEmpreendimentoId by rememberSaveable { mutableStateOf<Long?>(null) }
     val editando = remember(editandoId, condicionantes) {
         editandoId?.let { id -> condicionantes.firstOrNull { it.id == id } }
+    }
+    val condicionantesFiltradas = remember(condicionantes, filtroEmpreendimentoId) {
+        filtroEmpreendimentoId?.let { id -> condicionantes.filter { it.empreendimentoId == id } } ?: condicionantes
     }
     val contexto = LocalContext.current
 
@@ -85,21 +93,49 @@ fun TelaCondicionantes(vm: CapturaViewModel, voltar: () -> Unit) {
 
         if (novaAberta || editando != null) {
             FormularioCondicionante(
-                vm, editando = editando,
+                vm, editando = editando, empreendimentos = empreendimentos,
                 aoTerminar = { novaAberta = false; editandoId = null }
             )
         } else {
             Box(Modifier.padding(16.dp)) {
                 BotaoLargo("+ Nova condicionante", principal = true) { novaAberta = true }
             }
-            ListaCondicionantes(vm, condicionantes, aoEditar = { editandoId = it.id })
+            if (empreendimentos.isNotEmpty()) {
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ChipFiltro("Todas", filtroEmpreendimentoId == null) { filtroEmpreendimentoId = null }
+                    empreendimentos.forEach { e ->
+                        ChipFiltro(e.nome, filtroEmpreendimentoId == e.id) { filtroEmpreendimentoId = e.id }
+                    }
+                }
+            }
+            ListaCondicionantes(vm, condicionantesFiltradas, empreendimentos, aoEditar = { editandoId = it.id })
         }
     }
 }
 
 @Composable
+private fun ChipFiltro(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit) {
+    Box(
+        Modifier
+            .background(if (selecionado) Cores.bom else Cores.superficie, RoundedCornerShape(14.dp))
+            .clickable { aoEscolher() }
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+    ) {
+        Text(
+            rotulo, color = if (selecionado) Color.White else Cores.textoFraco,
+            fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
 private fun ColumnScope.ListaCondicionantes(
-    vm: CapturaViewModel, condicionantes: List<Condicionante>, aoEditar: (Condicionante) -> Unit
+    vm: CapturaViewModel, condicionantes: List<Condicionante>, empreendimentos: List<Empreendimento>,
+    aoEditar: (Condicionante) -> Unit
 ) {
     if (condicionantes.isEmpty()) {
         Vazio(
@@ -109,14 +145,18 @@ private fun ColumnScope.ListaCondicionantes(
         return
     }
     val hoje = LocalDate.now()
+    val nomesPorId = remember(empreendimentos) { empreendimentos.associate { it.id to it.nome } }
     LazyColumn(Modifier.weight(1f)) {
-        items(condicionantes) { c -> LinhaCondicionante(vm, c, hoje, aoEditar) }
+        items(condicionantes) { c -> LinhaCondicionante(vm, c, hoje, nomesPorId[c.empreendimentoId], aoEditar) }
         item { Spacer(Modifier.height(24.dp)) }
     }
 }
 
 @Composable
-private fun LinhaCondicionante(vm: CapturaViewModel, c: Condicionante, hoje: LocalDate, aoEditar: (Condicionante) -> Unit) {
+private fun LinhaCondicionante(
+    vm: CapturaViewModel, c: Condicionante, hoje: LocalDate, nomeEmpreendimento: String?,
+    aoEditar: (Condicionante) -> Unit
+) {
     var confirmarExclusao by remember { mutableStateOf(false) }
     val prazo = remember(c.prazoData) {
         java.time.Instant.ofEpochMilli(c.prazoData).atZone(ZoneId.systemDefault()).toLocalDate()
@@ -148,6 +188,10 @@ private fun LinhaCondicionante(vm: CapturaViewModel, c: Condicionante, hoje: Loc
                 },
                 color = cor, fontSize = 10.5.sp
             )
+        }
+        nomeEmpreendimento?.let {
+            Spacer(Modifier.height(2.dp))
+            Mono(it.uppercase(), Cores.bomClaro, 10)
         }
         Spacer(Modifier.height(4.dp))
         Text(c.descricao, color = Cores.texto, fontSize = 13.sp, lineHeight = 18.sp)
@@ -188,7 +232,8 @@ private val DIAS_ANTECEDENCIA_OPCOES = listOf(7, 15, 30)
 
 @Composable
 private fun ColumnScope.FormularioCondicionante(
-    vm: CapturaViewModel, editando: Condicionante?, aoTerminar: () -> Unit
+    vm: CapturaViewModel, editando: Condicionante?, empreendimentos: List<Empreendimento>,
+    aoTerminar: () -> Unit
 ) {
     val chave = editando?.id ?: -1L
     var descricao by rememberSaveable(chave) { mutableStateOf(editando?.descricao ?: "") }
@@ -202,6 +247,9 @@ private fun ColumnScope.FormularioCondicionante(
         )
     }
     var diasAntecedencia by rememberSaveable(chave) { mutableStateOf(editando?.diasAntecedencia ?: 15) }
+    var empreendimentoId by rememberSaveable(chave) { mutableStateOf(editando?.empreendimentoId) }
+    var novoEmpreendimentoNome by rememberSaveable(chave) { mutableStateOf("") }
+    var criandoEmpreendimento by remember { mutableStateOf(false) }
     var fotoParecer by remember(chave) { mutableStateOf<File?>(null) }
     var capturando by remember { mutableStateOf(false) }
     var linhasReconhecidas by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -289,6 +337,49 @@ private fun ColumnScope.FormularioCondicionante(
                     }
                 }
 
+                Rotulo("EMPREENDIMENTO (OPCIONAL) — PARA AGRUPAR PRAZOS DA MESMA LICENÇA")
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    ChipFiltro("Nenhum", empreendimentoId == null) { empreendimentoId = null }
+                    empreendimentos.forEach { e ->
+                        ChipFiltro(e.nome, empreendimentoId == e.id) { empreendimentoId = e.id }
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                if (criandoEmpreendimento) {
+                    OutlinedTextField(
+                        value = novoEmpreendimentoNome, onValueChange = { novoEmpreendimentoNome = it },
+                        placeholder = { Text("Ex.: Mineradora X — LO 2024 (nome genérico, sem CNPJ)") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row {
+                        Text(
+                            "criar", color = Cores.bomClaro, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable {
+                                val nome = novoEmpreendimentoNome.trim()
+                                if (nome.isNotBlank()) {
+                                    vm.criarEmpreendimento(nome) { id -> empreendimentoId = id }
+                                    novoEmpreendimentoNome = ""
+                                    criandoEmpreendimento = false
+                                }
+                            }
+                        )
+                        Spacer(Modifier.width(16.dp))
+                        Text(
+                            "cancelar", color = Cores.textoFraco, fontSize = 12.5.sp,
+                            modifier = Modifier.clickable { criandoEmpreendimento = false; novoEmpreendimentoNome = "" }
+                        )
+                    }
+                } else {
+                    Text(
+                        "+ novo empreendimento", color = Cores.bomClaro, fontSize = 12.5.sp,
+                        modifier = Modifier.clickable { criandoEmpreendimento = true }
+                    )
+                }
+
                 Rotulo("FOTO DO PARECER (OPCIONAL)")
                 if (fotoParecer != null) {
                     Text("Foto nova anexada.", color = Cores.bomClaro, fontSize = 12.sp)
@@ -343,7 +434,8 @@ private fun ColumnScope.FormularioCondicionante(
                     formaCumprimento = formaCumprimento.trim().ifBlank { null },
                     prazoData = prazoMillis,
                     fotoOriginal = fotoParecer,
-                    diasAntecedencia = diasAntecedencia
+                    diasAntecedencia = diasAntecedencia,
+                    empreendimentoId = empreendimentoId
                 )
             } else {
                 vm.atualizarCondicionante(
@@ -352,7 +444,8 @@ private fun ColumnScope.FormularioCondicionante(
                     formaCumprimento = formaCumprimento.trim().ifBlank { null },
                     prazoData = prazoMillis,
                     diasAntecedencia = diasAntecedencia,
-                    novaFotoOriginal = fotoParecer
+                    novaFotoOriginal = fotoParecer,
+                    empreendimentoId = empreendimentoId
                 )
             }
             aoTerminar()

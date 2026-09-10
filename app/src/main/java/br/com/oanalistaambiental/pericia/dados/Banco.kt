@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 11) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 12) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -118,6 +118,12 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 11
                 respostas_json TEXT NOT NULL
             )""")
         db.execSQL("""
+            CREATE TABLE empreendimento (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                criado_em INTEGER NOT NULL
+            )""")
+        db.execSQL("""
             CREATE TABLE condicionante (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 descricao TEXT NOT NULL,
@@ -127,7 +133,8 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 11
                 cumprida INTEGER NOT NULL DEFAULT 0,
                 foto_arquivo TEXT,
                 foto_sha256 TEXT,
-                dias_antecedencia INTEGER NOT NULL DEFAULT 15
+                dias_antecedencia INTEGER NOT NULL DEFAULT 15,
+                empreendimento_id INTEGER
             )""")
         db.execSQL("CREATE INDEX idx_foto_sessao ON foto(sessao_id)")
         db.execSQL("CREATE INDEX idx_restricao_foto ON restricao(foto_id)")
@@ -248,6 +255,15 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 11
         }
         if (old < 11) {
             db.execSQL("ALTER TABLE condicionante ADD COLUMN dias_antecedencia INTEGER NOT NULL DEFAULT 15")
+        }
+        if (old < 12) {
+            db.execSQL("""
+                CREATE TABLE empreendimento (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    nome TEXT NOT NULL,
+                    criado_em INTEGER NOT NULL
+                )""")
+            db.execSQL("ALTER TABLE condicionante ADD COLUMN empreendimento_id INTEGER")
         }
     }
 
@@ -619,18 +635,21 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 11
         put("cumprida", if (c.cumprida) 1 else 0)
         put("foto_arquivo", c.fotoArquivo); put("foto_sha256", c.fotoSha256)
         put("dias_antecedencia", c.diasAntecedencia)
+        put("empreendimento_id", c.empreendimentoId)
     }
 
     fun condicionantes(): List<Condicionante> {
         val out = mutableListOf<Condicionante>()
         readableDatabase.rawQuery(
             "SELECT id, descricao, forma_cumprimento, prazo_data, criada_em, cumprida," +
-                " foto_arquivo, foto_sha256, dias_antecedencia FROM condicionante ORDER BY prazo_data ASC", null
+                " foto_arquivo, foto_sha256, dias_antecedencia, empreendimento_id" +
+                " FROM condicionante ORDER BY prazo_data ASC", null
         ).use { c ->
             while (c.moveToNext()) out += Condicionante(
                 id = c.getLong(0), descricao = c.getString(1), formaCumprimento = c.getString(2),
                 prazoData = c.getLong(3), criadaEm = c.getLong(4), cumprida = c.getInt(5) != 0,
-                fotoArquivo = c.getString(6), fotoSha256 = c.getString(7), diasAntecedencia = c.getInt(8)
+                fotoArquivo = c.getString(6), fotoSha256 = c.getString(7), diasAntecedencia = c.getInt(8),
+                empreendimentoId = if (c.isNull(9)) null else c.getLong(9)
             )
         }
         return out
@@ -645,6 +664,34 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 11
 
     fun excluirCondicionante(id: Long) {
         writableDatabase.delete("condicionante", "id=?", arrayOf(id.toString()))
+    }
+
+    // ---- empreendimentos (rótulo local para agrupar condicionantes) ----
+
+    fun inserirEmpreendimento(e: Empreendimento): Long =
+        writableDatabase.insert("empreendimento", null, ContentValues().apply {
+            put("nome", e.nome); put("criado_em", e.criadoEm)
+        })
+
+    fun empreendimentos(): List<Empreendimento> {
+        val out = mutableListOf<Empreendimento>()
+        readableDatabase.rawQuery(
+            "SELECT id, nome, criado_em FROM empreendimento ORDER BY nome ASC", null
+        ).use { c ->
+            while (c.moveToNext()) out += Empreendimento(
+                id = c.getLong(0), nome = c.getString(1), criadoEm = c.getLong(2)
+            )
+        }
+        return out
+    }
+
+    /** Desvincula as condicionantes daquele empreendimento antes de excluir — nunca ficam órfãs de referência. */
+    fun excluirEmpreendimento(id: Long) {
+        writableDatabase.update(
+            "condicionante", ContentValues().apply { putNull("empreendimento_id") },
+            "empreendimento_id=?", arrayOf(id.toString())
+        )
+        writableDatabase.delete("empreendimento", "id=?", arrayOf(id.toString()))
     }
 
     fun foto(id: Long): Foto? =

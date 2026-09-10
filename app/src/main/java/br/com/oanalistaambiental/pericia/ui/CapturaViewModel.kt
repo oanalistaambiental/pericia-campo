@@ -24,6 +24,7 @@ import br.com.oanalistaambiental.pericia.dados.CadastrosIefCarregador
 import br.com.oanalistaambiental.pericia.dados.CanaisDenuncia
 import br.com.oanalistaambiental.pericia.dados.CanaisDenunciaCarregador
 import br.com.oanalistaambiental.pericia.dados.Condicionante
+import br.com.oanalistaambiental.pericia.dados.Empreendimento
 import br.com.oanalistaambiental.pericia.dados.Foto
 import br.com.oanalistaambiental.pericia.dados.FotoOcorrencia
 import br.com.oanalistaambiental.pericia.dados.MAXIMO_FOTOS_OCORRENCIA
@@ -147,6 +148,9 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _condicionantes = MutableStateFlow<List<Condicionante>>(emptyList())
     val condicionantes: StateFlow<List<Condicionante>> = _condicionantes
+
+    private val _empreendimentos = MutableStateFlow<List<Empreendimento>>(emptyList())
+    val empreendimentos: StateFlow<List<Empreendimento>> = _empreendimentos
 
     /**
      * Marca d'água (brasão do órgão, logo da consultoria) queimada no canto da CÓPIA com
@@ -566,7 +570,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     /** Grava uma condicionante com prazo, opcionalmente com a foto do parecer que a originou. */
     fun salvarCondicionante(
         descricao: String, formaCumprimento: String?, prazoData: Long, fotoOriginal: File?,
-        diasAntecedencia: Int = 15
+        diasAntecedencia: Int = 15, empreendimentoId: Long? = null
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
@@ -583,7 +587,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                     descricao = descricao, formaCumprimento = formaCumprimento,
                     prazoData = prazoData, criadaEm = System.currentTimeMillis(),
                     fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256,
-                    diasAntecedencia = diasAntecedencia
+                    diasAntecedencia = diasAntecedencia, empreendimentoId = empreendimentoId
                 )
                 val id = banco.inserirCondicionante(condicionante)
                 LembreteCondicionante.agendar(getApplication<Application>(), condicionante.copy(id = id))
@@ -601,7 +605,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     fun atualizarCondicionante(
         existente: Condicionante,
         descricao: String, formaCumprimento: String?, prazoData: Long, diasAntecedencia: Int,
-        novaFotoOriginal: File?
+        novaFotoOriginal: File?, empreendimentoId: Long?
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             runCatching {
@@ -618,7 +622,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 val atualizada = existente.copy(
                     descricao = descricao, formaCumprimento = formaCumprimento,
                     prazoData = prazoData, diasAntecedencia = diasAntecedencia,
-                    fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256
+                    fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256, empreendimentoId = empreendimentoId
                 )
                 banco.atualizarCondicionante(atualizada)
                 LembreteCondicionante.cancelar(getApplication<Application>(), atualizada.id)
@@ -644,6 +648,23 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             c.fotoArquivo?.let { runCatching { File(it).delete() } }
             banco.excluirCondicionante(c.id)
             LembreteCondicionante.cancelar(getApplication<Application>(), c.id)
+            _condicionantes.value = banco.condicionantes()
+        }
+    }
+
+    /** Rótulo local — nome genérico, nunca CNPJ/processo — para agrupar condicionantes de uma mesma licença. */
+    fun criarEmpreendimento(nome: String, aoCriar: (Long) -> Unit = {}) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val id = banco.inserirEmpreendimento(Empreendimento(nome = nome, criadoEm = System.currentTimeMillis()))
+            _empreendimentos.value = banco.empreendimentos()
+            aoCriar(id)
+        }
+    }
+
+    fun excluirEmpreendimento(e: Empreendimento) {
+        viewModelScope.launch(Dispatchers.IO) {
+            banco.excluirEmpreendimento(e.id)
+            _empreendimentos.value = banco.empreendimentos()
             _condicionantes.value = banco.condicionantes()
         }
     }
@@ -782,6 +803,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) { _registrosCaptacao.value = banco.registrosCaptacao() }
         viewModelScope.launch(Dispatchers.IO) { _registrosFicha.value = banco.registrosFicha() }
         viewModelScope.launch(Dispatchers.IO) { _condicionantes.value = banco.condicionantes() }
+        viewModelScope.launch(Dispatchers.IO) { _empreendimentos.value = banco.empreendimentos() }
         _temMarcaDagua.value = arquivoMarcaDagua().exists()
     }
 

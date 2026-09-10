@@ -131,7 +131,21 @@ data class Condicionante(
     val fotoSha256: String? = null,
     /** Quantos dias antes do prazo o aviso local dispara — por condicionante, não global: uma
      *  renovação de licença pede mais antecedência que um DMR mensal. */
-    val diasAntecedencia: Int = 15
+    val diasAntecedencia: Int = 15,
+    /** Nulo = condicionante avulsa, sem empreendimento vinculado. Ver [Empreendimento]. */
+    val empreendimentoId: Long? = null
+)
+
+/**
+ * Um rótulo local para agrupar condicionantes de um mesmo processo/licença — nome genérico,
+ * escolhido por quem usa (ex. "Mineradora X — LO 2024"), NUNCA CNPJ/razão social/número de
+ * processo: mesma regra de anonimização de todo o app. Serve só para separar visualmente quando
+ * há mais de uma licença em acompanhamento ao mesmo tempo.
+ */
+data class Empreendimento(
+    val id: Long = 0,
+    val nome: String,
+    val criadoEm: Long
 )
 
 data class Sessao(
