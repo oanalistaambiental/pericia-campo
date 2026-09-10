@@ -181,7 +181,7 @@ private fun ColumnScope.AbaCampo(vm: CapturaViewModel) {
                     }
                 if (resultado != null) {
                     Spacer(Modifier.height(14.dp))
-                    CartaoResultado(resultado)
+                    CartaoResultadoUsoInsignificante(resultado)
 
                     Rotulo("BOMBEAMENTO")
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -320,7 +320,7 @@ private fun OpcaoTipo(rotulo: String, selecionado: Boolean, aoEscolher: () -> Un
 }
 
 @Composable
-private fun CartaoResultado(r: ResultadoUsoInsignificante) {
+private fun CartaoResultadoUsoInsignificante(r: ResultadoUsoInsignificante) {
     val insignificante = r.classificacao == ClassificacaoUso.INSIGNIFICANTE
     Column(
         Modifier.fillMaxWidth()
@@ -329,32 +329,32 @@ private fun CartaoResultado(r: ResultadoUsoInsignificante) {
     ) {
         Text(
             if (insignificante) "CADASTRO DE USO INSIGNIFICANTE" else "REQUER OUTORGA",
-            color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp
+            color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp
         )
         Spacer(Modifier.height(6.dp))
         Text(
             "Limiar aplicado: ${r.limiar}",
-            color = Color(0xE6FFFFFF), fontSize = 12.sp, lineHeight = 16.sp
+            color = Color(0xE6FFFFFF), fontSize = 13.sp, lineHeight = 18.sp
         )
         Spacer(Modifier.height(4.dp))
         Text(
             "Base legal: ${r.baseLegal}",
-            color = Color(0xCCFFFFFF), fontSize = 11.sp, lineHeight = 15.sp
+            color = Color(0xCCFFFFFF), fontSize = 12.sp, lineHeight = 16.sp
         )
         if (r.condicoesAdicionais.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
             Text(
                 "Também precisa, cumulativamente:",
-                color = Color.White, fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold
+                color = Color.White, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold
             )
             r.condicoesAdicionais.forEach {
-                Text("• $it", color = Color(0xE6FFFFFF), fontSize = 11.sp, lineHeight = 15.sp)
+                Text("• $it", color = Color(0xE6FFFFFF), fontSize = 12.sp, lineHeight = 16.sp)
             }
         }
         Text(
             "Sugestão do app a partir do valor informado — confirme o enquadramento final com " +
                 "o IGAM antes de protocolar.",
-            color = Color(0xB3FFFFFF), fontSize = 10.sp, lineHeight = 14.sp,
+            color = Color(0xB3FFFFFF), fontSize = 11.sp, lineHeight = 15.sp,
             modifier = Modifier.padding(top = 8.dp)
         )
     }

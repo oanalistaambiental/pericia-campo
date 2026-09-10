@@ -142,10 +142,10 @@ private fun OpcaoUnidade(rotulo: String, selecionado: Boolean, aoEscolher: () ->
 private fun LinhaConversao(rotuloUnidade: String, valorFormatado: String) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 4.dp)
-            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(horizontal = 12.dp, vertical = 10.dp)
+            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(horizontal = 14.dp, vertical = 12.dp)
     ) {
-        Text(rotuloUnidade, color = Cores.textoFraco, fontSize = 12.5.sp)
+        Text(rotuloUnidade, color = Cores.textoFraco, fontSize = 13.sp)
         Spacer(Modifier.weight(1f))
-        Text(valorFormatado, color = Cores.texto, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
+        Text(valorFormatado, color = Cores.bomClaro, fontSize = 15.sp, fontWeight = FontWeight.Bold)
     }
 }

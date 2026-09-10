@@ -364,17 +364,29 @@ fun Cabecalho(titulo: String, voltar: (() -> Unit)? = null) {
     }
 }
 
+/**
+ * Tamanhos de fonte de "letra miúda" do app inteiro — um lugar só, por pedido explícito de
+ * consistência visual (vídeo de divulgação, pensado para quem nunca abriu o app). Antes cada
+ * tela escrevia seu próprio `fontSize` avulso (9.5sp, 10.5sp, 11sp...); subir um valor aqui já
+ * sobe em toda tela que usa [Rotulo]/[Mono]/[Vazio], sem precisar editar tela por tela.
+ */
+object Tipos {
+    val rotulo = 12.sp
+    val mono = 12
+    val corpo = 13.5.sp
+}
+
 @Composable
 fun Rotulo(texto: String) {
     Text(
-        texto, color = Cores.textoFraco, fontSize = 10.5.sp,
+        texto, color = Cores.textoFraco, fontSize = Tipos.rotulo,
         fontWeight = FontWeight.Medium, letterSpacing = 1.2.sp,
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 18.dp, bottom = 8.dp)
     )
 }
 
 @Composable
-fun Mono(texto: String, cor: Color = Cores.textoFraco, tamanho: Int = 11, modifier: Modifier = Modifier) {
+fun Mono(texto: String, cor: Color = Cores.textoFraco, tamanho: Int = Tipos.mono, modifier: Modifier = Modifier) {
     Text(
         texto, color = cor, fontSize = tamanho.sp, fontFamily = FontFamily.Monospace,
         lineHeight = (tamanho + 5).sp, modifier = modifier
@@ -388,15 +400,49 @@ fun Vazio(titulo: String, texto: String, acao: String? = null, aoAgir: (() -> Un
         Modifier.fillMaxWidth().padding(horizontal = 28.dp, vertical = 44.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(titulo, color = Cores.texto, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        Text(titulo, color = Cores.texto, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(10.dp))
         Text(
-            texto, color = Cores.textoFraco, fontSize = 12.5.sp, lineHeight = 19.sp,
+            texto, color = Cores.textoFraco, fontSize = Tipos.corpo, lineHeight = 20.sp,
             textAlign = TextAlign.Center
         )
         if (acao != null && aoAgir != null) {
             Spacer(Modifier.height(22.dp))
             BotaoLargo(acao, principal = true) { aoAgir() }
+        }
+    }
+}
+
+/**
+ * O resultado principal de uma calculadora — sempre com a mesma cara em todo o app: rótulo
+ * pequeno em CAIXA ALTA, valor grande e com cor de destaque logo abaixo. Antes cada tela
+ * (Prazo de renovação, Taxa em UFEMG, Conversor de unidades...) desenhava isso à mão, com
+ * tamanho e contraste variando de uma calculadora para outra — pedido explícito de
+ * consistência visual, pensando em quem vai ver isso pela primeira vez num vídeo curto.
+ */
+@Composable
+fun CartaoResultado(
+    rotulo: String,
+    valor: String,
+    corDestaque: Color = Cores.bomClaro,
+    linhaExtra: String? = null,
+    corLinhaExtra: Color = Cores.textoFraco,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier.fillMaxWidth()
+            .background(Cores.superficie, RoundedCornerShape(10.dp))
+            .padding(horizontal = 18.dp, vertical = 16.dp)
+    ) {
+        Text(
+            rotulo.uppercase(), color = Cores.textoFraco, fontSize = 11.sp,
+            letterSpacing = 1.sp, fontWeight = FontWeight.Medium
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(valor, color = corDestaque, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+        if (linhaExtra != null) {
+            Spacer(Modifier.height(8.dp))
+            Text(linhaExtra, color = corLinhaExtra, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
         }
     }
 }

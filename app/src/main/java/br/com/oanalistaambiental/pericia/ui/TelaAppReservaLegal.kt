@@ -65,7 +65,7 @@ private fun BlocoCursoDagua() {
     )
     if (largura != null) {
         Spacer(Modifier.height(8.dp))
-        CartaoResultado("Faixa mínima de APP: ${fmt(AppReservaLegal.faixaCursoDaguaM(largura))} m")
+        CartaoResultado("Faixa mínima de APP", "${fmt(AppReservaLegal.faixaCursoDaguaM(largura))} m")
     }
     Spacer(Modifier.height(6.dp))
     Text(
@@ -98,8 +98,8 @@ private fun BlocoLagoLagoa() {
     }
     Spacer(Modifier.height(8.dp))
     CartaoResultado(
-        "Faixa mínima de APP: " +
-            "${fmt(AppReservaLegal.faixaLagoLagoaNaturalM(zonaUrbana, area))} m"
+        "Faixa mínima de APP",
+        "${fmt(AppReservaLegal.faixaLagoLagoaNaturalM(zonaUrbana, area))} m"
     )
     Spacer(Modifier.height(6.dp))
     Text(
@@ -120,7 +120,7 @@ private fun BlocoReservaLegal() {
         OpcaoRegiao(r.titulo, regiao == r) { regiao = r }
     }
     Spacer(Modifier.height(8.dp))
-    CartaoResultado("Reserva Legal mínima: ${fmt(AppReservaLegal.percentualReservaLegal(regiao))}%")
+    CartaoResultado("Reserva Legal mínima", "${fmt(AppReservaLegal.percentualReservaLegal(regiao))}%")
     Spacer(Modifier.height(6.dp))
     Text(
         "Minas Gerais não integra a Amazônia Legal — cai sempre em \"demais regiões\", 20%. As " +
@@ -133,15 +133,6 @@ private fun BlocoReservaLegal() {
 
 private fun fmt(v: Double): String =
     if (v == v.toLong().toDouble()) v.toLong().toString() else v.toString()
-
-@Composable
-private fun CartaoResultado(texto: String) {
-    Column(
-        Modifier.fillMaxWidth().background(Cores.superficie, RoundedCornerShape(8.dp)).padding(14.dp)
-    ) {
-        Text(texto, color = Cores.bomClaro, fontSize = 15.sp, fontWeight = FontWeight.Bold)
-    }
-}
 
 @Composable
 private fun OpcaoZona(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit) {

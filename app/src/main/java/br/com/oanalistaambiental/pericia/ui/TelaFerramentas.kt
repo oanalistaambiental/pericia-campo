@@ -668,36 +668,22 @@ fun TelaPrazoRenovacao(voltar: () -> Unit) {
                 )
                 else -> {
                     val r = remember(validade) { PrazoRenovacao.calcular(validade) }
-                    Column(
-                        Modifier.fillMaxWidth()
-                            .background(Cores.superficie, RoundedCornerShape(8.dp)).padding(18.dp)
-                    ) {
-                        Text(
-                            "PROTOCOLAR ATÉ", color = Cores.textoFraco, fontSize = 10.5.sp,
-                            letterSpacing = 1.2.sp
-                        )
-                        Spacer(Modifier.height(6.dp))
-                        Text(
-                            r.dataLimiteProtocolo.format(formatoDataBr),
-                            color = Cores.texto, fontSize = 30.sp, fontWeight = FontWeight.Bold
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        Text(
-                            when {
-                                r.prazoVencido ->
-                                    "O prazo de 120 dias já passou há ${-r.diasRestantes} dia(s)."
-                                r.proximoDoLimite ->
-                                    "Faltam ${r.diasRestantes} dia(s) — dentro da janela de atenção."
-                                else -> "Faltam ${r.diasRestantes} dia(s)."
-                            },
-                            color = when {
-                                r.prazoVencido -> Cores.alertaClaro
-                                r.proximoDoLimite -> Cores.atencaoClaro
-                                else -> Cores.bomClaro
-                            },
-                            fontSize = 14.sp, fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    CartaoResultado(
+                        rotulo = "Protocolar até",
+                        valor = r.dataLimiteProtocolo.format(formatoDataBr),
+                        linhaExtra = when {
+                            r.prazoVencido ->
+                                "O prazo de 120 dias já passou há ${-r.diasRestantes} dia(s)."
+                            r.proximoDoLimite ->
+                                "Faltam ${r.diasRestantes} dia(s) — dentro da janela de atenção."
+                            else -> "Faltam ${r.diasRestantes} dia(s)."
+                        },
+                        corLinhaExtra = when {
+                            r.prazoVencido -> Cores.alertaClaro
+                            r.proximoDoLimite -> Cores.atencaoClaro
+                            else -> Cores.bomClaro
+                        }
+                    )
                 }
             }
         }
@@ -1308,20 +1294,18 @@ fun TelaAlturaTrigonometrica(vm: CapturaViewModel, voltar: () -> Unit) {
                                     d, anguloBase!!.toDouble(), anguloTopo!!.toDouble()
                                 )
                             }
-                            Text(
-                                "%.1f m".format(r.alturaM),
-                                color = Cores.texto, fontSize = 44.sp, fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "± %.1f m".format(r.incertezaM),
-                                color = Cores.atencaoClaro, fontSize = 14.sp, fontWeight = FontWeight.SemiBold
+                            CartaoResultado(
+                                rotulo = "Altura estimada",
+                                valor = "%.1f m".format(r.alturaM),
+                                linhaExtra = "± %.1f m de incerteza".format(r.incertezaM),
+                                corLinhaExtra = Cores.atencaoClaro
                             )
                             Spacer(Modifier.height(6.dp))
                             Mono(
                                 "base %.1f° · topo %.1f° · %.1f m".format(
                                     java.util.Locale.US, anguloBase, anguloTopo, d
                                 ),
-                                Cores.textoFraco, 10
+                                Cores.textoFraco, 11
                             )
                         }
                         Spacer(Modifier.height(14.dp))
@@ -1509,24 +1493,22 @@ fun TelaTaxaUfemg(vm: CapturaViewModel, voltar: () -> Unit) {
                 val quantidade = quantidadeTexto.replace(',', '.').toDoubleOrNull()
                 if (quantidade != null && quantidade >= 0) {
                     val valor = TaxaUfemg.calcular(selecionado, quantidade, t.valorUfemg)
-                    Text(
-                        "R$ %,.2f".format(java.util.Locale("pt", "BR"), valor),
-                        color = Cores.texto, fontSize = 34.sp, fontWeight = FontWeight.Bold
-                    )
-                    if (selecionado.fixoUfemg > 0) {
-                        Mono(
-                            "%.0f UFEMG fixas + %.0f × %.2f UFEMG/%s".format(
-                                java.util.Locale.US, selecionado.fixoUfemg, selecionado.variavelUfemgPorUnidade,
-                                quantidade, selecionado.unidade
-                            ), Cores.textoFraco, 11
+                    val memoriaCalculo = if (selecionado.fixoUfemg > 0) {
+                        "%.0f UFEMG fixas + %.0f × %.2f UFEMG/%s".format(
+                            java.util.Locale.US, selecionado.fixoUfemg, selecionado.variavelUfemgPorUnidade,
+                            quantidade, selecionado.unidade
                         )
                     } else {
-                        Mono(
-                            "%.2f × %.2f UFEMG/%s".format(
-                                java.util.Locale.US, quantidade, selecionado.variavelUfemgPorUnidade, selecionado.unidade
-                            ), Cores.textoFraco, 11
+                        "%.2f × %.2f UFEMG/%s".format(
+                            java.util.Locale.US, quantidade, selecionado.variavelUfemgPorUnidade, selecionado.unidade
                         )
                     }
+                    CartaoResultado(
+                        rotulo = "Valor da taxa",
+                        valor = "R$ %,.2f".format(java.util.Locale("pt", "BR"), valor)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Mono(memoriaCalculo, Cores.textoFraco, 12)
                 } else {
                     Text("Informe a quantidade.", color = Cores.textoFraco, fontSize = 12.5.sp)
                 }
