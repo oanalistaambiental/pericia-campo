@@ -178,19 +178,19 @@ class CatalogoDN217Test {
     fun `curadoria de 10-09-2026 — tres atividades que faltavam agora existem`() {
         val b = r.atividade("B-10-06-5")
         assertNotNull("Fabricação de móveis de metal com tratamento químico", b)
-        assertEquals(1000.0, b!!.limiteP, 0.001)
-        assertEquals(10000.0, b.limiteM, 0.001)
+        assertEquals(1000.0, b!!.limiteP!!, 0.001)
+        assertEquals(10000.0, b.limiteM!!, 0.001)
 
         val d = r.atividade("D-02-01-1")
         assertNotNull("Fabricação de vinhos", d)
-        assertEquals(50000.0, d!!.pisoFaixa)
-        assertEquals(125000.0, d.limiteP, 0.001)
-        assertEquals(250000.0, d.limiteM, 0.001)
+        assertEquals(50000.0, d!!.pisoFaixa!!, 0.001)
+        assertEquals(125000.0, d.limiteP!!, 0.001)
+        assertEquals(250000.0, d.limiteM!!, 0.001)
 
         val e = r.atividade("E-03-07-7")
         assertNotNull("Aterro sanitário (CAF)", e)
-        assertEquals(110000.0, e!!.limiteP, 0.001)
-        assertEquals(2700000.0, e.limiteM, 0.001)
+        assertEquals(110000.0, e!!.limiteP!!, 0.001)
+        assertEquals(2700000.0, e.limiteM!!, 0.001)
     }
 
     /**
