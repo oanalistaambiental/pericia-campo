@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -14,7 +13,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -63,15 +61,6 @@ object Cores {
 }
 
 /**
- * Ângulo (0/90/180/270) para girar textos e números curtos junto quando o aparelho gira,
- * sem travar a Activity em paisagem — só o que precisa ser lido de relance (rótulo, número,
- * coordenada) gira no lugar; parágrafo/aviso longo fica de fora de propósito, porque giraria
- * mal (perderia a largura de quebra de linha que já tem hoje). Fornecido pela tela da câmera;
- * em qualquer outra tela vale o padrão (0, sem giro).
- */
-val LocalAnguloTela = compositionLocalOf { 0f }
-
-/**
  * Selo de qualidade do ponto.
  *
  * Mudou de "mostrar o numero" para "dizer o que fazer com ele": um perito que ve
@@ -101,23 +90,18 @@ fun SeloPrecisao(p: EstadoCampo.Posicao, modifier: Modifier = Modifier, comDica:
         else -> null
     }
 
-    val anguloTela = LocalAnguloTela.current
     Column(modifier.fillMaxWidth().background(cor)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                rotulo, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold,
-                modifier = Modifier.rotate(anguloTela)
-            )
+            Text(rotulo, color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             if (p.aproximada) {
                 Spacer(Modifier.width(8.dp))
                 Text(
                     "APROXIMADA",
                     color = Color.White, fontSize = 9.sp, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.rotate(anguloTela)
-                        .background(Color(0x33FFFFFF), RoundedCornerShape(3.dp))
+                    modifier = Modifier.background(Color(0x33FFFFFF), RoundedCornerShape(3.dp))
                         .padding(horizontal = 5.dp, vertical = 2.dp)
                 )
             }
@@ -128,7 +112,7 @@ fun SeloPrecisao(p: EstadoCampo.Posicao, modifier: Modifier = Modifier, comDica:
                 if (p.qualidade == EstadoCampo.Qualidade.VENCIDA) "há ${p.idadeSegundos()} s"
                 else p.precisaoM?.let { "±%.0f m".format(it) } ?: "—",
                 color = Color.White, fontSize = 12.sp, fontFamily = FontFamily.Monospace,
-                fontWeight = FontWeight.SemiBold, modifier = Modifier.rotate(anguloTela)
+                fontWeight = FontWeight.SemiBold
             )
         }
         if (comDica && dica != null) {
@@ -361,11 +345,8 @@ fun Rotulo(texto: String) {
 }
 
 @Composable
-fun Mono(texto: String, cor: Color = Cores.textoFraco, tamanho: Int = 11, modifier: Modifier = Modifier) {
-    Text(
-        texto, color = cor, fontSize = tamanho.sp, fontFamily = FontFamily.Monospace,
-        lineHeight = (tamanho + 5).sp, modifier = modifier
-    )
+fun Mono(texto: String, cor: Color = Cores.textoFraco, tamanho: Int = 11) {
+    Text(texto, color = cor, fontSize = tamanho.sp, fontFamily = FontFamily.Monospace, lineHeight = (tamanho + 5).sp)
 }
 
 /** Estado vazio com instrucao — em vez de uma tela em branco que nao ensina nada. */

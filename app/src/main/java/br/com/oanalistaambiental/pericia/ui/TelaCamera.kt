@@ -23,7 +23,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
@@ -135,12 +134,7 @@ fun TelaCamera(
      * BUG corrigido: a Activity e travada em retrato, entao o CameraX gravava TODA foto como
      * retrato. Foto tirada com o aparelho deitado — enquadramento normal numa vistoria de
      * talude, margem ou estrada — saia com o EXIF errado e a legenda ia parar de lado.
-     *
-     * O MESMO sensor tambem gira os textos/numeros curtos da tela (ver [LocalAnguloTela]) —
-     * pedido de Francisco para nao precisar virar a cabeca lendo com o aparelho deitado. Um so
-     * listener para as duas coisas: registrar o sensor duas vezes gastaria bateria a toa.
      */
-    var anguloTela by remember { mutableStateOf(0f) }
     DisposableEffect(imageCapture) {
         val ouvinte = object : OrientationEventListener(contexto) {
             override fun onOrientationChanged(graus: Int) {
@@ -150,12 +144,6 @@ fun TelaCamera(
                     graus < 135 -> Surface.ROTATION_270
                     graus < 225 -> Surface.ROTATION_180
                     else -> Surface.ROTATION_90
-                }
-                anguloTela = when {
-                    graus >= 315 || graus < 45 -> 0f
-                    graus < 135 -> 270f
-                    graus < 225 -> 180f
-                    else -> 90f
                 }
             }
         }
@@ -168,7 +156,6 @@ fun TelaCamera(
         if (clarao) { delay(110); clarao = false }
     }
 
-    CompositionLocalProvider(LocalAnguloTela provides anguloTela) {
     Box(Modifier.fillMaxSize().background(Color.Black)) {
 
         AndroidView(modifier = Modifier.fillMaxSize(), factory = { previewView })
@@ -283,7 +270,7 @@ fun TelaCamera(
                 Spacer(Modifier.weight(1f))
 
                 Column(
-                    Modifier.width(94.dp).rotate(anguloTela).clickable { irParaFerramentas() },
+                    Modifier.width(94.dp).clickable { irParaFerramentas() },
                     horizontalAlignment = Alignment.End
                 ) {
                     Text("≡", color = Color.White, fontSize = 24.sp)
@@ -291,7 +278,6 @@ fun TelaCamera(
                 }
             }
         }
-    }
     }
 }
 
@@ -459,15 +445,13 @@ private fun BlocoCoordenada(vm: CapturaViewModel) {
     ) {
         Text(
             utm.formatado(), color = Color.White, fontSize = 12.sp,
-            fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.rotate(LocalAnguloTela.current)
+            fontFamily = FontFamily.Monospace, fontWeight = FontWeight.SemiBold
         )
         Mono(
             listOfNotNull(
                 "SIRGAS 2000",
                 posicao.altitudeM?.let { "alt %.0f m".format(it) }
-            ).joinToString(" · "), Cores.textoFraco, 10,
-            modifier = Modifier.rotate(LocalAnguloTela.current)
+            ).joinToString(" · "), Cores.textoFraco, 10
         )
     }
 }
@@ -489,7 +473,7 @@ private fun BotaoOcorrencia(vm: CapturaViewModel, aoTocar: () -> Unit) {
     val tipo by vm.tipoOcorrencia.collectAsState()
     val ativo = tipo != null
     Column(
-        Modifier.width(104.dp).rotate(LocalAnguloTela.current)
+        Modifier.width(104.dp)
             .background(
                 if (ativo) Cores.bom.copy(alpha = 0.22f) else Color.Transparent,
                 RoundedCornerShape(4.dp)
