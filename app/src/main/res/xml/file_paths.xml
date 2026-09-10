@@ -1,5 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
-    <files-path name="sessoes" path="sessoes/" />
+    <!--
+      Raiz inteira de filesDir, nao so "sessoes/". BUG que isto corrige: cada pasta de
+      exportacao nova (pontos/, medicoes/) quebrava com "Failed to find configured root" ate
+      alguem lembrar de adicionar uma linha aqui — pontos salvos e a medicao de area vieram
+      quebrados assim. Declarar a raiz uma vez evita essa classe inteira de erro se repetir a
+      cada pasta nova.
+    -->
+    <files-path name="dados" path="." />
     <cache-path name="cache" path="." />
 </paths>
