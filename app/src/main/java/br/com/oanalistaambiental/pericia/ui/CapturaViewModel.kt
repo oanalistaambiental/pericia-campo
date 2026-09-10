@@ -250,6 +250,31 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Exporta o polígono medido por caminhamento — GPX (rota), KML (área) ou CSV. */
+    fun exportarMedicao(formato: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val ctx = getApplication<Application>()
+            val pol = _poligono.value
+            if (pol == null || pol.vertices.isEmpty()) {
+                _mensagem.value = "Nenhum vértice marcado para exportar."
+                return@launch
+            }
+            val pasta = File(ctx.filesDir, "medicoes").apply { mkdirs() }
+            val base = "medicao-${System.currentTimeMillis()}"
+            runCatching {
+                val arquivo: File = when (formato) {
+                    "gpx" -> Exportador.gpxMedicao(pol, File(pasta, "$base.gpx"))
+                    "kml" -> Exportador.kmlMedicao(pol, File(pasta, "$base.kml"))
+                    "csv" -> Exportador.csvMedicao(pol, File(pasta, "$base.csv"))
+                    else -> throw IllegalArgumentException("Formato desconhecido: $formato")
+                }
+                withContext(Dispatchers.Main) {
+                    Exportador.compartilhar(ctx, listOf(arquivo), "Medição de área")
+                }
+            }.onFailure { _mensagem.value = "Falha ao exportar: ${it.message}" }
+        }
+    }
+
     private val _bacia = MutableStateFlow<CircunscricaoHidrografica.Info?>(null)
     val bacia: StateFlow<CircunscricaoHidrografica.Info?> = _bacia
 

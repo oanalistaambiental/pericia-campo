@@ -35,4 +35,43 @@ class AlturaTrigonometricaTest {
         val quaseVertical = AlturaTrigonometrica.calcular(distanciaHorizontalM = 10.0, anguloGraus = 80.0)
         assertTrue(quaseVertical.incertezaM > moderado.incertezaM)
     }
+
+    // ---------------------------------------------------------- metodo dos dois angulos
+
+    @Test
+    fun `duplo angulo com base no horizonte da o mesmo resultado do metodo simples`() {
+        // Base em 0 graus (no nivel do observador) equivale a somar a altura do observador —
+        // os dois metodos tem que concordar neste caso particular.
+        val simples = AlturaTrigonometrica.calcular(distanciaHorizontalM = 10.0, anguloGraus = 30.0, alturaObservadorM = 0.0)
+        val duplo = AlturaTrigonometrica.calcularDuploAngulo(
+            distanciaHorizontalM = 10.0, anguloBaseGraus = 0.0, anguloTopoGraus = 30.0
+        )
+        assertEquals(simples.alturaM, duplo.alturaM, 0.0001)
+    }
+
+    @Test
+    fun `duplo angulo soma a base abaixo do horizonte, nao subtrai`() {
+        // Base 10 m abaixo da linha do observador (angulo negativo) e topo 20 m acima: a altura
+        // do objeto e a distancia TOTAL entre as duas alturas, nao a diferenca de angulo.
+        val d = 10.0
+        val anguloBase = -Math.toDegrees(kotlin.math.atan(1.0)) // -45 graus: base 10 m abaixo
+        val anguloTopo = Math.toDegrees(kotlin.math.atan(2.0))  // topo 20 m acima
+        val r = AlturaTrigonometrica.calcularDuploAngulo(d, anguloBase, anguloTopo)
+        assertEquals(30.0, r.alturaM, 0.01)
+    }
+
+    @Test
+    fun `duplo angulo com base e topo iguais da altura zero`() {
+        val r = AlturaTrigonometrica.calcularDuploAngulo(15.0, anguloBaseGraus = 12.0, anguloTopoGraus = 12.0)
+        assertEquals(0.0, r.alturaM, 0.0001)
+    }
+
+    @Test
+    fun `incerteza do duplo angulo e maior que a de uma leitura so, mas nao o dobro`() {
+        // Soma em quadratura (RSS): raiz de 2 vezes uma leitura, nao 2 vezes.
+        val umaLeitura = AlturaTrigonometrica.calcular(distanciaHorizontalM = 10.0, anguloGraus = 20.0).incertezaM
+        val duasLeituras = AlturaTrigonometrica.calcularDuploAngulo(10.0, 20.0, 20.0).incertezaM
+        assertEquals(umaLeitura * kotlin.math.sqrt(2.0), duasLeituras, 0.001)
+        assertTrue(duasLeituras < umaLeitura * 2)
+    }
 }

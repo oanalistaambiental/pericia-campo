@@ -69,12 +69,14 @@ object Registro {
         Ferramenta(
             id = "coordenada",
             nome = "Ir para uma coordenada",
-            resumo = "Converte entre UTM, graus decimais e GMS, e guia até o ponto.",
+            resumo = "Digite, cole ou importe de um arquivo (KML, GPX, GeoJSON), e guia até o ponto.",
             grupo = Grupo.CAMPO,
             icone = IconeGaveta.ALVO,
             exige = setOf(Recurso.GNSS),
             limite = "Guia por rumo e distância em linha reta — não é navegação por rota e " +
-                "não conhece estrada, cerca nem barreira do terreno.",
+                "não conhece estrada, cerca nem barreira do terreno. A importação de arquivo " +
+                "lê só o PRIMEIRO ponto encontrado (de uma linha ou polígono, o primeiro " +
+                "vértice) — não abre Shapefile (.shp), formato binário de vários arquivos.",
             tela = { nav -> TelaIrParaCoordenada(vmCaptura(), voltar = nav.voltar) }
         ),
         Ferramenta(
@@ -102,12 +104,14 @@ object Registro {
         Ferramenta(
             id = "altura_trigonometrica",
             nome = "Altura por trigonometria",
-            resumo = "Distância até a base + ângulo até o topo — altura com incerteza declarada.",
+            resumo = "Mire a base, mire o topo — altura com incerteza declarada, câmera à vista.",
             grupo = Grupo.CAMPO,
             icone = IconeGaveta.ALTURA,
-            limite = "O erro de um grau no ângulo vira erro grande em distâncias longas ou " +
-                "ângulos perto de 90° — a incerteza mostrada é estimada, não medida. Não " +
-                "substitui um clinômetro dedicado.",
+            exige = setOf(Recurso.CAMERA),
+            limite = "O visor é só para mirar — nada aqui vira arquivo nem entra em sessão. O " +
+                "erro de um grau no ângulo vira erro grande em distâncias longas ou ângulos " +
+                "perto de 90° — a incerteza mostrada é estimada, não medida. Não substitui um " +
+                "clinômetro dedicado.",
             tela = { nav -> TelaAlturaTrigonometrica(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(

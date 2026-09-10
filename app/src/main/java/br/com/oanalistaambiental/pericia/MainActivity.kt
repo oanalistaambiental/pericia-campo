@@ -1,7 +1,6 @@
 package br.com.oanalistaambiental.pericia
 
 import android.Manifest
-import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -136,10 +135,12 @@ private fun App(abrirNaCamera: Boolean = false) {
     )
 
     // Antes o pedido saltava na abertura, antes de o usuario ter feito nada. Agora ele
-    // acompanha a ferramenta escolhida: quem abre a camera ou uma ferramenta de GNSS e que
-    // ve a caixa de permissao, e ai ela tem contexto.
+    // acompanha a ferramenta escolhida: quem abre a camera, uma ferramenta de GNSS ou uma
+    // ferramenta que declara `Recurso.CAMERA` (ex.: altura por trigonometria, que so mostra o
+    // visor para mirar) e que ve a caixa de permissao, e ai ela tem contexto.
     LaunchedEffect(rota, ferramentaId) {
-        val precisaCamera = rota == Rota.CAMERA
+        val precisaCamera = rota == Rota.CAMERA ||
+            ferramentaId?.let { id -> Registro.porId(id)?.exige?.contains(Recurso.CAMERA) } == true
         val precisaLocal = rota == Rota.CAMERA || rota == Rota.SESSOES ||
             ferramentaId?.let { id -> Registro.porId(id)?.exige?.contains(Recurso.GNSS) } == true
         if ((precisaCamera && !cameraOk) || (precisaLocal && !localOk)) pedir.launch(permissoes)
@@ -188,27 +189,13 @@ private fun App(abrirNaCamera: Boolean = false) {
      *
      * Antes este bloco ficava antes de tudo: sem camera, nao se via nada. Fazia sentido num
      * aplicativo que era uma camera; num kit de ferramentas, prendia na porta quem so queria a
-     * bussola ou o conversor de coordenadas. Agora so a ferramenta que EXIGE camera pede.
+     * bussola ou o conversor de coordenadas. Agora so a ferramenta que EXIGE camera pede — a
+     * rota da camera em si, ou uma ferramenta que declara `Recurso.CAMERA` (ex.: o visor da
+     * altura por trigonometria).
      */
-    if (rota == Rota.CAMERA && !cameraOk) {
+    val ferramentaExigeCamera = ferramentaId?.let { id -> Registro.porId(id)?.exige?.contains(Recurso.CAMERA) } == true
+    if ((rota == Rota.CAMERA || (rota == Rota.FERRAMENTA && ferramentaExigeCamera)) && !cameraOk) {
         TelaPermissoes(jaPediu) { pedir.launch(permissoes) }
-        return
-    }
-
-    /**
-     * Primeiro uso.
-     *
-     * Nao e tela de boas-vindas: e a unica chance de ensinar as quatro coisas sem as quais o
-     * app vira uma camera comum com coordenada. Quem pula, pula uma vez; quem le, para de
-     * cometer os erros que invalidam registro em campo.
-     */
-    val prefs = remember { contexto.getSharedPreferences("pericia", Context.MODE_PRIVATE) }
-    var viuIntro by remember { mutableStateOf(prefs.getBoolean("viu_intro_1", false)) }
-    if (!viuIntro) {
-        TelaPrimeiroUso {
-            prefs.edit().putBoolean("viu_intro_1", true).apply()
-            viuIntro = true
-        }
         return
     }
 
@@ -369,83 +356,3 @@ private fun TelaPermissoes(jaPediu: Boolean, aoPedir: () -> Unit) {
     }
 }
 
-/**
- * O que o perito precisa saber antes da primeira foto.
- *
- * Quatro licoes, na ordem em que os erros acontecem em campo. Texto curto de proposito: a tela
- * que ninguem le nao ensina nada, e este app e usado no sol, com pressa.
- */
-@Composable
-private fun TelaPrimeiroUso(aoComecar: () -> Unit) {
-    Column(
-        Modifier.fillMaxSize().background(Cores.fundo)
-            .windowInsetsPadding(WindowInsets.safeDrawing)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp, vertical = 28.dp)
-    ) {
-        Text(
-            "Antes da primeira foto",
-            color = Cores.texto, fontSize = 24.sp, fontWeight = FontWeight.Bold
-        )
-        Spacer(Modifier.height(6.dp))
-        Text(
-            "Quatro coisas separam um registro que sustenta laudo de uma foto bonita.",
-            color = Cores.textoFraco, fontSize = 13.sp, lineHeight = 19.sp
-        )
-
-        Licao(
-            "1",
-            "Espere o selo ficar verde",
-            "A faixa no topo mostra a precisão do GNSS. Vermelha, a coordenada pode errar " +
-                "dezenas de metros — o bastante para colocar a ocorrência dentro ou fora de uma " +
-                "área protegida. Pare, fique a céu aberto e espere. Costuma levar segundos."
-        )
-        Licao(
-            "2",
-            "Toda foto pertence a uma sessão",
-            "A sessão é a vistoria. É ela que vira laudo, que recebe o selo de integridade ao " +
-                "ser fechada e que agrupa as fotos numa sequência com começo e fim. Foto solta " +
-                "não vira nada."
-        )
-        Licao(
-            "3",
-            "O arquivo original nunca é tocado",
-            "No instante da captura o app calcula o SHA-256 do arquivo e guarda. A legenda " +
-                "técnica é queimada numa CÓPIA. É a cópia que você compartilha; o original fica " +
-                "no aparelho, íntegro e conferível."
-        )
-        Licao(
-            "4",
-            "Não mande o original por aplicativo de mensagem",
-            "Aplicativos de mensagem recomprimem a imagem. O arquivo muda, o hash deixa de " +
-                "bater e a cadeia de custódia se quebra em silêncio. Exporte pela própria tela " +
-                "de sessões, que preserva o arquivo. O verificador do app mostra na hora " +
-                "quando um arquivo foi alterado."
-        )
-
-        Spacer(Modifier.height(28.dp))
-        BotaoLargo("Começar", principal = true) { aoComecar() }
-        Spacer(Modifier.height(10.dp))
-        Text(
-            "Isto reaparece só se você reinstalar o aplicativo.",
-            color = Cores.textoFraco, fontSize = 10.5.sp
-        )
-        Spacer(Modifier.height(24.dp))
-    }
-}
-
-@Composable
-private fun Licao(numero: String, titulo: String, texto: String) {
-    Row(Modifier.fillMaxWidth().padding(top = 26.dp)) {
-        Text(
-            numero,
-            color = Cores.bomClaro, fontSize = 20.sp, fontWeight = FontWeight.Bold,
-            modifier = Modifier.width(30.dp)
-        )
-        Column {
-            Text(titulo, color = Cores.texto, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-            Spacer(Modifier.height(5.dp))
-            Text(texto, color = Cores.textoFraco, fontSize = 12.5.sp, lineHeight = 19.sp)
-        }
-    }
-}

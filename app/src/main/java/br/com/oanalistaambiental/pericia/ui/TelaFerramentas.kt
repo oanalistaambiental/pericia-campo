@@ -1,5 +1,8 @@
 package br.com.oanalistaambiental.pericia.ui
 
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -24,11 +28,15 @@ import androidx.compose.ui.unit.sp
 import br.com.oanalistaambiental.pericia.captura.Orientacoes
 import br.com.oanalistaambiental.pericia.dados.GlossarioSisema
 import br.com.oanalistaambiental.pericia.geo.AlturaTrigonometrica
+import br.com.oanalistaambiental.pericia.geo.ImportadorCoordenada
 import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.PontosLocais
 import br.com.oanalistaambiental.pericia.geo.PrazoRenovacao
 import br.com.oanalistaambiental.pericia.geo.Utm
 import br.com.oanalistaambiental.pericia.taxas.TaxaUfemg
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Menu de ferramentas — o que existe fora do ato de fotografar. */
 /*
@@ -251,17 +259,34 @@ fun TelaMedicao(vm: CapturaViewModel, voltar: () -> Unit) {
 
         // Mapa ao vivo: o poligono se formando, vertice a vertice, em escala — nao so o
         // numero da area. O ultimo vertice marcado vem destacado, para se ver onde se esta.
+        //
+        // Ponto de referencia: a posicao ATUAL do GNSS entra no mesmo mapa, num anel de cor
+        // diferente, sem participar da linha do poligono — o pedido de ver, ao vivo, o quanto
+        // quem esta medindo se aproxima ou se afasta do que ja foi caminhado.
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
-            val pontosMapa = remember(vertices) {
-                if (vertices.isEmpty()) emptyList() else {
-                    val locais = PontosLocais.relativos(vertices.map { it.lat to it.lon })
-                    locais.mapIndexed { i, local ->
-                        PontoMapa(local, Cores.bomClaro, destaque = i == locais.lastIndex)
+            val latAtual = p.lat
+            val lonAtual = p.lon
+            val (pontosMapa, referenciaMapa) = remember(vertices, latAtual, lonAtual) {
+                val baseLatLon = vertices.map { it.lat to it.lon }
+                val temRef = latAtual != null && lonAtual != null
+                val comRef = if (temRef) baseLatLon + (latAtual!! to lonAtual!!) else baseLatLon
+                if (comRef.isEmpty()) {
+                    emptyList<PontoMapa>() to null
+                } else {
+                    val locais = PontosLocais.relativos(comRef)
+                    val locaisVertices = if (temRef) locais.dropLast(1) else locais
+                    val mapaVertices = locaisVertices.mapIndexed { i, local ->
+                        PontoMapa(local, Cores.bomClaro, destaque = i == locaisVertices.lastIndex)
                     }
+                    val mapaRef = if (temRef) {
+                        PontoMapa(locais.last(), Cores.atencaoClaro, rotulo = "você")
+                    } else null
+                    mapaVertices to mapaRef
                 }
             }
             MapaEscala(
                 pontosMapa, fecharPoligono = (pol?.vertices?.size ?: 0) >= 3,
+                referencia = referenciaMapa,
                 vazio = "O polígono aparece aqui conforme os vértices são marcados"
             )
         }
@@ -313,6 +338,16 @@ fun TelaMedicao(vm: CapturaViewModel, voltar: () -> Unit) {
                 Spacer(Modifier.height(8.dp))
                 BotaoLargo("Usar como observação das fotos") { vm.usarMedicaoComoObservacao() }
             }
+        }
+
+        if (vertices.isNotEmpty()) {
+            Rotulo("EXPORTAR ESTA MEDIÇÃO")
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.weight(1f)) { BotaoLargo("GPX") { vm.exportarMedicao("gpx") } }
+                Box(Modifier.weight(1f)) { BotaoLargo("KML") { vm.exportarMedicao("kml") } }
+                Box(Modifier.weight(1f)) { BotaoLargo("CSV") { vm.exportarMedicao("csv") } }
+            }
+            Spacer(Modifier.height(8.dp))
         }
 
         if (vertices.isEmpty()) {
@@ -377,6 +412,40 @@ fun TelaIrParaCoordenada(vm: CapturaViewModel, voltar: () -> Unit) {
     var texto by remember { mutableStateOf("") }
     val lida = remember(texto) { Medicao.interpretar(texto) }
     val alvo by vm.alvo.collectAsState()
+    val contexto = LocalContext.current
+    val escopo = rememberCoroutineScope()
+    var erroImportacao by remember { mutableStateOf<String?>(null) }
+    var importando by remember { mutableStateOf(false) }
+
+    val escolherArquivo = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        erroImportacao = null
+        importando = true
+        escopo.launch(Dispatchers.IO) {
+            val resultado = runCatching {
+                var nome = uri.lastPathSegment ?: "arquivo"
+                contexto.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+                    if (idx >= 0 && cursor.moveToFirst()) nome = cursor.getString(idx) ?: nome
+                }
+                val conteudo = contexto.contentResolver.openInputStream(uri)
+                    ?.bufferedReader()?.use { it.readText() }
+                    ?: throw IllegalStateException("não consegui abrir o arquivo")
+                ImportadorCoordenada.extrairPrimeiroPonto(nome, conteudo)
+            }
+            withContext(Dispatchers.Main) {
+                importando = false
+                resultado.onSuccess { ponto ->
+                    if (ponto != null) vm.definirAlvoCoordenada(ponto.lat, ponto.lon, ponto.rotulo)
+                    else erroImportacao = "Não achei uma coordenada legível nesse arquivo — " +
+                        "aceita KML, GPX e GeoJSON. Shapefile (.shp) não é suportado: é um " +
+                        "formato binário de vários arquivos, sem leitor pronto aqui."
+                }.onFailure { erroImportacao = "Falha ao ler o arquivo: ${it.message}" }
+            }
+        }
+    }
 
     Column(
         Modifier.fillMaxSize().background(Cores.fundo)
@@ -393,6 +462,15 @@ fun TelaIrParaCoordenada(vm: CapturaViewModel, voltar: () -> Unit) {
                     label = { Text("Cole ou digite a coordenada") },
                     modifier = Modifier.fillMaxWidth()
                 )
+                Spacer(Modifier.height(10.dp))
+                BotaoLargo(
+                    if (importando) "Lendo arquivo…" else "Importar de um arquivo (KML, GPX, GeoJSON)",
+                    habilitado = !importando
+                ) { escolherArquivo.launch(arrayOf("*/*")) }
+                if (erroImportacao != null) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(erroImportacao!!, color = Cores.alertaClaro, fontSize = 11.5.sp, lineHeight = 16.sp)
+                }
                 Spacer(Modifier.height(12.dp))
 
                 when {
@@ -839,21 +917,62 @@ fun TelaBaciaHidrografica(vm: CapturaViewModel, voltar: () -> Unit) {
 }
 
 /**
- * Altura por trigonometria: distância horizontal até a base + ângulo de elevação ao vivo até o
- * topo (o mesmo sensor da bússola/clinômetro, `estadoCampo.orientacao.elevacaoGraus`).
+ * Altura por trigonometria, pelo método dos DOIS ângulos, com a câmera visível para mirar.
+ *
+ * Antes a conta assumia a base do objeto no mesmo nível dos pés de quem mede, e somava uma
+ * altura de observador fixa (1,5 m) — erra pelo desnível inteiro numa encosta, vala ou talude.
+ * Agora se mira a BASE de verdade (zera ali) e depois o TOPO; a altura sai da diferença das
+ * duas tangentes (`AlturaTrigonometrica.calcularDuploAngulo`), sem precisar estimar nada.
  */
 @Composable
 fun TelaAlturaTrigonometrica(vm: CapturaViewModel, voltar: () -> Unit) {
     val o by vm.estadoCampo.orientacao.collectAsState()
     var distanciaTexto by rememberSaveable { mutableStateOf("") }
     val distancia = distanciaTexto.replace(',', '.').toDoubleOrNull()
-    val angulo = o.elevacaoGraus
+    val anguloAtual = o.elevacaoGraus
+
+    var anguloBase by rememberSaveable { mutableStateOf<Float?>(null) }
+    var anguloTopo by rememberSaveable { mutableStateOf<Float?>(null) }
 
     Column(
         Modifier.fillMaxSize().background(Cores.fundo)
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
         Cabecalho("Altura por trigonometria", voltar)
+
+        // O visor: so para mirar. Nunca vira arquivo, nunca entra em sessao — por isso um
+        // painel de altura fixa, como o mapinha da medicao de area, nao a tela cheia da camera
+        // de pericia.
+        Box(Modifier.fillMaxWidth().height(240.dp)) {
+            VisorCamera(Modifier.fillMaxSize())
+
+            // Mira central.
+            Box(Modifier.align(Alignment.Center).width(2.dp).height(26.dp).background(Color.White.copy(alpha = 0.85f)))
+            Box(Modifier.align(Alignment.Center).width(26.dp).height(2.dp).background(Color.White.copy(alpha = 0.85f)))
+
+            Column(
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Cores.veuEscuro)
+                    .padding(horizontal = 14.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    if (anguloBase == null) "ÂNGULO ATUAL — mire a base" else "ÂNGULO ATUAL — mire o topo",
+                    color = Color.White.copy(alpha = 0.75f), fontSize = 10.sp, letterSpacing = 1.sp
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        anguloAtual?.let { "%.1f°".format(it) } ?: "—",
+                        color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold
+                    )
+                    if (anguloBase != null && anguloAtual != null) {
+                        Spacer(Modifier.width(10.dp))
+                        Text(
+                            "desde a base: %.1f°".format(anguloAtual - anguloBase!!),
+                            color = Cores.bomClaro, fontSize = 13.sp, fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
 
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
             OutlinedTextField(
@@ -862,43 +981,68 @@ fun TelaAlturaTrigonometrica(vm: CapturaViewModel, voltar: () -> Unit) {
                 label = { Text("Distância horizontal até a base (m)") },
                 modifier = Modifier.fillMaxWidth()
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
 
             Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("ÂNGULO ATÉ O TOPO", color = Cores.textoFraco, fontSize = 10.5.sp, letterSpacing = 1.sp)
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    angulo?.let { "%.1f°".format(it) } ?: "—",
-                    color = Cores.texto, fontSize = 32.sp, fontWeight = FontWeight.Bold
-                )
-                Text(
-                    "Aponte a câmera para o topo do que está medindo",
-                    color = Cores.textoFraco, fontSize = 11.5.sp
-                )
-
-                Spacer(Modifier.height(28.dp))
-
                 when {
-                    distancia == null || distancia <= 0 -> Text(
-                        "Informe a distância horizontal até a base.",
-                        color = Cores.textoFraco, fontSize = 12.5.sp, textAlign = TextAlign.Center
-                    )
-                    angulo == null || angulo <= 0 -> Text(
-                        "Aponte a câmera para cima, até o topo do que está medindo.",
-                        color = Cores.textoFraco, fontSize = 12.5.sp, textAlign = TextAlign.Center
-                    )
-                    else -> {
-                        val r = remember(distancia, angulo) {
-                            AlturaTrigonometrica.calcular(distancia, angulo.toDouble())
+                    anguloBase == null -> {
+                        Text(
+                            "Aponte a mira para a BASE do que vai medir e toque para zerar ali.",
+                            color = Cores.textoFraco, fontSize = 12.5.sp, textAlign = TextAlign.Center
+                        )
+                        Spacer(Modifier.height(14.dp))
+                        BotaoLargo(
+                            "Marcar base (zerar)", principal = true, habilitado = anguloAtual != null
+                        ) { anguloBase = anguloAtual }
+                    }
+
+                    anguloTopo == null -> {
+                        Text(
+                            "Agora suba a mira até o TOPO do que está medindo e toque para marcar.",
+                            color = Cores.textoFraco, fontSize = 12.5.sp, textAlign = TextAlign.Center
+                        )
+                        Spacer(Modifier.height(14.dp))
+                        BotaoLargo(
+                            "Marcar topo", principal = true,
+                            habilitado = anguloAtual != null && distancia != null && distancia > 0
+                        ) { anguloTopo = anguloAtual }
+                        Spacer(Modifier.height(8.dp))
+                        BotaoLargo("Mirar a base de novo") { anguloBase = null }
+                        if (distancia == null || distancia <= 0) {
+                            Spacer(Modifier.height(8.dp))
+                            Text(
+                                "Falta informar a distância horizontal até a base.",
+                                color = Cores.atencaoClaro, fontSize = 11.5.sp, textAlign = TextAlign.Center
+                            )
                         }
-                        Text(
-                            "%.1f m".format(r.alturaM),
-                            color = Cores.texto, fontSize = 44.sp, fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            "± %.1f m".format(r.incertezaM),
-                            color = Cores.atencaoClaro, fontSize = 14.sp, fontWeight = FontWeight.SemiBold
-                        )
+                    }
+
+                    else -> {
+                        val d = distancia
+                        if (d != null && d > 0) {
+                            val r = remember(d, anguloBase, anguloTopo) {
+                                AlturaTrigonometrica.calcularDuploAngulo(
+                                    d, anguloBase!!.toDouble(), anguloTopo!!.toDouble()
+                                )
+                            }
+                            Text(
+                                "%.1f m".format(r.alturaM),
+                                color = Cores.texto, fontSize = 44.sp, fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "± %.1f m".format(r.incertezaM),
+                                color = Cores.atencaoClaro, fontSize = 14.sp, fontWeight = FontWeight.SemiBold
+                            )
+                            Spacer(Modifier.height(6.dp))
+                            Mono(
+                                "base %.1f° · topo %.1f° · %.1f m".format(
+                                    java.util.Locale.US, anguloBase, anguloTopo, d
+                                ),
+                                Cores.textoFraco, 10
+                            )
+                        }
+                        Spacer(Modifier.height(14.dp))
+                        BotaoLargo("Medir de novo") { anguloBase = null; anguloTopo = null }
                     }
                 }
             }
@@ -906,13 +1050,18 @@ fun TelaAlturaTrigonometrica(vm: CapturaViewModel, voltar: () -> Unit) {
             Ajuda(
                 "Como medir",
                 "Fique a uma distância horizontal conhecida da base do que quer medir — passos " +
-                    "contados, ou a medição de área do app até lá. Aponte a câmera para o topo e " +
-                    "leia o ângulo. A altura soma a elevação medida com 1,5 m de onde você " +
-                    "segura o aparelho — não é a altura do seu olho, é uma aproximação.\n\n" +
+                    "contados, ou a medição de área do app até lá — e informe essa distância " +
+                    "acima.\n\n" +
+                    "Mire a câmera para a BASE do objeto e toque em \"Marcar base\": esse é o " +
+                    "zero. Suba a mira até o TOPO e toque em \"Marcar topo\". A altura sai da " +
+                    "diferença entre os dois ângulos, não da soma de uma altura de observador " +
+                    "estimada — por isso funciona igual numa encosta, numa vala ou olhando de " +
+                    "cima de um talude, onde a base não está no mesmo nível dos seus pés.\n\n" +
                     "A incerteza cresce com a distância e perto de 90°: um grau de erro no " +
                     "ângulo é pouco a 5 m e muito a 50 m. Para medida de precisão, use um " +
                     "clinômetro dedicado."
             )
+            Spacer(Modifier.height(24.dp))
         }
     }
 }

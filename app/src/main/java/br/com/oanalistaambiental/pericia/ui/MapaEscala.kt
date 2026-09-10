@@ -50,7 +50,15 @@ fun MapaEscala(
     fecharPoligono: Boolean = false,
     tracejado: Boolean = false,
     altura: Dp = 200.dp,
-    vazio: String = "Nenhum ponto ainda"
+    vazio: String = "Nenhum ponto ainda",
+    /**
+     * Posição atual do GNSS, desenhada à parte — NÃO entra na linha que liga [pontos].
+     *
+     * Entra no cálculo de escala/enquadramento junto com os demais pontos, para que o mapa dê
+     * zoom out sozinho e mantenha o ponto visível conforme quem mede se afasta ou se aproxima
+     * do polígono — a referência pedida para a medição de área.
+     */
+    referencia: PontoMapa? = null
 ) {
     BoxWithConstraints(
         modifier
@@ -59,7 +67,7 @@ fun MapaEscala(
             .clip(RoundedCornerShape(10.dp))
             .background(Cores.superficie)
     ) {
-        if (pontos.isEmpty()) {
+        if (pontos.isEmpty() && referencia == null) {
             Text(
                 vazio, color = Cores.textoFraco, fontSize = 12.5.sp,
                 modifier = Modifier.align(Alignment.Center)
@@ -73,8 +81,9 @@ fun MapaEscala(
             val larguraUtil = (size.width - 2 * margemPx).coerceAtLeast(1f)
             val alturaUtil = (size.height - 2 * margemPx).coerceAtLeast(1f)
 
-            val lestes = pontos.map { it.local.lesteM }
-            val nortes = pontos.map { it.local.norteM }
+            val todosPontos = if (referencia != null) pontos + referencia else pontos
+            val lestes = todosPontos.map { it.local.lesteM }
+            val nortes = todosPontos.map { it.local.norteM }
             // Vao minimo de 2 m: um unico ponto (ou dois no mesmo lugar) nao pode gerar
             // divisao por zero nem um zoom infinito.
             val vaoLeste = ((lestes.max() - lestes.min())).coerceAtLeast(2.0)
@@ -128,6 +137,21 @@ fun MapaEscala(
                 val rotulo = pontos[i].rotulo ?: return@forEachIndexed
                 paintRotulo.color = corArgb(pontos[i].cor)
                 drawContext.canvas.nativeCanvas.drawText(rotulo, p.x + 10.dp.toPx(), p.y + 4.dp.toPx(), paintRotulo)
+            }
+
+            // Posição atual: um anel, não um circulo preenchido — para nunca ser confundida com
+            // um vertice marcado, mesmo na mesma cor.
+            if (referencia != null) {
+                val p = tela(referencia.local)
+                drawCircle(Cores.fundo, 9.dp.toPx(), p, style = Fill)
+                drawCircle(referencia.cor, 7.dp.toPx(), p, style = Stroke(width = 2.5.dp.toPx()))
+                drawCircle(referencia.cor, 2.dp.toPx(), p, style = Fill)
+                if (referencia.rotulo != null) {
+                    paintRotulo.color = corArgb(referencia.cor)
+                    drawContext.canvas.nativeCanvas.drawText(
+                        referencia.rotulo, p.x + 12.dp.toPx(), p.y + 4.dp.toPx(), paintRotulo
+                    )
+                }
             }
 
             // Barra de escala: o maior passo redondo que cabe num terco da largura do mapa.

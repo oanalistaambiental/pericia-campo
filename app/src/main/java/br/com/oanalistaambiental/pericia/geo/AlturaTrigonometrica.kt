@@ -44,4 +44,40 @@ object AlturaTrigonometrica {
 
         return Resultado(altura, abs(incerteza))
     }
+
+    /**
+     * Metodo dos DOIS angulos: mira-se a BASE do objeto (zera ali) e depois o TOPO, e a altura
+     * sai da diferenca entre as duas tangentes — sem precisar estimar a altura de onde o
+     * observador segura o aparelho.
+     *
+     * Por que isto e melhor que somar 1,5 m: a aproximacao de [calcular] so vale quando a base
+     * do objeto esta no mesmo nivel dos pes do observador. Numa encosta, numa vala ou olhando de
+     * cima de um talude, a base fica acima ou abaixo do observador, e a soma fixa erra pelo
+     * desnivel inteiro. Mirar a base de verdade elimina esse erro, ao custo de uma segunda
+     * leitura de angulo.
+     *
+     * [anguloBaseGraus] pode ser negativo (base abaixo da linha do horizonte, olhando para
+     * baixo) — a formula nao assume sinal.
+     */
+    fun calcularDuploAngulo(
+        distanciaHorizontalM: Double,
+        anguloBaseGraus: Double,
+        anguloTopoGraus: Double
+    ): Resultado {
+        val baseRad = Math.toRadians(anguloBaseGraus)
+        val topoRad = Math.toRadians(anguloTopoGraus)
+        val altura = distanciaHorizontalM * (tan(topoRad) - tan(baseRad))
+
+        // Duas leituras independentes, cada uma com a mesma incerteza de sensor — soma-se em
+        // quadratura (RSS), nao direto: a chance de as duas leituras errarem juntas NO MESMO
+        // sentido e menor que a de uma so errar.
+        val incertezaRad = Math.toRadians(INCERTEZA_ANGULO_GRAUS)
+        val cosBase = cos(baseRad)
+        val cosTopo = cos(topoRad)
+        val dBase = distanciaHorizontalM * incertezaRad / (cosBase * cosBase)
+        val dTopo = distanciaHorizontalM * incertezaRad / (cosTopo * cosTopo)
+        val incerteza = kotlin.math.sqrt(dBase * dBase + dTopo * dTopo)
+
+        return Resultado(altura, abs(incerteza))
+    }
 }

@@ -8,6 +8,7 @@ import br.com.oanalistaambiental.pericia.dados.Banco
 import br.com.oanalistaambiental.pericia.dados.Foto
 import br.com.oanalistaambiental.pericia.dados.PontoSalvo
 import br.com.oanalistaambiental.pericia.dados.Sessao
+import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.Utm
 import java.io.File
 import java.io.FileOutputStream
@@ -268,6 +269,99 @@ object Exportador {
                     "%.2f".format(Locale.US, utm.easting),
                     "%.2f".format(Locale.US, utm.northing),
                     p.precisaoM?.let { "%.1f".format(Locale.US, it) } ?: ""
+                ).joinToString(";") { escapar(it) }
+            )
+            sb.append("\n")
+        }
+        destino.writeBytes(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()) + sb.toString().toByteArray(Charsets.UTF_8))
+        return destino
+    }
+
+    // ------------------------------------------------------------------ medicao de area
+
+    /**
+     * O polígono medido por caminhamento, como rota GPX (`<rte>`, um `<rtept>` por vértice na
+     * ordem em que foram marcados). GPX não tem elemento de área — quem for conferir em campo
+     * com um GPS de mão precisa do CONTORNO, não de uma nuvem de waypoints soltos.
+     */
+    fun gpxMedicao(pol: Medicao.Poligono, destino: File): File {
+        val sb = StringBuilder()
+        sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append("\n")
+        sb.append("""<gpx version="1.1" creator="Kit de Pericia Ambiental" """)
+            .append("""xmlns="http://www.topografix.com/GPX/1/1">""").append("\n")
+        sb.append("<rte>\n")
+        sb.append("<name>").append(xml("Área medida — ${pol.areaFormatada()}")).append("</name>\n")
+        pol.vertices.forEachIndexed { i, v ->
+            sb.append("""<rtept lat="%.7f" lon="%.7f">""".format(Locale.US, v.lat, v.lon)).append("\n")
+            sb.append("<time>").append(fmtIso.get()!!.format(Date(v.instante))).append("</time>\n")
+            sb.append("<name>").append(xml("Vértice ${i + 1}")).append("</name>\n")
+            sb.append("</rtept>\n")
+        }
+        sb.append("</rte>\n")
+        sb.append("</gpx>\n")
+        destino.writeText(sb.toString(), Charsets.UTF_8)
+        return destino
+    }
+
+    /**
+     * O mesmo polígono como `<Polygon>` do KML — abre em planta no Google Earth/QGIS com a
+     * área e a incerteza na descrição. O anel precisa fechar (primeiro ponto repetido no fim);
+     * sem isso o KML é lido como linha aberta, não como área.
+     */
+    fun kmlMedicao(pol: Medicao.Poligono, destino: File): File {
+        val sb = StringBuilder()
+        sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append("\n")
+        sb.append("""<kml xmlns="http://www.opengis.net/kml/2.2"><Document>""").append("\n")
+        sb.append("<Placemark>\n")
+        sb.append("<name>").append(xml("Área medida — ${pol.areaFormatada()}")).append("</name>\n")
+        val desc = "Perímetro: ${pol.perimetroFormatado()}\n" +
+            "Incerteza: ${pol.incertezaFormatada()}\n" +
+            "Vértices: ${pol.vertices.size}\n" +
+            (if (!pol.confiavel()) "ATENÇÃO: incerteza acima de 20% da área — trate como estimativa.\n" else "")
+        sb.append("<description>").append(xml(desc)).append("</description>\n")
+        if (pol.vertices.size >= 3) {
+            sb.append("<Polygon><outerBoundaryIs><LinearRing><coordinates>\n")
+            pol.vertices.forEach { v ->
+                sb.append("%.7f,%.7f,0 ".format(Locale.US, v.lon, v.lat))
+            }
+            val primeiro = pol.vertices.first()
+            sb.append("%.7f,%.7f,0\n".format(Locale.US, primeiro.lon, primeiro.lat))
+            sb.append("</coordinates></LinearRing></outerBoundaryIs></Polygon>\n")
+        } else {
+            // Menos de 3 vertices nao fecha poligono — exporta como linha, para nao inventar area.
+            sb.append("<LineString><coordinates>\n")
+            pol.vertices.forEach { v -> sb.append("%.7f,%.7f,0 ".format(Locale.US, v.lon, v.lat)) }
+            sb.append("\n</coordinates></LineString>\n")
+        }
+        sb.append("</Placemark>\n")
+        sb.append("</Document></kml>\n")
+        destino.writeText(sb.toString(), Charsets.UTF_8)
+        return destino
+    }
+
+    /** Um vértice por linha — para quem prefere conferir a medição numa planilha. */
+    fun csvMedicao(pol: Medicao.Poligono, destino: File): File {
+        val sb = StringBuilder()
+        sb.append("vertice;data_hora;latitude;longitude;datum;utm_zona;utm_e;utm_n;precisao_m;")
+        sb.append("area;perimetro;incerteza\n")
+        pol.vertices.forEachIndexed { i, v ->
+            val utm = Utm.projetar(v.lat, v.lon)
+            sb.append(
+                listOf(
+                    "${i + 1}",
+                    fmtBr.get()!!.format(Date(v.instante)),
+                    "%.7f".format(Locale.US, v.lat),
+                    "%.7f".format(Locale.US, v.lon),
+                    "SIRGAS 2000 (EPSG:4674)",
+                    "${utm.zona}${if (utm.hemisferioSul) "S" else "N"}",
+                    "%.2f".format(Locale.US, utm.easting),
+                    "%.2f".format(Locale.US, utm.northing),
+                    "%.1f".format(Locale.US, v.precisaoM),
+                    // area/perimetro/incerteza so fazem sentido uma vez — repetir por linha
+                    // e o preco de manter uma linha por vertice, mais facil de abrir num SIG.
+                    if (i == 0) pol.areaFormatada() else "",
+                    if (i == 0) pol.perimetroFormatado() else "",
+                    if (i == 0) pol.incertezaFormatada() else ""
                 ).joinToString(";") { escapar(it) }
             )
             sb.append("\n")
