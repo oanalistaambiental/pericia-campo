@@ -52,6 +52,10 @@ dependencies {
     implementation("org.locationtech.jts:jts-core:1.19.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.9.0")
 
+    // Mapa de referencia — OpenStreetMap via osmdroid, de uso publico e sem chave de API (ao
+    // contrario do Google Maps, que exige conta Google Cloud com faturamento habilitado).
+    implementation("org.osmdroid:osmdroid-android:6.1.20")
+
     testImplementation("junit:junit:4.13.2")
 // org.json faz parte do Android, mas nos testes de unidade e apenas um esqueleto;
 // esta dependencia da a implementacao real para a JVM.

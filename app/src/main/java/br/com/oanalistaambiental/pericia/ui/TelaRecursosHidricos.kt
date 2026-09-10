@@ -131,6 +131,11 @@ private fun ColumnScope.AbaCampo(vm: CapturaViewModel) {
                     }
                 }
 
+                if (p.lat != null && p.lon != null) {
+                    Spacer(Modifier.height(10.dp))
+                    MapaReferencia(p.lat!!, p.lon!!)
+                }
+
                 Rotulo("TIPO DE CAPTAÇÃO")
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     OpcaoTipo("Superficial (rio, córrego, açude)", tipo == TipoCaptacao.SUPERFICIAL) {
