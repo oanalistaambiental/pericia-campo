@@ -41,7 +41,8 @@ enum class IconeGaveta {
     GLOSSARIO,
     ALTURA,
     PINO,
-    MOEDA
+    MOEDA,
+    CARTEIRA
 }
 
 @Composable
@@ -250,6 +251,22 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                 drawPath(pE, cor, style = traco)
                 drawPath(pD, cor, style = traco)
                 drawLine(cor, lombada, Offset(lombada.x, h * 0.74f), traco.width * 0.8f)
+            }
+
+            IconeGaveta.CARTEIRA -> {
+                // Carteirinha de registro: retangulo, foto (circulo) a esquerda, linhas de
+                // dado a direita — cadastro/registro, nao ficha tecnica nem prancheta.
+                drawRoundRect(
+                    color = cor,
+                    topLeft = Offset(w * 0.08f, h * 0.2f),
+                    size = Size(w * 0.84f, h * 0.6f),
+                    cornerRadius = CornerRadius(w * 0.08f, w * 0.08f),
+                    style = traco
+                )
+                drawCircle(cor, w * 0.13f, Offset(w * 0.3f, h * 0.5f), style = traco)
+                drawLine(cor, Offset(w * 0.56f, h * 0.38f), Offset(w * 0.8f, h * 0.38f), traco.width, StrokeCap.Round)
+                drawLine(cor, Offset(w * 0.56f, h * 0.5f), Offset(w * 0.8f, h * 0.5f), traco.width, StrokeCap.Round)
+                drawLine(cor, Offset(w * 0.56f, h * 0.62f), Offset(w * 0.72f, h * 0.62f), traco.width, StrokeCap.Round)
             }
 
             IconeGaveta.CAMADAS -> {

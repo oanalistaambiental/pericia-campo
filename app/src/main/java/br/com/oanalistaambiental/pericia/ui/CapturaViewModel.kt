@@ -12,6 +12,8 @@ import br.com.oanalistaambiental.pericia.captura.Integridade
 import br.com.oanalistaambiental.pericia.captura.Legenda
 import br.com.oanalistaambiental.pericia.captura.ProvaFoto
 import br.com.oanalistaambiental.pericia.dados.Banco
+import br.com.oanalistaambiental.pericia.dados.CadastrosIef
+import br.com.oanalistaambiental.pericia.dados.CadastrosIefCarregador
 import br.com.oanalistaambiental.pericia.dados.Foto
 import br.com.oanalistaambiental.pericia.dados.RegistroRestricao
 import br.com.oanalistaambiental.pericia.dados.PontoSalvo
@@ -61,6 +63,9 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _tabelaTaxas = MutableStateFlow<TabelaTaxas?>(null)
     val tabelaTaxas: StateFlow<TabelaTaxas?> = _tabelaTaxas
+
+    private val _cadastrosIef = MutableStateFlow<CadastrosIef?>(null)
+    val cadastrosIef: StateFlow<CadastrosIef?> = _cadastrosIef
 
     private val _fotosDaSessao = MutableStateFlow<List<Foto>>(emptyList())
     val fotosDaSessao: StateFlow<List<Foto>> = _fotosDaSessao
@@ -280,6 +285,11 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
             runCatching {
                 TaxaUfemg.carregar { getApplication<Application>().assets.open("taxas/ufemg_2026.json") }
             }.onSuccess { _tabelaTaxas.value = it }
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                CadastrosIefCarregador.carregar { getApplication<Application>().assets.open("ief/cadastros.json") }
+            }.onSuccess { _cadastrosIef.value = it }
         }
     }
 

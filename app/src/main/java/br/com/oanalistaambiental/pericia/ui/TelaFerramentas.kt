@@ -1134,6 +1134,153 @@ fun TelaGlossario(voltar: () -> Unit) {
     }
 }
 
+/**
+ * Cadastros e registros do IEF — categorias, quem precisa se cadastrar e base legal.
+ *
+ * NÃO tem valor de taxa de cadastro inicial: a pesquisa que montou `assets/ief/cadastros.json`
+ * não achou uma tabela atual confiável (só uma de 2009, defasada demais para usar). Onde existe
+ * um valor confirmado em texto oficial — a taxa de ALTERAÇÃO de registro da flora, em UFEMG —
+ * ele aparece calculado contra a UFEMG do exercício vigente; para o resto, a tela diz que não
+ * tem o número, em vez de inventar.
+ */
+@Composable
+fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
+    val cadastros by vm.cadastrosIef.collectAsState()
+    val tabelaTaxas by vm.tabelaTaxas.collectAsState()
+    var grupoSelecionadoId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    Column(
+        Modifier.fillMaxSize().background(Cores.fundo)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+    ) {
+        Cabecalho("Cadastros do IEF", voltar)
+
+        val c = cadastros
+        if (c == null) {
+            Vazio("Carregando…", "")
+            return@Column
+        }
+
+        val grupo = c.grupos.firstOrNull { it.id == grupoSelecionadoId }
+
+        if (grupo == null) {
+            Text(
+                c.aviso, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            )
+            Rotulo("ESCOLHA O GRUPO")
+            LazyColumn(Modifier.weight(1f)) {
+                items(c.grupos) { g ->
+                    Column(
+                        Modifier.fillMaxWidth()
+                            .clickable { grupoSelecionadoId = g.id }
+                            .padding(horizontal = 16.dp, vertical = 14.dp)
+                    ) {
+                        Text(g.titulo, color = Cores.texto, fontSize = 14.5.sp, fontWeight = FontWeight.SemiBold)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "${g.categorias.size} categorias — ${g.baseLegal}",
+                            color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                        )
+                    }
+                    HorizontalDivider(color = Cores.linha)
+                }
+            }
+        } else {
+            Text(
+                "clique para escolher outro grupo",
+                color = Cores.bomClaro, fontSize = 11.5.sp,
+                modifier = Modifier.clickable { grupoSelecionadoId = null }
+                    .padding(horizontal = 16.dp, vertical = 10.dp)
+            )
+            LazyColumn(Modifier.weight(1f)) {
+                item {
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                        Text(grupo.titulo, color = Cores.texto, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(4.dp))
+                        Mono(grupo.baseLegal, Cores.textoFraco, 11)
+                    }
+                }
+                item { Rotulo("CATEGORIAS") }
+                items(grupo.categorias) { cat ->
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Text(cat.nome, color = Cores.texto, fontSize = 13.sp, fontWeight = FontWeight.Medium, lineHeight = 18.sp)
+                        if (cat.quemPrecisa != null) {
+                            Spacer(Modifier.height(3.dp))
+                            Text(cat.quemPrecisa, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp)
+                        }
+                        if (cat.baseLegalEspecifica != null) {
+                            Spacer(Modifier.height(2.dp))
+                            Mono(cat.baseLegalEspecifica, Cores.bomClaro, 10)
+                        }
+                    }
+                }
+                val quemPrecisaGeral: String? = grupo.quemPrecisaGeral
+                if (quemPrecisaGeral != null) {
+                    item {
+                        Rotulo("QUEM PRECISA SE CADASTRAR")
+                        Text(
+                            quemPrecisaGeral, color = Cores.texto, fontSize = 12.5.sp, lineHeight = 18.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                }
+                val isencao: String? = grupo.isencao
+                if (isencao != null) {
+                    item {
+                        Rotulo("ISENÇÃO")
+                        Text(
+                            isencao, color = Cores.texto, fontSize = 12.5.sp, lineHeight = 18.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
+                }
+                if (grupo.documentos.isNotEmpty()) {
+                    item { Rotulo("DOCUMENTOS") }
+                    items(grupo.documentos) { doc ->
+                        Text(
+                            "• $doc", color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 3.dp)
+                        )
+                    }
+                }
+                item {
+                    Rotulo("RENOVAÇÃO")
+                    Text(
+                        grupo.renovacao, color = Cores.texto, fontSize = 12.5.sp, lineHeight = 18.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
+                item {
+                    Rotulo("TAXA")
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                        val taxaUfemg: Double? = grupo.taxaAlteracaoUfemg
+                        val ufemg: Double? = tabelaTaxas?.valorUfemg
+                        val exercicio: Int = tabelaTaxas?.exercicio ?: 0
+                        if (taxaUfemg != null && ufemg != null) {
+                            Text(
+                                "Alteração de registro: %.0f UFEMG × R$ %.4f = R$ %,.2f (%d)".format(
+                                    java.util.Locale("pt", "BR"), taxaUfemg, ufemg, taxaUfemg * ufemg, exercicio
+                                ),
+                                color = Cores.texto, fontSize = 13.sp, fontWeight = FontWeight.Medium
+                            )
+                            Spacer(Modifier.height(4.dp))
+                        }
+                        Text(grupo.taxaNota, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp)
+                    }
+                }
+                item {
+                    Text(
+                        "Cadastro feito em: ${c.sistema}",
+                        color = Cores.textoFraco, fontSize = 10.5.sp,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun LinhaAlternavel(titulo: String, descricao: String, ligado: Boolean, aoAlternar: () -> Unit) {
     Row(

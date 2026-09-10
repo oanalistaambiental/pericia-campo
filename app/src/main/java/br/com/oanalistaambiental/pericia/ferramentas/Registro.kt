@@ -7,6 +7,7 @@ import br.com.oanalistaambiental.pericia.ui.CapturaViewModel
 import br.com.oanalistaambiental.pericia.ui.TelaAlturaTrigonometrica
 import br.com.oanalistaambiental.pericia.ui.TelaBaciaHidrografica
 import br.com.oanalistaambiental.pericia.ui.TelaBussola
+import br.com.oanalistaambiental.pericia.ui.TelaCadastrosIef
 import br.com.oanalistaambiental.pericia.ui.TelaGlossario
 import br.com.oanalistaambiental.pericia.ui.TelaPontosSalvos
 import br.com.oanalistaambiental.pericia.ui.TelaTaxaUfemg
@@ -141,6 +142,17 @@ object Registro {
                 "citado na tela — o valor da UFEMG muda todo ano. Confirme a taxa final com a " +
                 "Unidade Regional antes de pagar.",
             tela = { nav -> TelaTaxaUfemg(vmCaptura(), nav.voltar) }
+        ),
+        Ferramenta(
+            id = "cadastros_ief",
+            nome = "Cadastros do IEF",
+            resumo = "Categorias de registro de flora e fauna aquática, com base legal.",
+            grupo = Grupo.ENQUADRAR,
+            icone = IconeGaveta.CARTEIRA,
+            limite = "Não é o cadastro em si — o registro se faz no Portal EcoSistemas do " +
+                "Sisema. Valor de taxa de cadastro inicial não foi confirmado em fonte " +
+                "atual: consulte o IEF antes de pagar qualquer valor.",
+            tela = { nav -> TelaCadastrosIef(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(
             id = "glossario",

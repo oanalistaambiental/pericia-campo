@@ -1,0 +1,73 @@
+{
+  "titulo": "Cadastros e registros do IEF",
+  "extraido_em": "2026-09-10",
+  "fonte": "https://www.ief.mg.gov.br/servi%C3%A7os-de-cadastro-e-registro, https://www.ief.mg.gov.br/cadastro-e-registro-de-atividades-ligadas-%C3%A0-fauna-aqu%C3%A1tica e https://www.ief.mg.gov.br/cadastro-e-registro-de-atividades-ligadas-%C3%A0-flora",
+  "sistema": "Portal de Serviços do Sisema — EcoSistemas (ecosistemas.meioambiente.mg.gov.br)",
+  "aviso": "Ferramenta independente, sem vínculo com o SISEMA — não substitui a análise do IEF. As categorias e a base legal abaixo vieram das páginas oficiais citadas; não há garantia de que a lista está completa. Valor de taxa só aparece aqui quando achado em texto oficial e identificado como tal — cadastro inicial sem valor confirmado mostra isso explicitamente.",
+  "grupos": [
+    {
+      "id": "flora",
+      "titulo": "Atividades ligadas à flora",
+      "baseLegal": "Lei nº 20.922/2013 (políticas florestais e de proteção à biodiversidade) e Lei nº 10.173/1990 (comercialização de motosserras)",
+      "categorias": [
+        {
+          "nome": "Consumo, comércio ou industrialização de produtos e subprodutos da flora",
+          "quemPrecisa": "Pessoa física ou jurídica que explore, utilize, transforme, industrialize, comercialize ou consuma, no território do estado, produto ou subproduto da flora — madeira, lenha, carvão, entre outros."
+        },
+        {
+          "nome": "Transporte de carvão vegetal",
+          "quemPrecisa": "Quem transporte carvão vegetal no território do estado, ainda que o produto seja originário de outra unidade da federação."
+        },
+        {
+          "nome": "Prestação de serviço com equipamento mecanizado",
+          "quemPrecisa": "Pessoa física ou jurídica prestadora de serviços em que se utilizem tratores de esteira ou similares para supressão de vegetação nativa."
+        },
+        {
+          "nome": "Operação, porte ou comércio de motosserra",
+          "quemPrecisa": "Pessoas físicas e jurídicas que comercializem, portem e façam a utilização florestal de motosserras.",
+          "baseLegalEspecifica": "Portaria IEF nº 125, de 23 de novembro de 2020"
+        }
+      ],
+      "documentos": [
+        "Cadastro inicial — pessoa física: documento de identidade e CPF (e procuração com documentos do procurador, se houver)",
+        "Cadastro inicial — pessoa jurídica: estatuto ou contrato social registrado na Jucemg e certificado CCME (e procuração com documentos do procurador, se houver)",
+        "Registro de flora — comprovante de endereço para correspondência atualizado, preferencialmente em área urbana",
+        "Registro de motosserra ou trator — comprovante de endereço atualizado e nota fiscal, cupom fiscal ou contrato de compra e venda dos equipamentos em nome do titular"
+      ],
+      "renovacao": "O registro é cancelado se o recadastramento não for feito no prazo previsto na Portaria IEF nº 125/2020.",
+      "taxaNota": "A única taxa com valor confirmado em texto oficial: alteração de registro custa 15 UFEMG (Portaria IEF nº 125/2020). Valor do cadastro/registro inicial não foi confirmado nesta pesquisa — consulte o IEF.",
+      "taxaAlteracaoUfemg": 15.0
+    },
+    {
+      "id": "fauna_aquatica",
+      "titulo": "Atividades ligadas à fauna aquática (pesca e aquicultura)",
+      "baseLegal": "Lei nº 14.181, de 17 de janeiro de 2002; Decreto nº 43.713, de 14 de janeiro de 2004; Decreto nº 47.892, de 23 de março de 2020; Portaria IEF nº 100/2020 (aquicultura); Portaria IEF nº 101/2020 (comércio e industrialização)",
+      "categorias": [
+        { "nome": "Aquicultura em tanque escavado/viveiros (piscicultura e pesque-pague)" },
+        { "nome": "Aquicultura em tanque-rede" },
+        { "nome": "Ranicultura" },
+        { "nome": "Comerciante de petrechos de pesca" },
+        { "nome": "Comerciante de produtos de pesca" },
+        { "nome": "Comerciante de peixes ornamentais" },
+        { "nome": "Comerciante de iscas vivas" },
+        { "nome": "Fabricante de petrechos de pesca" },
+        { "nome": "Industrial de produtos de pesca" },
+        { "nome": "Ambulante ou feirante de petrechos/pescado" },
+        { "nome": "Colônia de pescador" },
+        { "nome": "Associação de pescador ou de aquicultor" },
+        { "nome": "Clube de pesca" },
+        { "nome": "Industrial naval (pesca)" },
+        { "nome": "Artesão de petrechos" },
+        { "nome": "Pescador profissional" }
+      ],
+      "quemPrecisa": "Pessoa física ou jurídica que explore, comercialize ou industrialize produto da pesca; que fabrique ou comercialize petrechos, aparelhos ou equipamentos para a pesca; associações de pescadores, associações de aquicultores, clubes de pesca, colônias de pescadores; e quem exerça a atividade de aquicultura.",
+      "isencao": "Estabelecimentos que comercializem produtos da pesca ou da aquicultura prontos para o consumo — bares, restaurantes e similares — são isentos do registro.",
+      "documentos": [
+        "No portal, acessar \"Cadastro de Pessoas Físicas e Jurídicas\", preencher as informações e anexar os documentos obrigatórios (lista específica por tipo de pessoa, conforme manual do IEF no próprio portal)"
+      ],
+      "renovacao": "Anual, desde 30/09/2021. O registro é cancelado se o recadastramento não for feito no prazo previsto.",
+      "taxaNota": "Valor de taxa de cadastro/registro não foi confirmado nesta pesquisa — consulte o IEF.",
+      "taxaAlteracaoUfemg": null
+    }
+  ]
+}
