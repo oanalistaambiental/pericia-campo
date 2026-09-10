@@ -46,7 +46,8 @@ enum class IconeGaveta {
     ALERTA,
     AGUA,
     RELATORIO,
-    CHECKLIST
+    CHECKLIST,
+    SINO
 }
 
 @Composable
@@ -362,6 +363,22 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                         traco.width, StrokeCap.Round
                     )
                 }
+            }
+
+            IconeGaveta.SINO -> {
+                // Sino de lembrete: cupula, aba na base, badalo — prazo/condicionante, nao
+                // calendario (folhinha com argolas).
+                val corpo = Path().apply {
+                    moveTo(w * 0.24f, h * 0.62f)
+                    cubicTo(w * 0.24f, h * 0.28f, w * 0.30f, h * 0.14f, w * 0.5f, h * 0.14f)
+                    cubicTo(w * 0.70f, h * 0.14f, w * 0.76f, h * 0.28f, w * 0.76f, h * 0.62f)
+                    lineTo(w * 0.84f, h * 0.72f)
+                    lineTo(w * 0.16f, h * 0.72f)
+                    close()
+                }
+                drawPath(corpo, cor, style = traco)
+                drawLine(cor, Offset(w * 0.5f, h * 0.08f), Offset(w * 0.5f, h * 0.14f), traco.width, StrokeCap.Round)
+                drawCircle(cor, w * 0.06f, Offset(w * 0.5f, h * 0.82f), style = Fill)
             }
         }
     }

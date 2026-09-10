@@ -113,6 +113,24 @@ data class RegistroFicha(
     val respostasJson: String
 )
 
+/**
+ * Uma condicionante de licença com prazo — a peça que faltava para o app ser aberto fora de
+ * vistoria: renovação de licença, DMR mensal, qualquer condicionante com data. `fotoArquivo`
+ * guarda o parecer fotografado que deu origem ao registro (prova de onde veio o prazo), não uma
+ * foto de campo — por isso não tem coordenada nem entra em sessão.
+ */
+data class Condicionante(
+    val id: Long = 0,
+    val descricao: String,
+    val formaCumprimento: String?,
+    /** Meia-noite (epoch millis) do dia do prazo — hora do dia não importa aqui. */
+    val prazoData: Long,
+    val criadaEm: Long,
+    val cumprida: Boolean = false,
+    val fotoArquivo: String? = null,
+    val fotoSha256: String? = null
+)
+
 data class Sessao(
     val id: Long = 0,
     val titulo: String,

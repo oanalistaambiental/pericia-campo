@@ -23,6 +23,7 @@ import br.com.oanalistaambiental.pericia.dados.CadastrosIef
 import br.com.oanalistaambiental.pericia.dados.CadastrosIefCarregador
 import br.com.oanalistaambiental.pericia.dados.CanaisDenuncia
 import br.com.oanalistaambiental.pericia.dados.CanaisDenunciaCarregador
+import br.com.oanalistaambiental.pericia.dados.Condicionante
 import br.com.oanalistaambiental.pericia.dados.Foto
 import br.com.oanalistaambiental.pericia.dados.FotoOcorrencia
 import br.com.oanalistaambiental.pericia.dados.MAXIMO_FOTOS_OCORRENCIA
@@ -142,6 +143,9 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _registrosFicha = MutableStateFlow<List<RegistroFicha>>(emptyList())
     val registrosFicha: StateFlow<List<RegistroFicha>> = _registrosFicha
+
+    private val _condicionantes = MutableStateFlow<List<Condicionante>>(emptyList())
+    val condicionantes: StateFlow<List<Condicionante>> = _condicionantes
 
     /**
      * Marca d'água (brasão do órgão, logo da consultoria) queimada no canto da CÓPIA com
@@ -558,6 +562,50 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    /** Grava uma condicionante com prazo, opcionalmente com a foto do parecer que a originou. */
+    fun salvarCondicionante(
+        descricao: String, formaCumprimento: String?, prazoData: Long, fotoOriginal: File?
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            runCatching {
+                var fotoArquivo: String? = null
+                var fotoSha256: String? = null
+                if (fotoOriginal != null && fotoOriginal.exists()) {
+                    val pasta = File(getApplication<Application>().filesDir, "condicionantes").apply { mkdirs() }
+                    val destino = File(pasta, "parecer-${System.currentTimeMillis()}.jpg")
+                    fotoOriginal.copyTo(destino, overwrite = true)
+                    fotoArquivo = destino.absolutePath
+                    fotoSha256 = Integridade.sha256(destino)
+                }
+                banco.inserirCondicionante(
+                    Condicionante(
+                        descricao = descricao, formaCumprimento = formaCumprimento,
+                        prazoData = prazoData, criadaEm = System.currentTimeMillis(),
+                        fotoArquivo = fotoArquivo, fotoSha256 = fotoSha256
+                    )
+                )
+            }.onSuccess {
+                _condicionantes.value = banco.condicionantes()
+                _mensagem.value = "Condicionante salva."
+            }.onFailure { _mensagem.value = "Falha ao salvar condicionante: ${it.message}" }
+        }
+    }
+
+    fun marcarCondicionanteCumprida(c: Condicionante, cumprida: Boolean) {
+        viewModelScope.launch(Dispatchers.IO) {
+            banco.marcarCondicionanteCumprida(c.id, cumprida)
+            _condicionantes.value = banco.condicionantes()
+        }
+    }
+
+    fun excluirCondicionante(c: Condicionante) {
+        viewModelScope.launch(Dispatchers.IO) {
+            c.fotoArquivo?.let { runCatching { File(it).delete() } }
+            banco.excluirCondicionante(c.id)
+            _condicionantes.value = banco.condicionantes()
+        }
+    }
+
     /** Copia até [limite] arquivos para a pasta própria da ocorrência e devolve com hash — usado ao criar e ao editar. */
     private fun copiarFotosOcorrencia(originais: List<File>, limite: Int): List<FotoOcorrencia> {
         if (limite <= 0) return emptyList()
@@ -691,6 +739,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch(Dispatchers.IO) { _ocorrencias.value = banco.ocorrencias() }
         viewModelScope.launch(Dispatchers.IO) { _registrosCaptacao.value = banco.registrosCaptacao() }
         viewModelScope.launch(Dispatchers.IO) { _registrosFicha.value = banco.registrosFicha() }
+        viewModelScope.launch(Dispatchers.IO) { _condicionantes.value = banco.condicionantes() }
         _temMarcaDagua.value = arquivoMarcaDagua().exists()
     }
 

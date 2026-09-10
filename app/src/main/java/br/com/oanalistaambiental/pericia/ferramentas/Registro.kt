@@ -18,6 +18,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaMedicao
 import br.com.oanalistaambiental.pericia.ui.TelaOcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.ui.TelaPrazoRenovacao
 import br.com.oanalistaambiental.pericia.ui.TelaRecursosHidricos
+import br.com.oanalistaambiental.pericia.ui.TelaCondicionantes
 import br.com.oanalistaambiental.pericia.ui.TelaFichaVistoria
 import br.com.oanalistaambiental.pericia.ui.TelaRelatorioPonto
 
@@ -164,6 +165,17 @@ object Registro {
             limite = "Faz só a conta do art. 12 da DN COPAM 217/2017. Não conhece condicionante " +
                 "nem prazo específico do processo — confirme com a Unidade Regional.",
             tela = { nav -> TelaPrazoRenovacao(nav.voltar) }
+        ),
+        Ferramenta(
+            id = "condicionantes",
+            nome = "Condicionantes e prazos",
+            resumo = "Cadastre um prazo — de uma foto do parecer ou à mão — e acompanhe até vencer.",
+            grupo = Grupo.ENQUADRAR,
+            icone = IconeGaveta.SINO,
+            limite = "O app não lê nem interpreta o parecer sozinho — a foto é só prova de onde " +
+                "veio o prazo. Descrição, prazo e forma de cumprir são sempre confirmados por " +
+                "quem cadastra, nunca preenchidos automaticamente.",
+            tela = { nav -> TelaCondicionantes(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(
             id = "taxa_ufemg",

@@ -11,7 +11,7 @@ import android.database.sqlite.SQLiteOpenHelper
  * Escolha deliberada: menos pecas moveis significa menos motivo para a primeira compilacao
  * falhar, e a mesma API ja e usada para ler o GeoPackage das camadas.
  */
-class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 9) {
+class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 10) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL("""
@@ -117,6 +117,17 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 9)
                 instante INTEGER NOT NULL,
                 respostas_json TEXT NOT NULL
             )""")
+        db.execSQL("""
+            CREATE TABLE condicionante (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                descricao TEXT NOT NULL,
+                forma_cumprimento TEXT,
+                prazo_data INTEGER NOT NULL,
+                criada_em INTEGER NOT NULL,
+                cumprida INTEGER NOT NULL DEFAULT 0,
+                foto_arquivo TEXT,
+                foto_sha256 TEXT
+            )""")
         db.execSQL("CREATE INDEX idx_foto_sessao ON foto(sessao_id)")
         db.execSQL("CREATE INDEX idx_restricao_foto ON restricao(foto_id)")
         db.execSQL("CREATE INDEX idx_caminhamento_sessao ON caminhamento_ponto(sessao_id)")
@@ -219,6 +230,19 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 9)
                     lat REAL NOT NULL, lon REAL NOT NULL, precisao_m REAL,
                     instante INTEGER NOT NULL,
                     respostas_json TEXT NOT NULL
+                )""")
+        }
+        if (old < 10) {
+            db.execSQL("""
+                CREATE TABLE condicionante (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    descricao TEXT NOT NULL,
+                    forma_cumprimento TEXT,
+                    prazo_data INTEGER NOT NULL,
+                    criada_em INTEGER NOT NULL,
+                    cumprida INTEGER NOT NULL DEFAULT 0,
+                    foto_arquivo TEXT,
+                    foto_sha256 TEXT
                 )""")
         }
     }
@@ -571,6 +595,42 @@ class Banco(context: Context) : SQLiteOpenHelper(context, "pericia.db", null, 9)
 
     fun excluirRegistroFicha(id: Long) {
         writableDatabase.delete("ficha_vistoria", "id=?", arrayOf(id.toString()))
+    }
+
+    // ---- condicionantes e prazos ----
+
+    fun inserirCondicionante(c: Condicionante): Long =
+        writableDatabase.insert("condicionante", null, ContentValues().apply {
+            put("descricao", c.descricao); put("forma_cumprimento", c.formaCumprimento)
+            put("prazo_data", c.prazoData); put("criada_em", c.criadaEm)
+            put("cumprida", if (c.cumprida) 1 else 0)
+            put("foto_arquivo", c.fotoArquivo); put("foto_sha256", c.fotoSha256)
+        })
+
+    fun condicionantes(): List<Condicionante> {
+        val out = mutableListOf<Condicionante>()
+        readableDatabase.rawQuery(
+            "SELECT id, descricao, forma_cumprimento, prazo_data, criada_em, cumprida," +
+                " foto_arquivo, foto_sha256 FROM condicionante ORDER BY prazo_data ASC", null
+        ).use { c ->
+            while (c.moveToNext()) out += Condicionante(
+                id = c.getLong(0), descricao = c.getString(1), formaCumprimento = c.getString(2),
+                prazoData = c.getLong(3), criadaEm = c.getLong(4), cumprida = c.getInt(5) != 0,
+                fotoArquivo = c.getString(6), fotoSha256 = c.getString(7)
+            )
+        }
+        return out
+    }
+
+    fun marcarCondicionanteCumprida(id: Long, cumprida: Boolean) {
+        writableDatabase.update(
+            "condicionante", ContentValues().apply { put("cumprida", if (cumprida) 1 else 0) },
+            "id=?", arrayOf(id.toString())
+        )
+    }
+
+    fun excluirCondicionante(id: Long) {
+        writableDatabase.delete("condicionante", "id=?", arrayOf(id.toString()))
     }
 
     fun foto(id: Long): Foto? =
