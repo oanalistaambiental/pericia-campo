@@ -177,6 +177,37 @@ object Exportador {
     /** Quebra o unico fechamento possivel de CDATA, sem mexer no resto do texto. */
     private fun protegerCdata(v: String): String = v.replace("]]>", "]]]]><![CDATA[>")
 
+    // ------------------------------------------------------------------ GPX
+
+    /**
+     * GPX 1.1, um `<wpt>` por registro.
+     *
+     * Existe porque parte da pericia ainda usa GPS de mao (Garmin e afins) ao lado do celular,
+     * e GPX e o formato que esses aparelhos importam direto — o KMZ serve ao Google Earth/QGIS,
+     * nao a um GPS de campo. Mesma regra do KMZ: ponto sem coordenada nao entra, um `<wpt>` em
+     * 0,0 seria pior que a ausencia dele.
+     */
+    fun gpx(fotos: List<Foto>, destino: File): File {
+        val sb = StringBuilder()
+        sb.append("""<?xml version="1.0" encoding="UTF-8"?>""").append("\n")
+        sb.append("""<gpx version="1.1" creator="Kit de Pericia Ambiental" """)
+           .append("""xmlns="http://www.topografix.com/GPX/1/1">""").append("\n")
+
+        fotos.forEach { f ->
+            if (f.lat == 0.0 && f.lon == 0.0) return@forEach
+            sb.append("""<wpt lat="%.7f" lon="%.7f">""".format(Locale.US, f.lat, f.lon)).append("\n")
+            f.altitudeM?.let { sb.append("<ele>").append("%.1f".format(Locale.US, it)).append("</ele>\n") }
+            sb.append("<time>").append(fmtIso.get()!!.format(Date(f.instante))).append("</time>\n")
+            sb.append("<name>").append(xml(File(f.arquivoOriginal).name)).append("</name>\n")
+            val desc = listOfNotNull(f.tipoOcorrencia, f.observacao).joinToString(" — ")
+            if (desc.isNotEmpty()) sb.append("<desc>").append(xml(desc)).append("</desc>\n")
+            sb.append("</wpt>\n")
+        }
+        sb.append("</gpx>\n")
+        destino.writeText(sb.toString(), Charsets.UTF_8)
+        return destino
+    }
+
     // ------------------------------------------------------- compartilhamento
 
     /**
@@ -230,6 +261,7 @@ object Exportador {
         "pdf" -> "application/pdf"
         "csv" -> "text/csv"
         "kmz" -> "application/vnd.google-earth.kmz"
+        "gpx" -> "application/gpx+xml"
         // Sem isto a prova de integridade saia como "*/*", e varios aplicativos de e-mail
         // e mensagem recusam anexo de tipo desconhecido — o documento existia e nao chegava.
         "txt" -> "text/plain"

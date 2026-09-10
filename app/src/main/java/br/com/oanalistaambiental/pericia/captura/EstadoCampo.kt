@@ -187,18 +187,27 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
      * 3. A falha de permissao era engolida por um `runCatching {}` vazio: o app parecia
      *    apenas "sem sinal", sem dizer que o problema era outro.
      */
+    /**
+     * Ligado, GNSS e bussola atualizam com menor frequencia — mais bateria dura numa vistoria
+     * longa em area rural, ao custo de a leitura reagir mais devagar. Lido dentro de [iniciar];
+     * para o valor novo valer, quem alterna chama [parar] e [iniciar] de novo (ver
+     * `CapturaViewModel.alternarEconomiaDeBateria`).
+     */
+    var economiaDeBateria: Boolean = false
+
     @SuppressLint("MissingPermission")
     fun iniciar() {
         if (ligado) return
         ligado = true
         _falha.value = null
 
+        val intervaloGnssMs = if (economiaDeBateria) 5_000L else 1_000L
         var algumProvedor = false
         var permissaoNegada = false
         for (provedor in listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)) {
             runCatching {
                 if (lm.isProviderEnabled(provedor)) {
-                    lm.requestLocationUpdates(provedor, 1000L, 0f, this)
+                    lm.requestLocationUpdates(provedor, intervaloGnssMs, 0f, this)
                     algumProvedor = true
                     lm.getLastKnownLocation(provedor)?.let { semear(it) }
                 }
@@ -217,8 +226,9 @@ class EstadoCampo(private val context: Context) : LocationListener, SensorEventL
         relogio.removeCallbacks(vigiaDeValidade)
         relogio.post(vigiaDeValidade)
 
+        val atrasoRotacao = if (economiaDeBateria) SensorManager.SENSOR_DELAY_NORMAL else SensorManager.SENSOR_DELAY_UI
         sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)?.let {
-            sm.registerListener(this, it, SensorManager.SENSOR_DELAY_UI)
+            sm.registerListener(this, it, atrasoRotacao)
         }
         sm.getDefaultSensor(Sensor.TYPE_PRESSURE)?.let {
             sm.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL)

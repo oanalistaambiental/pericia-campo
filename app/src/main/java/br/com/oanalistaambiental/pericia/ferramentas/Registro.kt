@@ -9,6 +9,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaClinometro
 import br.com.oanalistaambiental.pericia.ui.TelaConfiguracoes
 import br.com.oanalistaambiental.pericia.ui.TelaIrParaCoordenada
 import br.com.oanalistaambiental.pericia.ui.TelaMedicao
+import br.com.oanalistaambiental.pericia.ui.TelaPrazoRenovacao
 
 /**
  * A gaveta, em um lugar so.
@@ -80,6 +81,16 @@ object Registro {
                 "substitui o enquadramento do órgão ambiental e não vincula a Administração " +
                 "Pública. A modalidade definitiva é a da Unidade Regional.",
             tela = { nav -> TelaEnquadramento(nav.voltar) }
+        ),
+        Ferramenta(
+            id = "prazo_renovacao",
+            nome = "Prazo de renovação",
+            resumo = "Data-limite para protocolar a renovação, 120 dias antes do vencimento.",
+            grupo = Grupo.ENQUADRAR,
+            icone = IconeGaveta.CALENDARIO,
+            limite = "Faz só a conta do art. 12 da DN COPAM 217/2017. Não conhece condicionante " +
+                "nem prazo específico do processo — confirme com a Unidade Regional.",
+            tela = { nav -> TelaPrazoRenovacao(nav.voltar) }
         ),
         Ferramenta(
             id = "configuracoes",

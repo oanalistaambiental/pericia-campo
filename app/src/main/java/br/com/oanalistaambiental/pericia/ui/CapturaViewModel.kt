@@ -66,6 +66,41 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
     private val _versaoPacote = MutableStateFlow<String?>(null)
     val versaoPacote: StateFlow<String?> = _versaoPacote
 
+    // ------------------------------------------------------------------ preferencias
+
+    /**
+     * `SharedPreferences` direto, sem Banco: sao dois booleanos de interface, nao dado de
+     * pericia. Guardar em tabela seria peso morto para o que e.
+     */
+    private val prefs = getApplication<Application>()
+        .getSharedPreferences("pericia_prefs", android.content.Context.MODE_PRIVATE)
+
+    /** Fonte maior e contraste no maximo nos numeros grandes — leitura ao sol do meio-dia. */
+    private val _modoSolForte = MutableStateFlow(prefs.getBoolean("modo_sol_forte", false))
+    val modoSolForte: StateFlow<Boolean> = _modoSolForte
+
+    fun alternarModoSolForte() {
+        val novo = !_modoSolForte.value
+        _modoSolForte.value = novo
+        prefs.edit().putBoolean("modo_sol_forte", novo).apply()
+    }
+
+    /**
+     * GNSS e bussola atualizam mais devagar — mais bateria numa vistoria longa em area rural.
+     * Precisa reiniciar `estadoCampo` para o novo intervalo valer (ver [EstadoCampo.iniciar]).
+     */
+    private val _economiaDeBateria = MutableStateFlow(prefs.getBoolean("economia_bateria", false))
+    val economiaDeBateria: StateFlow<Boolean> = _economiaDeBateria
+
+    fun alternarEconomiaDeBateria() {
+        val novo = !_economiaDeBateria.value
+        _economiaDeBateria.value = novo
+        prefs.edit().putBoolean("economia_bateria", novo).apply()
+        estadoCampo.economiaDeBateria = novo
+        estadoCampo.parar()
+        estadoCampo.iniciar()
+    }
+
     /**
      * Para onde o app esta guiando. Nasceu como "voltar aquela foto" e virou generico, porque
      * a outra metade do trabalho e chegar a uma coordenada que veio de fora: auto de infracao,
@@ -151,6 +186,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         recarregar()
         // O GNSS NAO e iniciado aqui: sem permissao a chamada e recusada em silencio e nada
         // religa depois. Quem inicia e a MainActivity, assim que a permissao existe.
+        estadoCampo.economiaDeBateria = _economiaDeBateria.value
         abrirPacote()
         observarPosicaoParaRetorno()
     }
@@ -538,6 +574,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                     "pdf" -> LaudoPdf.gerar(banco, sessao, fotos, File(pasta, "$base-laudo.pdf"))
                     "csv" -> Exportador.csv(banco, fotos, File(pasta, "$base-metadados.csv"))
                     "kmz" -> Exportador.kmz(banco, sessao, fotos, File(pasta, "$base.kmz"))
+                    "gpx" -> Exportador.gpx(fotos, File(pasta, "$base.gpx"))
                     else -> throw IllegalArgumentException("Formato desconhecido: $formato")
                 }
                 withContext(Dispatchers.Main) {

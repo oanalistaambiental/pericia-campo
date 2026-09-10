@@ -3,6 +3,11 @@
 # tipo: poligono | ponto      raio_m: usado apenas quando tipo=ponto
 # tecnico: PREENCHER com o Name que sair do GetCapabilities (passo 1 do montar-pacote.sh)
 #
+# Nao existe camada estadual de ZEE/Macrozoneamento Ambiental publicada neste WFS (conferido em
+# 09/09/2026): so ha zoneamento por Unidade de Conservacao especifica, uma tabela por UC. As 5
+# linhas abaixo sao as que o WFS publica hoje — nao e a lista completa das UCs de MG, so as que
+# tem zoneamento publicado neste servico.
+#
 # prioridade	tabela	nome	fonte	tipo	raio_m	tecnico
 1	areas_protegidas	Áreas Protegidas	IEF/ICMBio	poligono		
 1	zonas_amortecimento	Zonas de Amortecimento de Unidades de Conservação	IEF	poligono		
@@ -13,7 +18,11 @@
 1	drenagem_classe_especial	Áreas de Drenagem à Montante de Cursos d'água Classe Especial	Igam	poligono		
 1	enquadramento_corpos_agua	Enquadramentos de Corpos D'água	Igam	poligono		
 1	rios_preservacao_permanente	Rios de Preservação Permanente	Igam	poligono		
-1	zoneamento_ucs_estaduais	Zoneamento de Unidades de Conservação Estaduais	IEF	poligono		
+1	zoneamento_uc_pe_botumirim	Zoneamento — PE Botumirim	IEF	poligono		IDE:ide_2021_mg_zoneamento_uc_pe_botumirim_pol
+1	zoneamento_uc_pe_nova_baden	Zoneamento — PE Nova Baden	IEF	poligono		IDE:ide_2021_mg_zoneamento_uc_pe_nova_baden_pol
+1	zoneamento_uc_pe_serra_negra_mantiqueira	Zoneamento — PE Serra Negra da Mantiqueira	IEF	poligono		IDE:ide_2021_mg_zoneamento_uc_pe_serra_negra_mantiqueira_pol
+1	zoneamento_uc_pe_serra_sobrado	Zoneamento — PE Serra do Sobrado	IEF	poligono		IDE:ide_2021_mg_zoneamento_uc_pe_serra_sobrado_pol
+1	zoneamento_uc_pe_serra_verde	Zoneamento — PE Serra Verde	IEF	poligono		IDE:ide_2021_mg_zoneamento_uc_pe_serra_verde_pol
 1	terras_indigenas	Terras indígenas	Funai	poligono		
 1	raios_terras_indigenas	Raios de restrição de Terras Indígenas	Feam/Funai	poligono		
 1	quilombolas	Quilombolas	Incra	poligono		

@@ -196,6 +196,7 @@ fun TelaDetalheSessao(
                     BotaoLargo("Laudo fotográfico (PDF)", principal = true) { vm.exportar(sessao, "pdf") }
                     BotaoLargo("Metadados (CSV)") { vm.exportar(sessao, "csv") }
                     BotaoLargo("Pontos (KMZ — Google Earth / QGIS)") { vm.exportar(sessao, "kmz") }
+                    BotaoLargo("Pontos (GPX — GPS de mão)") { vm.exportar(sessao, "gpx") }
                     BotaoLargo("Arquivos originais") { vm.compartilharOriginais(sessao) }
                 }
 

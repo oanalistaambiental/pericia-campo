@@ -329,6 +329,20 @@ fun TelaResultado(
                     }
                 }
 
+                // Aviso GERAL, nao um cruzamento codigo-a-codigo: o CTF/APP do Ibama usa uma
+                // classificacao federal diferente da DN 217, e cruzar as duas exigiria ler o
+                // Anexo I da norma do Ibama linha a linha, do mesmo jeito que o catalogo da DN
+                // 217 foi extraido. Sem essa leitura, uma tabela codigo-a-codigo seria dado
+                // fabricado — o aviso fica generico e verdadeiro, nunca especifico e inventado.
+                Spacer(Modifier.height(8.dp))
+                Aviso(
+                    "Atividade potencialmente poluidora também pode exigir Cadastro Técnico " +
+                        "Federal (CTF/APP) do Ibama, independente do licenciamento estadual. " +
+                        "Este app não sabe dizer se esta atividade específica exige — confira em " +
+                        "servicos.ibama.gov.br.",
+                    TipoAviso.INFO
+                )
+
                 // Art. 18 — o caso condicional ganha bloco proprio, e nao so uma linha de aviso.
                 // A condicao precisa caber inteira na tela: quem vai formalizar o processo tem
                 // de conseguir ler e dizer "isto e o meu caso" ou "nao e", sem abrir a norma.

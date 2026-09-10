@@ -35,7 +35,8 @@ enum class IconeGaveta {
     REGUA,
     ALVO,
     ENQUADRAMENTO,
-    CAMADAS
+    CAMADAS,
+    CALENDARIO
 }
 
 @Composable
@@ -150,6 +151,22 @@ fun DesenharIcone(icone: IconeGaveta, cor: Color, tamanho: Dp = 30.dp) {
                     lineTo(w * 0.7f, h * 0.4f)
                 }
                 drawPath(check, cor, style = traco)
+            }
+
+            IconeGaveta.CALENDARIO -> {
+                // Folhinha: retangulo com duas argolas no topo e uma linha separando o cabecalho.
+                drawRoundRect(
+                    color = cor,
+                    topLeft = Offset(w * 0.12f, h * 0.18f),
+                    size = Size(w * 0.76f, h * 0.68f),
+                    cornerRadius = CornerRadius(w * 0.06f, w * 0.06f),
+                    style = traco
+                )
+                drawLine(cor, Offset(w * 0.12f, h * 0.36f), Offset(w * 0.88f, h * 0.36f), traco.width)
+                drawLine(cor, Offset(w * 0.30f, h * 0.1f), Offset(w * 0.30f, h * 0.24f), traco.width, StrokeCap.Round)
+                drawLine(cor, Offset(w * 0.70f, h * 0.1f), Offset(w * 0.70f, h * 0.24f), traco.width, StrokeCap.Round)
+                // Marca de um dia destacado, o prazo.
+                drawCircle(cor, w * 0.07f, Offset(w * 0.6f, h * 0.6f), style = Fill)
             }
 
             IconeGaveta.CAMADAS -> {

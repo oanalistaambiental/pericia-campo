@@ -9,6 +9,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -22,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import br.com.oanalistaambiental.pericia.captura.Orientacoes
 import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.PontosLocais
+import br.com.oanalistaambiental.pericia.geo.PrazoRenovacao
 import br.com.oanalistaambiental.pericia.geo.Utm
 
 /** Menu de ferramentas — o que existe fora do ato de fotografar. */
@@ -31,11 +34,23 @@ import br.com.oanalistaambiental.pericia.geo.Utm
  * segue sendo a casa das TELAS de cada ferramenta.
  */
 
+/**
+ * Escala de fonte do modo sol forte, e a cor de maximo contraste que o acompanha.
+ *
+ * So os numeros grandes (o que se le de relance, de pe, ao sol) usam isto — texto de apoio ja
+ * usa `Cores.textoFraco`, que foi clareado por este mesmo motivo (ver o comentario em
+ * `Componentes.kt`).
+ */
+private fun escalaSolForte(ligado: Boolean) = if (ligado) 1.18f else 1f
+private fun corSolForte(ligado: Boolean, normal: Color) = if (ligado) Color.White else normal
+
 @Composable
 fun TelaBussola(vm: CapturaViewModel, voltar: () -> Unit) {
     val p by vm.estadoCampo.posicao.collectAsState()
     val o by vm.estadoCampo.orientacao.collectAsState()
     val b by vm.estadoCampo.barometro.collectAsState()
+    val solForte by vm.modoSolForte.collectAsState()
+    val escala = escalaSolForte(solForte)
 
     Column(
         Modifier.fillMaxSize().background(Cores.fundo)
@@ -48,11 +63,11 @@ fun TelaBussola(vm: CapturaViewModel, voltar: () -> Unit) {
             Modifier.fillMaxWidth().padding(top = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            BussolaCircular(o.azimuteGraus)
+            BussolaCircular(o.azimuteGraus, tamanho = (220 * escala).dp)
             Spacer(Modifier.height(14.dp))
             Text(
                 o.azimuteGraus?.let { "%.0f°".format(it) } ?: "—",
-                color = Cores.texto, fontSize = 40.sp, fontWeight = FontWeight.Bold
+                color = corSolForte(solForte, Cores.texto), fontSize = (40 * escala).sp, fontWeight = FontWeight.Bold
             )
             Text(
                 o.azimuteGraus?.let { "${Orientacoes.rosa(it)} · direção da câmera" }
@@ -118,6 +133,8 @@ fun TelaClinometro(vm: CapturaViewModel, voltar: () -> Unit) {
     val o by vm.estadoCampo.orientacao.collectAsState()
     val graus = o.inclinacaoSuperficieGraus
     val percent = o.declividadePercent
+    val solForte by vm.modoSolForte.collectAsState()
+    val escala = escalaSolForte(solForte)
 
     Column(
         Modifier.fillMaxSize().background(Cores.fundo)
@@ -131,7 +148,7 @@ fun TelaClinometro(vm: CapturaViewModel, voltar: () -> Unit) {
         ) {
             Text(
                 graus?.let { "%.1f°".format(it) } ?: "—",
-                color = Cores.texto, fontSize = 64.sp, fontWeight = FontWeight.Bold
+                color = corSolForte(solForte, Cores.texto), fontSize = (64 * escala).sp, fontWeight = FontWeight.Bold
             )
             Spacer(Modifier.height(4.dp))
             Text(
@@ -198,6 +215,8 @@ fun TelaMedicao(vm: CapturaViewModel, voltar: () -> Unit) {
     val vertices by vm.vertices.collectAsState()
     val pol by vm.poligono.collectAsState()
     var confirmarLimpeza by rememberSaveable { mutableStateOf(false) }
+    val solForte by vm.modoSolForte.collectAsState()
+    val escala = escalaSolForte(solForte)
 
     Column(
         Modifier.fillMaxSize().background(Cores.fundo)
@@ -212,7 +231,7 @@ fun TelaMedicao(vm: CapturaViewModel, voltar: () -> Unit) {
         ) {
             Text(
                 pol?.areaFormatada() ?: "—",
-                color = Cores.texto, fontSize = 44.sp, fontWeight = FontWeight.Bold
+                color = corSolForte(solForte, Cores.texto), fontSize = (44 * escala).sp, fontWeight = FontWeight.Bold
             )
             Text(
                 pol?.incertezaFormatada() ?: "marque ao menos três vértices",
@@ -431,6 +450,8 @@ private fun GuiaAteCoordenada(vm: CapturaViewModel, alvo: CapturaViewModel.Alvo,
     val p by vm.estadoCampo.posicao.collectAsState()
     val o by vm.estadoCampo.orientacao.collectAsState()
     val guia by vm.guia.collectAsState()
+    val solForte by vm.modoSolForte.collectAsState()
+    val escala = escalaSolForte(solForte)
 
     SeloPrecisao(p)
 
@@ -438,12 +459,12 @@ private fun GuiaAteCoordenada(vm: CapturaViewModel, alvo: CapturaViewModel.Alvo,
         Modifier.fillMaxWidth().padding(top = 18.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        BussolaCircular(o.azimuteGraus, alvoGraus = guia?.rumoGraus)
+        BussolaCircular(o.azimuteGraus, alvoGraus = guia?.rumoGraus, tamanho = (220 * escala).dp)
         Spacer(Modifier.height(10.dp))
         Text(
             guia?.let { "%.0f m".format(it.distanciaM) } ?: "—",
-            color = if (guia?.chegou == true) Cores.bomClaro else Cores.texto,
-            fontSize = 36.sp, fontWeight = FontWeight.Bold
+            color = if (guia?.chegou == true) Cores.bomClaro else corSolForte(solForte, Cores.texto),
+            fontSize = (36 * escala).sp, fontWeight = FontWeight.Bold
         )
         Text(
             when {
@@ -503,6 +524,94 @@ private fun Campo(rotulo: String, valor: String) {
     HorizontalDivider(color = Cores.linha)
 }
 
+private val formatoDataBr = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+private fun interpretarData(texto: String): java.time.LocalDate? =
+    runCatching { java.time.LocalDate.parse(texto.trim(), formatoDataBr) }.getOrNull()
+
+/**
+ * Prazo de protocolo da renovacao — art. 12 da DN COPAM 217/2017.
+ *
+ * So a conta da data, deliberadamente separada de qualquer enquadramento em curso: o vencimento
+ * de uma licenca e informacao do PROCESSO, nao da simulacao, e o perito pode querer conferir o
+ * prazo de uma licenca cujo enquadramento nem foi feito neste aparelho.
+ */
+@Composable
+fun TelaPrazoRenovacao(voltar: () -> Unit) {
+    var texto by rememberSaveable { mutableStateOf("") }
+    val validade = remember(texto) { interpretarData(texto) }
+
+    Column(
+        Modifier.fillMaxSize().background(Cores.fundo)
+            .windowInsetsPadding(WindowInsets.safeDrawing)
+    ) {
+        Cabecalho("Prazo de renovação", voltar)
+
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            OutlinedTextField(
+                value = texto,
+                onValueChange = { texto = it },
+                label = { Text("Vencimento da licença (dd/mm/aaaa)") },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(Modifier.height(16.dp))
+
+            when {
+                texto.isBlank() -> Text(
+                    "Informe a data de vencimento da licença para calcular até quando dá para " +
+                        "protocolar a renovação.",
+                    color = Cores.textoFraco, fontSize = 12.5.sp, lineHeight = 18.sp
+                )
+                validade == null -> Text(
+                    "Não reconheci essa data. Use o formato dd/mm/aaaa, por exemplo 15/03/2027.",
+                    color = Cores.atencaoClaro, fontSize = 12.5.sp, lineHeight = 18.sp
+                )
+                else -> {
+                    val r = remember(validade) { PrazoRenovacao.calcular(validade) }
+                    Column(
+                        Modifier.fillMaxWidth()
+                            .background(Cores.superficie, RoundedCornerShape(8.dp)).padding(18.dp)
+                    ) {
+                        Text(
+                            "PROTOCOLAR ATÉ", color = Cores.textoFraco, fontSize = 10.5.sp,
+                            letterSpacing = 1.2.sp
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Text(
+                            r.dataLimiteProtocolo.format(formatoDataBr),
+                            color = Cores.texto, fontSize = 30.sp, fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            when {
+                                r.prazoVencido ->
+                                    "O prazo de 120 dias já passou há ${-r.diasRestantes} dia(s)."
+                                r.proximoDoLimite ->
+                                    "Faltam ${r.diasRestantes} dia(s) — dentro da janela de atenção."
+                                else -> "Faltam ${r.diasRestantes} dia(s)."
+                            },
+                            color = when {
+                                r.prazoVencido -> Cores.alertaClaro
+                                r.proximoDoLimite -> Cores.atencaoClaro
+                                else -> Cores.bomClaro
+                            },
+                            fontSize = 14.sp, fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+        }
+
+        Ajuda(
+            "De onde vem o prazo de 120 dias",
+            "Art. 12 da DN COPAM 217/2017 exige que o pedido de renovação seja protocolado com " +
+                "antecedência mínima de 120 dias do término da validade da licença. Esta " +
+                "ferramenta faz só a conta da data — confirme o prazo exato e eventuais " +
+                "condicionantes específicas com a Unidade Regional."
+        )
+    }
+}
+
 /** Configuracoes e estado do pacote de camadas. */
 @Composable
 fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
@@ -514,9 +623,27 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
             .windowInsetsPadding(WindowInsets.safeDrawing)
     ) {
         Cabecalho("Configurações", voltar)
+        val solForte by vm.modoSolForte.collectAsState()
+        val economia by vm.economiaDeBateria.collectAsState()
 
         LazyColumn(Modifier.weight(1f)) {
             item {
+                Rotulo("TELA E BATERIA")
+                LinhaAlternavel(
+                    titulo = "Modo sol forte",
+                    descricao = "Aumenta o tamanho e o contraste dos números grandes, para " +
+                        "ler ao sol do meio-dia.",
+                    ligado = solForte,
+                    aoAlternar = { vm.alternarModoSolForte() }
+                )
+                LinhaAlternavel(
+                    titulo = "Economia de bateria",
+                    descricao = "GNSS e bússola atualizam mais devagar. Rende mais numa " +
+                        "vistoria longa em área rural; a leitura reage com menos frequência.",
+                    ligado = economia,
+                    aoAlternar = { vm.alternarEconomiaDeBateria() }
+                )
+
                 Rotulo("COORDENADAS")
                 Linha("Datum de exibição", "SIRGAS 2000", Cores.bomClaro)
                 Linha("Projeção da legenda", "UTM, fuso automático", Cores.texto)
@@ -626,6 +753,26 @@ private fun Linha(rotulo: String, valor: String, cor: Color) {
         Text(rotulo, color = Cores.texto, fontSize = 13.5.sp)
         Spacer(Modifier.weight(1f))
         Mono(valor, cor, 12)
+    }
+    HorizontalDivider(color = Cores.linha)
+}
+
+@Composable
+private fun LinhaAlternavel(titulo: String, descricao: String, ligado: Boolean, aoAlternar: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(titulo, color = Cores.texto, fontSize = 13.5.sp, fontWeight = FontWeight.Medium)
+            Spacer(Modifier.height(3.dp))
+            Text(descricao, color = Cores.textoFraco, fontSize = 11.sp, lineHeight = 15.sp)
+        }
+        Spacer(Modifier.width(10.dp))
+        Switch(
+            checked = ligado, onCheckedChange = { aoAlternar() },
+            colors = SwitchDefaults.colors(checkedTrackColor = Cores.bom)
+        )
     }
     HorizontalDivider(color = Cores.linha)
 }
