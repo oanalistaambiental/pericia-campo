@@ -2,6 +2,7 @@ package br.com.oanalistaambiental.pericia.ui
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -22,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import br.com.oanalistaambiental.pericia.dados.Condicionante
+import br.com.oanalistaambiental.pericia.ocr.LeitorDeTexto
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.io.File
 import java.time.LocalDate
 import java.time.ZoneId
@@ -172,12 +176,34 @@ private fun ColumnScope.NovaCondicionante(vm: CapturaViewModel, aoTerminar: () -
     var dataTexto by rememberSaveable { mutableStateOf("") }
     var fotoParecer by remember { mutableStateOf<File?>(null) }
     var capturando by remember { mutableStateOf(false) }
+    var linhasReconhecidas by remember { mutableStateOf<List<String>>(emptyList()) }
+    var lendoFoto by remember { mutableStateOf(false) }
+    var falhaLeitura by remember { mutableStateOf(false) }
     val data = remember(dataTexto) { interpretarDataCondicionante(dataTexto) }
+    val escopo = rememberCoroutineScope()
 
     if (capturando) {
         CapturaFotoMinima(
             prefixoArquivo = "condicionante_temp",
-            aoCapturar = { f -> fotoParecer = f; capturando = false },
+            aoCapturar = { f ->
+                fotoParecer = f
+                capturando = false
+                linhasReconhecidas = emptyList()
+                falhaLeitura = false
+                lendoFoto = true
+                escopo.launch(Dispatchers.Default) {
+                    val bitmap = BitmapFactory.decodeFile(f.absolutePath)
+                    val linhas = if (bitmap != null) {
+                        runCatching { LeitorDeTexto.reconhecerLinhas(bitmap) }.getOrNull()
+                    } else null
+                    linhasReconhecidas = linhas ?: emptyList()
+                    falhaLeitura = linhas == null
+                    lendoFoto = false
+                    if (dataTexto.isBlank()) {
+                        LeitorDeTexto.sugerirData(linhasReconhecidas)?.let { dataTexto = it }
+                    }
+                }
+            },
             aoCancelar = { capturando = false }
         )
         return
@@ -221,6 +247,32 @@ private fun ColumnScope.NovaCondicionante(vm: CapturaViewModel, aoTerminar: () -
                 }
                 BotaoLargo(if (fotoParecer == null) "Fotografar o parecer" else "Trocar foto") {
                     capturando = true
+                }
+
+                if (lendoFoto) {
+                    Spacer(Modifier.height(8.dp))
+                    Text("Lendo texto da foto…", color = Cores.textoFraco, fontSize = 11.5.sp)
+                }
+                if (falhaLeitura) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Não consegui ler texto nessa foto — preencha à mão.",
+                        color = Cores.atencaoClaro, fontSize = 11.5.sp
+                    )
+                }
+                if (linhasReconhecidas.isNotEmpty()) {
+                    Spacer(Modifier.height(10.dp))
+                    Rotulo("TEXTO RECONHECIDO — TOQUE PARA USAR COMO DESCRIÇÃO")
+                    linhasReconhecidas.forEach { linha ->
+                        Text(
+                            linha, color = Cores.texto, fontSize = 12.sp, lineHeight = 17.sp,
+                            modifier = Modifier.fillMaxWidth()
+                                .background(Cores.superficie, RoundedCornerShape(6.dp))
+                                .clickable { descricao = linha }
+                                .padding(10.dp)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                    }
                 }
             }
         }

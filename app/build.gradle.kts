@@ -56,6 +56,11 @@ dependencies {
     // contrario do Google Maps, que exige conta Google Cloud com faturamento habilitado).
     implementation("org.osmdroid:osmdroid-android:6.1.20")
 
+    // OCR local do parecer fotografado (Condicionantes e prazos) — modelo embarcado no APK,
+    // funciona sem rede. Variante "bundled" (nao a "unbundled" via Play Services), de proposito:
+    // nao depende de baixar modelo na hora, mesmo espirito offline-first do resto do app.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+
     testImplementation("junit:junit:4.13.2")
 // org.json faz parte do Android, mas nos testes de unidade e apenas um esqueleto;
 // esta dependencia da a implementacao real para a JVM.

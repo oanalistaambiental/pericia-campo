@@ -172,9 +172,10 @@ object Registro {
             resumo = "Cadastre um prazo — de uma foto do parecer ou à mão — e acompanhe até vencer.",
             grupo = Grupo.ENQUADRAR,
             icone = IconeGaveta.SINO,
-            limite = "O app não lê nem interpreta o parecer sozinho — a foto é só prova de onde " +
-                "veio o prazo. Descrição, prazo e forma de cumprir são sempre confirmados por " +
-                "quem cadastra, nunca preenchidos automaticamente.",
+            limite = "O reconhecimento de texto da foto só localiza linhas — não entende o " +
+                "parecer nem decide qual linha é a condicionante ou qual data é o prazo. " +
+                "Descrição, prazo e forma de cumprir são sempre confirmados por quem cadastra, " +
+                "nunca preenchidos sozinhos.",
             tela = { nav -> TelaCondicionantes(vmCaptura(), nav.voltar) }
         ),
         Ferramenta(
