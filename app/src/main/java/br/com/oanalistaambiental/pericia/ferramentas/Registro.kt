@@ -15,6 +15,7 @@ import br.com.oanalistaambiental.pericia.ui.TelaClinometro
 import br.com.oanalistaambiental.pericia.ui.TelaConfiguracoes
 import br.com.oanalistaambiental.pericia.ui.TelaIrParaCoordenada
 import br.com.oanalistaambiental.pericia.ui.TelaMedicao
+import br.com.oanalistaambiental.pericia.ui.TelaOcorrenciaAmbiental
 import br.com.oanalistaambiental.pericia.ui.TelaPrazoRenovacao
 
 /**

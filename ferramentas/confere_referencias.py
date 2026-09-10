@@ -76,6 +76,46 @@ def blocos_when(texto):
     return saida
 
 
+FUN_TELA = re.compile(r"^@Composable\s*\n\s*fun\s+(Tela\w*)\s*\(", re.M)
+
+
+def checa_telas_sem_import(problemas):
+    """
+    Caso a parte — o DECL/`fornecedores` acima so rastreia class/object/interface/enum,
+    nunca `fun` (de proposito: incluir toda funcao privada criaria ruido demais). Mas TODA
+    tela deste projeto e uma @Composable `fun TelaAlgumaCoisa(...)`, convencao forte o
+    bastante para checar sozinha, sem essa ambiguidade — foi assim que `TelaOcorrenciaAmbiental`
+    usada em `ferramentas/Registro.kt` sem import passou batido pelo resto do script e so
+    quebrou no CI.
+    """
+    fornecedoras = {}  # nome -> (pacote relativo, arquivo)
+    for sub in ("ui", "enquadramento/ui"):
+        for f in arquivos(sub):
+            texto = open(f, encoding="utf-8").read()
+            for nome in FUN_TELA.findall(texto):
+                fornecedoras[nome] = (sub, os.path.basename(f))
+
+    for sub in ("ferramentas", "ui", "enquadramento/ui", "enquadramento/norma", ""):
+        for f in arquivos(sub):
+            rel = os.path.relpath(f, RAIZ)
+            texto = open(f, encoding="utf-8").read()
+            importados = set(re.findall(
+                rf"^import {re.escape(PACOTE)}\.[\w.]+\.(\w+)", texto, re.M))
+            curinga = {m for m in re.findall(
+                rf"^import {re.escape(PACOTE)}\.(\w+)\.\*", texto, re.M)}
+            declara_aqui = set(FUN_TELA.findall(texto))
+            usadas = set(re.findall(r"\b(Tela\w*)\s*\(", texto)) - declara_aqui
+            for nome in sorted(usadas):
+                if nome not in fornecedoras:
+                    continue
+                pac, orig = fornecedoras[nome]
+                if pac == sub or nome in importados or pac.split("/")[-1] in curinga:
+                    continue
+                problemas.append(
+                    f"{rel}: usa '{nome}' (de {pac}/{orig}) sem import — "
+                    f"o CI falha com \"Unresolved reference '{nome}'\"")
+
+
 def main():
     problemas = []
     fornecedores = {}
@@ -129,6 +169,8 @@ def main():
                             f"{rel}: 'when' sobre {nome} nao cobre "
                             f"{', '.join(faltando)} e nao tem 'else' — o CI falha com "
                             f"\"'when' expression must be exhaustive\"")
+
+    checa_telas_sem_import(problemas)
 
     if problemas:
         print("PROBLEMAS ENCONTRADOS:\n")

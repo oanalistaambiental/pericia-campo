@@ -9,7 +9,9 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.media.ExifInterface
 import br.com.oanalistaambiental.pericia.dados.Foto
+import br.com.oanalistaambiental.pericia.geo.FormatoCoordenada
 import br.com.oanalistaambiental.pericia.geo.Utm
+import br.com.oanalistaambiental.pericia.geo.formatarPreferido
 import java.io.File
 import java.io.FileOutputStream
 import java.text.SimpleDateFormat
@@ -54,7 +56,8 @@ object Legenda {
         sessaoTitulo: String,
         marcaDagua: File? = null,
         posicaoMarcaDagua: PosicaoMarcaDagua = PosicaoMarcaDagua.SUPERIOR_DIREITA,
-        opacidadeMarcaDagua: Float = 0.78f
+        opacidadeMarcaDagua: Float = 0.78f,
+        formatoCoordenada: FormatoCoordenada = FormatoCoordenada.UTM
     ): File {
         // BUG corrigido: a imagem era decodificada em tamanho cheio e mutavel (ARGB_8888).
         // Um sensor de 50 MP vira ~200 MB de bitmap, e ainda mais 200 MB quando ha rotacao a
@@ -97,7 +100,7 @@ object Legenda {
         val largura = copia.width
         val escala = largura / 1080f
 
-        val linhas = montarLinhas(foto, sessaoTitulo)
+        val linhas = montarLinhas(foto, sessaoTitulo, formatoCoordenada)
         val tamanhoTexto = 26f * escala
         val padding = 16f * escala
         val alturaLinha = tamanhoTexto * 1.35f
@@ -180,7 +183,9 @@ object Legenda {
         }
     }
 
-    private fun montarLinhas(foto: Foto, sessaoTitulo: String): List<String> {
+    private fun montarLinhas(
+        foto: Foto, sessaoTitulo: String, formatoCoordenada: FormatoCoordenada
+    ): List<String> {
         val linhas = mutableListOf<String>()
         linhas += sessaoTitulo.uppercase()
 
@@ -189,7 +194,7 @@ object Legenda {
         val semPosicao = foto.lat == 0.0 && foto.lon == 0.0
         if (semPosicao) {
             linhas += "SEM POSIÇÃO GNSS NO MOMENTO DA CAPTURA"
-        } else {
+        } else if (formatoCoordenada == FormatoCoordenada.UTM) {
             val utm = Utm.projetar(foto.lat, foto.lon)
             linhas += "UTM SIRGAS 2000  ${utm.formatado()}"
             // Locale.US e obrigatorio aqui, nao preferencia. Em aparelho pt-BR o `.format`
@@ -198,6 +203,12 @@ object Legenda {
             // para o processo. Quem copiasse aquilo para outro sistema nao teria como saber
             // onde termina a latitude.
             linhas += "GEO  %.6f, %.6f  (SIRGAS 2000)".format(Locale.US, foto.lat, foto.lon)
+        } else {
+            // Formato escolhido em primeiro — o app sempre acrescenta a UTM como segunda
+            // linha, porque e a projecao que o processo administrativo espera por padrao.
+            linhas += "${formatoCoordenada.rotulo.uppercase()}  " +
+                formatarPreferido(foto.lat, foto.lon, formatoCoordenada)
+            linhas += "UTM SIRGAS 2000  ${Utm.projetar(foto.lat, foto.lon).formatado()}"
         }
 
         val partes = mutableListOf<String>()

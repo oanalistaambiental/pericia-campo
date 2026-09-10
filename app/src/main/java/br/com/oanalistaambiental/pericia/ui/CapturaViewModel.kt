@@ -34,6 +34,7 @@ import br.com.oanalistaambiental.pericia.taxas.TabelaTaxas
 import br.com.oanalistaambiental.pericia.taxas.TaxaUfemg
 import br.com.oanalistaambiental.pericia.exportacao.Exportador
 import br.com.oanalistaambiental.pericia.geo.CamadaInfo
+import br.com.oanalistaambiental.pericia.geo.FormatoCoordenada
 import br.com.oanalistaambiental.pericia.geo.Caminhamento
 import br.com.oanalistaambiental.pericia.geo.CircunscricaoHidrografica
 import br.com.oanalistaambiental.pericia.geo.ConsultaOnline
@@ -242,6 +243,18 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
         val v = opacidade.coerceIn(0.05f, 1f)
         _opacidadeMarcaDagua.value = v
         prefs.edit().putFloat("opacidade_marca_dagua", v).apply()
+    }
+
+    /** Qual formato de coordenada entra primeiro na legenda da foto e nas telas do app. */
+    private val _formatoCoordenada = MutableStateFlow(
+        runCatching { FormatoCoordenada.valueOf(prefs.getString("formato_coordenada", null) ?: "") }
+            .getOrDefault(FormatoCoordenada.UTM)
+    )
+    val formatoCoordenada: StateFlow<FormatoCoordenada> = _formatoCoordenada
+
+    fun definirFormatoCoordenada(formato: FormatoCoordenada) {
+        _formatoCoordenada.value = formato
+        prefs.edit().putString("formato_coordenada", formato.name).apply()
     }
 
     /**
@@ -876,7 +889,7 @@ class CapturaViewModel(app: Application) : AndroidViewModel(app) {
                 val marca = arquivoMarcaDagua().takeIf { it.exists() }
                 Legenda.gerar(
                     original, destino, comId, sessao.titulo, marca,
-                    _posicaoMarcaDagua.value, _opacidadeMarcaDagua.value
+                    _posicaoMarcaDagua.value, _opacidadeMarcaDagua.value, _formatoCoordenada.value
                 )
                 // BUG corrigido: o caminho da copia nunca era gravado, e o laudo usava o original.
                 banco.atualizarLegenda(fotoId, destino.absolutePath)

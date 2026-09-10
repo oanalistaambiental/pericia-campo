@@ -34,6 +34,7 @@ import br.com.oanalistaambiental.pericia.captura.Orientacoes
 import br.com.oanalistaambiental.pericia.captura.PosicaoMarcaDagua
 import br.com.oanalistaambiental.pericia.dados.GlossarioSisema
 import br.com.oanalistaambiental.pericia.geo.AlturaTrigonometrica
+import br.com.oanalistaambiental.pericia.geo.FormatoCoordenada
 import br.com.oanalistaambiental.pericia.geo.ImportadorCoordenada
 import br.com.oanalistaambiental.pericia.geo.Medicao
 import br.com.oanalistaambiental.pericia.geo.PontosLocais
@@ -735,8 +736,8 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                 )
 
                 Rotulo("COORDENADAS")
-                Linha("Datum de exibição", "SIRGAS 2000", Cores.bomClaro)
-                Linha("Projeção da legenda", "UTM, fuso automático", Cores.texto)
+                Linha("Datum", "SIRGAS 2000", Cores.bomClaro)
+                FormatoCoordenadaConfig(vm)
 
                 Rotulo("ALERTA LOCACIONAL")
                 Linha("Folga de aviso", "50 m", Cores.texto)
@@ -832,6 +833,27 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                     modifier = Modifier.padding(16.dp)
                 )
                 Spacer(Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+/**
+ * Em qual formato a coordenada aparece primeiro — na legenda queimada na foto e nas telas do
+ * app que mostram posição. A UTM continua sempre presente como segunda linha na legenda,
+ * porque é a projeção que o processo administrativo espera por padrão.
+ */
+@Composable
+private fun FormatoCoordenadaConfig(vm: CapturaViewModel) {
+    val atual by vm.formatoCoordenada.collectAsState()
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            FormatoCoordenada.entries.forEach { formato ->
+                Box(Modifier.weight(1f)) {
+                    SeletorPosicao(formato.rotulo, atual == formato) {
+                        vm.definirFormatoCoordenada(formato)
+                    }
+                }
             }
         }
     }
