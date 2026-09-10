@@ -19,7 +19,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -106,9 +105,9 @@ fun TelaCondicionantes(vm: CapturaViewModel, voltar: () -> Unit) {
                         .padding(horizontal = 16.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    ChipFiltro("Todas", filtroEmpreendimentoId == null) { filtroEmpreendimentoId = null }
+                    ChipPilula("Todas", filtroEmpreendimentoId == null) { filtroEmpreendimentoId = null }
                     empreendimentos.forEach { e ->
-                        ChipFiltro(e.nome, filtroEmpreendimentoId == e.id) { filtroEmpreendimentoId = e.id }
+                        ChipPilula(e.nome, filtroEmpreendimentoId == e.id) { filtroEmpreendimentoId = e.id }
                     }
                 }
             }
@@ -117,20 +116,6 @@ fun TelaCondicionantes(vm: CapturaViewModel, voltar: () -> Unit) {
     }
 }
 
-@Composable
-private fun ChipFiltro(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit) {
-    Box(
-        Modifier
-            .background(if (selecionado) Cores.bom else Cores.superficie, RoundedCornerShape(14.dp))
-            .clickable { aoEscolher() }
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-    ) {
-        Text(
-            rotulo, color = if (selecionado) Color.White else Cores.textoFraco,
-            fontSize = 11.5.sp, fontWeight = FontWeight.SemiBold
-        )
-    }
-}
 
 @Composable
 private fun ColumnScope.ListaCondicionantes(
@@ -330,9 +315,10 @@ private fun ColumnScope.FormularioCondicionante(
                 Rotulo("AVISAR COM QUANTOS DIAS DE ANTECEDÊNCIA")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     DIAS_ANTECEDENCIA_OPCOES.forEach { dias ->
-                        OpcaoDiasAntecedencia(
-                            dias, selecionado = diasAntecedencia == dias,
-                            aoEscolher = { diasAntecedencia = dias }
+                        Chip(
+                            "$dias dias", selecionado = diasAntecedencia == dias,
+                            aoEscolher = { diasAntecedencia = dias },
+                            modifier = Modifier.weight(1f)
                         )
                     }
                 }
@@ -342,9 +328,9 @@ private fun ColumnScope.FormularioCondicionante(
                     Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    ChipFiltro("Nenhum", empreendimentoId == null) { empreendimentoId = null }
+                    ChipPilula("Nenhum", empreendimentoId == null) { empreendimentoId = null }
                     empreendimentos.forEach { e ->
-                        ChipFiltro(e.nome, empreendimentoId == e.id) { empreendimentoId = e.id }
+                        ChipPilula(e.nome, empreendimentoId == e.id) { empreendimentoId = e.id }
                     }
                 }
                 Spacer(Modifier.height(6.dp))
@@ -453,19 +439,3 @@ private fun ColumnScope.FormularioCondicionante(
     }
 }
 
-@Composable
-private fun RowScope.OpcaoDiasAntecedencia(dias: Int, selecionado: Boolean, aoEscolher: () -> Unit) {
-    Box(
-        Modifier.weight(1f)
-            .background(if (selecionado) Cores.bom else Cores.superficie, RoundedCornerShape(6.dp))
-            .clickable { aoEscolher() }
-            .padding(vertical = 10.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            "$dias dias",
-            color = if (selecionado) Color.White else Cores.textoFraco,
-            fontSize = 12.sp, fontWeight = FontWeight.SemiBold
-        )
-    }
-}

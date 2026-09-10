@@ -138,13 +138,13 @@ private fun ColumnScope.AbaCampo(vm: CapturaViewModel) {
 
                 Rotulo("TIPO DE CAPTAÇÃO")
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    OpcaoTipo("Superficial (rio, córrego, açude)", tipo == TipoCaptacao.SUPERFICIAL) {
+                    OpcaoLista("Superficial (rio, córrego, açude)", tipo == TipoCaptacao.SUPERFICIAL) {
                         tipo = TipoCaptacao.SUPERFICIAL
                     }
-                    OpcaoTipo(
+                    OpcaoLista(
                         "Subterrânea — poço tubular", tipo == TipoCaptacao.SUBTERRANEA_POCO_TUBULAR
                     ) { tipo = TipoCaptacao.SUBTERRANEA_POCO_TUBULAR }
-                    OpcaoTipo(
+                    OpcaoLista(
                         "Subterrânea — poço escavado, manual ou nascente",
                         tipo == TipoCaptacao.SUBTERRANEA_OUTRA
                     ) { tipo = TipoCaptacao.SUBTERRANEA_OUTRA }
@@ -186,10 +186,10 @@ private fun ColumnScope.AbaCampo(vm: CapturaViewModel) {
                     Rotulo("BOMBEAMENTO")
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Box(Modifier.weight(1f)) {
-                            OpcaoTipo("Por gravidade", comBomba == false) { comBomba = false }
+                            OpcaoLista("Por gravidade", comBomba == false) { comBomba = false }
                         }
                         Box(Modifier.weight(1f)) {
-                            OpcaoTipo("Com bomba", comBomba == true) { comBomba = true }
+                            OpcaoLista("Com bomba", comBomba == true) { comBomba = true }
                         }
                     }
 
@@ -300,23 +300,6 @@ private fun rotuloTipoCaptacao(nome: String): String = when (nome) {
     TipoCaptacao.SUBTERRANEA_POCO_TUBULAR.name -> "Subterrânea — poço tubular"
     TipoCaptacao.SUBTERRANEA_OUTRA.name -> "Subterrânea — poço escavado/manual/nascente"
     else -> nome
-}
-
-@Composable
-private fun OpcaoTipo(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth()
-            .background(if (selecionado) Cores.bom.copy(alpha = 0.18f) else Cores.superficie, RoundedCornerShape(6.dp))
-            .clickable { aoEscolher() }
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            rotulo,
-            color = if (selecionado) Cores.bomClaro else Cores.texto,
-            fontSize = 13.sp, fontWeight = if (selecionado) FontWeight.SemiBold else FontWeight.Normal
-        )
-    }
 }
 
 @Composable

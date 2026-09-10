@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -444,6 +445,66 @@ fun CartaoResultado(
             Spacer(Modifier.height(8.dp))
             Text(linhaExtra, color = corLinhaExtra, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
         }
+    }
+}
+
+/**
+ * Botão de opção selecionável — o "chip" que se repetia, quase idêntico, em cada ferramenta nova
+ * (tipo de captação, zona rural/urbana, região da Reserva Legal, categoria do conversor, dias de
+ * antecedência, resposta do checklist...). Cada tela desenhava essa mesma caixa colorida à mão,
+ * com pequenas diferenças de tamanho e raio de canto — um componente só garante que todos ficam
+ * visualmente idênticos, em qualquer ferramenta.
+ */
+@Composable
+fun Chip(
+    rotulo: String,
+    selecionado: Boolean,
+    aoEscolher: () -> Unit,
+    corSelecionado: Color = Cores.bom,
+    formato: Shape = RoundedCornerShape(6.dp),
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier
+            .background(if (selecionado) corSelecionado else Cores.superficie, formato)
+            .clickable { aoEscolher() }
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            rotulo, color = if (selecionado) Color.White else Cores.textoFraco,
+            fontSize = Tipos.corpo, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center
+        )
+    }
+}
+
+/** Variante "pílula" — arredondamento maior, para filtros roláveis lado a lado (empreendimento, categoria). */
+@Composable
+fun ChipPilula(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit, modifier: Modifier = Modifier) {
+    Chip(
+        rotulo, selecionado, aoEscolher,
+        formato = RoundedCornerShape(14.dp),
+        modifier = modifier
+    )
+}
+
+/**
+ * Opção em lista, alinhada à esquerda — a variante usada quando as opções ficam empilhadas
+ * (região da Reserva Legal, item de checklist), em vez de lado a lado.
+ */
+@Composable
+fun OpcaoLista(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier.fillMaxWidth()
+            .background(if (selecionado) Cores.bom.copy(alpha = 0.18f) else Color.Transparent, RoundedCornerShape(6.dp))
+            .clickable { aoEscolher() }
+            .padding(horizontal = 10.dp, vertical = 10.dp)
+    ) {
+        Text(
+            rotulo,
+            color = if (selecionado) Cores.bomClaro else Cores.texto,
+            fontSize = Tipos.corpo, fontWeight = if (selecionado) FontWeight.SemiBold else FontWeight.Normal
+        )
     }
 }
 
