@@ -331,7 +331,7 @@ private fun ColumnScope.MinhasOcorrencias(vm: CapturaViewModel, aoEditar: (Ocorr
                     Spacer(Modifier.height(4.dp))
                     Text(
                         if (o.fotos.size == 1) "1 foto" else "${o.fotos.size} fotos",
-                        color = Cores.bomClaro, fontSize = 10.5.sp
+                        color = Cores.bomClaro, fontSize = Tipos.detalhe
                     )
                 }
                 Spacer(Modifier.height(8.dp))
@@ -448,11 +448,11 @@ private fun ItemCanalLinha(item: ItemCanal) {
         }
         item.horario?.let {
             Spacer(Modifier.height(2.dp))
-            Text(it, color = Cores.textoFraco, fontSize = 10.5.sp)
+            Text(it, color = Cores.textoFraco, fontSize = Tipos.detalhe)
         }
         item.endereco?.let {
             Spacer(Modifier.height(2.dp))
-            Text(it, color = Cores.textoFraco, fontSize = 10.5.sp, lineHeight = 14.sp)
+            Text(it, color = Cores.textoFraco, fontSize = Tipos.detalhe, lineHeight = 14.sp)
         }
         item.link?.let {
             Spacer(Modifier.height(4.dp))

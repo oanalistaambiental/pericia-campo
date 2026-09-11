@@ -241,7 +241,7 @@ fun TelaDetalheSessao(
                         if (sessao.carimboTempo == null) {
                             Text(
                                 "Carimbo do tempo pendente — o hash prova que nada mudou, o carimbo prova desde quando.",
-                                color = Cores.atencaoClaro, fontSize = 10.5.sp, lineHeight = 14.sp
+                                color = Cores.atencaoClaro, fontSize = Tipos.detalhe, lineHeight = 14.sp
                             )
                             Spacer(Modifier.height(8.dp))
                             Text(
@@ -267,7 +267,7 @@ fun TelaDetalheSessao(
                                     (sessao.carimboInstante?.let {
                                         " em ${fmtUtc.format(Date(it))} UTC, declarado pela Autoridade"
                                     } ?: "") + ".",
-                                color = Cores.bomClaro, fontSize = 10.5.sp, lineHeight = 14.sp
+                                color = Cores.bomClaro, fontSize = Tipos.detalhe, lineHeight = 14.sp
                             )
                             sessao.carimboAutoridade?.let {
                                 Spacer(Modifier.height(3.dp))
@@ -343,7 +343,7 @@ fun TelaDetalheSessao(
                         }
                         Spacer(Modifier.height(10.dp))
                         Text(r.RESSALVA_TEMPO, color = Color(0xE6FFFFFF),
-                            fontSize = 10.5.sp, lineHeight = 14.sp)
+                            fontSize = Tipos.detalhe, lineHeight = 14.sp)
                     }
                 }
 
@@ -531,7 +531,7 @@ private fun ModoVistoria(vm: CapturaViewModel, sessao: Sessao) {
                 Text(
                     "Grave só com quem está presente ciente — informe que a visita está sendo " +
                         "gravada antes de começar.",
-                    color = Cores.atencaoClaro, fontSize = 10.5.sp, lineHeight = 15.sp
+                    color = Cores.atencaoClaro, fontSize = Tipos.detalhe, lineHeight = 15.sp
                 )
             }
             Spacer(Modifier.height(10.dp))
@@ -614,7 +614,7 @@ private fun LinhaFoto(
                     if (r.situacao == "DENTRO") "interno"
                     else "a " + "%.0f".format(Locale.US, r.distanciaM) + " m, indefinido",
                 color = if (r.situacao == "DENTRO") Cores.alertaClaro else Cores.atencaoClaro,
-                fontSize = 10.5.sp
+                fontSize = Tipos.detalhe
             )
         }
         Spacer(Modifier.height(6.dp))

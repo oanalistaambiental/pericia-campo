@@ -167,7 +167,7 @@ private fun LinhaCondicionante(
                     diasRestantes == 0L -> "vence hoje"
                     else -> "faltam $diasRestantes dia(s)"
                 },
-                color = cor, fontSize = 10.5.sp
+                color = cor, fontSize = Tipos.detalhe
             )
         }
         nomeEmpreendimento?.let {
@@ -182,7 +182,7 @@ private fun LinhaCondicionante(
         }
         if (c.fotoArquivo != null) {
             Spacer(Modifier.height(4.dp))
-            Text("com foto do parecer", color = Cores.bomClaro, fontSize = 10.5.sp)
+            Text("com foto do parecer", color = Cores.bomClaro, fontSize = Tipos.detalhe)
         }
         Spacer(Modifier.height(6.dp))
         Row {

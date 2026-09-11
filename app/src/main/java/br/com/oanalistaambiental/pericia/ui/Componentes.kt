@@ -375,6 +375,7 @@ object Tipos {
     val rotulo = 12.sp
     val mono = 12
     val corpo = 13.5.sp
+    val detalhe = 10.5.sp
 }
 
 @Composable

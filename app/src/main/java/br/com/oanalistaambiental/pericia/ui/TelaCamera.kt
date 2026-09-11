@@ -291,7 +291,7 @@ fun TelaCamera(
                     horizontalAlignment = Alignment.End
                 ) {
                     Text("≡", color = Color.White, fontSize = 24.sp)
-                    Text("Ferramentas", color = Cores.textoFraco, fontSize = 10.5.sp)
+                    Text("Ferramentas", color = Cores.textoFraco, fontSize = Tipos.detalhe)
                 }
             }
         }
@@ -387,7 +387,7 @@ private fun BarraSessao(vm: CapturaViewModel, irParaSessoes: () -> Unit) {
             )
         } ?: Text(
             "Toda foto precisa pertencer a uma vistoria para virar laudo.",
-            color = Cores.textoFraco, fontSize = 10.5.sp
+            color = Cores.textoFraco, fontSize = Tipos.detalhe
         )
     }
 }
@@ -595,7 +595,7 @@ private fun FormularioRapido(vm: CapturaViewModel, aoFechar: () -> Unit) {
         Spacer(Modifier.height(6.dp))
         Text(
             "Vale para as próximas fotos desta sessão, até você trocar.",
-            color = Cores.textoFraco, fontSize = 10.5.sp
+            color = Cores.textoFraco, fontSize = Tipos.detalhe
         )
     }
 }

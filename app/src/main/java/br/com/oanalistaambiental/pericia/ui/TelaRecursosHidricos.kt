@@ -125,7 +125,7 @@ private fun ColumnScope.AbaCampo(vm: CapturaViewModel) {
                             "Plano de Gestão (PGRH) e regime de outorga acompanham o comitê de " +
                                 "bacia desta CH — confirme com a Unidade Regional ou o IGAM os " +
                                 "detalhes vigentes para esta bacia especificamente.",
-                            color = Cores.textoFraco, fontSize = 10.5.sp, lineHeight = 15.sp,
+                            color = Cores.textoFraco, fontSize = Tipos.detalhe, lineHeight = 15.sp,
                             modifier = Modifier.padding(top = 6.dp)
                         )
                     }
@@ -265,7 +265,7 @@ private fun LinhaRegistroCaptacao(vm: CapturaViewModel, r: RegistroCaptacao) {
             Text(
                 if (insignificante) "CADASTRO" else "OUTORGA",
                 color = if (insignificante) Cores.bomClaro else Cores.alertaClaro,
-                fontSize = 10.5.sp, fontWeight = FontWeight.Bold
+                fontSize = Tipos.detalhe, fontWeight = FontWeight.Bold
             )
         }
         r.vazaoOuVolume?.let {
@@ -274,11 +274,11 @@ private fun LinhaRegistroCaptacao(vm: CapturaViewModel, r: RegistroCaptacao) {
         }
         r.comBomba?.let {
             Spacer(Modifier.height(2.dp))
-            Text(if (it) "Com bomba" else "Por gravidade", color = Cores.textoFraco, fontSize = 10.5.sp)
+            Text(if (it) "Com bomba" else "Por gravidade", color = Cores.textoFraco, fontSize = Tipos.detalhe)
         }
         if (r.fotoArquivo != null) {
             Spacer(Modifier.height(2.dp))
-            Text("com foto", color = Cores.bomClaro, fontSize = 10.5.sp)
+            Text("com foto", color = Cores.bomClaro, fontSize = Tipos.detalhe)
         }
         Spacer(Modifier.height(6.dp))
         AcaoTexto(

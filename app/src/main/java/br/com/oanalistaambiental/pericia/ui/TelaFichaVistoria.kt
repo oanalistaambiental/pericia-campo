@@ -104,7 +104,7 @@ private fun LinhaRegistroFicha(vm: CapturaViewModel, r: RegistroFicha) {
             Text(
                 if (naoConformes > 0) "$naoConformes não conforme(s)" else "sem não conformidade",
                 color = if (naoConformes > 0) Cores.alertaClaro else Cores.bomClaro,
-                fontSize = 10.5.sp, fontWeight = FontWeight.Bold
+                fontSize = Tipos.detalhe, fontWeight = FontWeight.Bold
             )
         }
         Spacer(Modifier.height(2.dp))

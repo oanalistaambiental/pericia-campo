@@ -194,7 +194,7 @@ fun TelaClinometro(vm: CapturaViewModel, voltar: () -> Unit) {
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp)
                     .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(16.dp)
             ) {
-                Text("COMO MEDIR", color = Cores.textoFraco, fontSize = 10.5.sp, letterSpacing = 1.sp)
+                Text("COMO MEDIR", color = Cores.textoFraco, fontSize = Tipos.detalhe, letterSpacing = 1.sp)
                 Spacer(Modifier.height(8.dp))
                 Text(
                     "Encoste as COSTAS do celular na superfície que quer medir — o talude, a " +
@@ -931,7 +931,7 @@ private fun MarcaDaguaConfig(vm: CapturaViewModel) {
             Text(
                 "Nas posições inferiores, a marca entra ACIMA da faixa de coordenada/data — " +
                     "as duas nunca se sobrepõem.",
-                color = Cores.textoFraco, fontSize = 10.5.sp, lineHeight = 15.sp,
+                color = Cores.textoFraco, fontSize = Tipos.detalhe, lineHeight = 15.sp,
                 modifier = Modifier.padding(top = 6.dp)
             )
 
@@ -950,7 +950,7 @@ private fun MarcaDaguaConfig(vm: CapturaViewModel) {
             )
             Text(
                 "10% quase invisível, 100% sólida — vale para a prévia na câmera e para a foto final.",
-                color = Cores.textoFraco, fontSize = 10.5.sp, lineHeight = 15.sp
+                color = Cores.textoFraco, fontSize = Tipos.detalhe, lineHeight = 15.sp
             )
 
             Spacer(Modifier.height(10.dp))
@@ -1518,7 +1518,7 @@ fun TelaTaxaUfemg(vm: CapturaViewModel, voltar: () -> Unit) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
             Text(
                 "UFEMG ${t.exercicio}: R$ %.4f — %s".format(java.util.Locale.US, t.valorUfemg, t.fonte),
-                color = Cores.textoFraco, fontSize = 10.5.sp, lineHeight = 15.sp
+                color = Cores.textoFraco, fontSize = Tipos.detalhe, lineHeight = 15.sp
             )
         }
     }
@@ -1686,7 +1686,7 @@ fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
                 item {
                     Text(
                         "Cadastro feito em: ${c.sistema}",
-                        color = Cores.textoFraco, fontSize = 10.5.sp,
+                        color = Cores.textoFraco, fontSize = Tipos.detalhe,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
                     )
                 }
