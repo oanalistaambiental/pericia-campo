@@ -433,10 +433,7 @@ private fun abrirLink(contexto: Context, url: String) {
 @Composable
 private fun ItemCanalLinha(item: ItemCanal) {
     val contexto = LocalContext.current
-    Column(
-        Modifier.fillMaxWidth().padding(vertical = 6.dp)
-            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(12.dp)
-    ) {
+    CartaoItem {
         Text(item.nome, color = Cores.texto, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         item.detalhe?.let {
             Spacer(Modifier.height(2.dp))

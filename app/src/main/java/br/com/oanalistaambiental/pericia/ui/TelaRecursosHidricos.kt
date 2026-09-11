@@ -255,10 +255,7 @@ private fun ColumnScope.AbaCampo(vm: CapturaViewModel) {
 private fun LinhaRegistroCaptacao(vm: CapturaViewModel, r: RegistroCaptacao) {
     var confirmarExclusao by remember { mutableStateOf(false) }
     val insignificante = r.classificacao == ClassificacaoUso.INSIGNIFICANTE.name
-    Column(
-        Modifier.fillMaxWidth().padding(vertical = 6.dp)
-            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(12.dp)
-    ) {
+    CartaoItem {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 rotuloTipoCaptacao(r.tipoCaptacao),
@@ -402,10 +399,7 @@ private fun ColumnScope.AbaEscritorio() {
 
 @Composable
 private fun NormaLinha(contexto: Context, titulo: String, descricao: String, url: String) {
-    Column(
-        Modifier.fillMaxWidth().padding(vertical = 6.dp)
-            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(12.dp)
-    ) {
+    CartaoItem {
         Text(titulo, color = Cores.texto, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(2.dp))
         Text(descricao, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 15.sp)

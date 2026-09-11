@@ -5,7 +5,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -98,10 +97,7 @@ private fun LinhaRegistroFicha(vm: CapturaViewModel, r: RegistroFicha) {
     val contexto = LocalContext.current
     val respostas = remember(r.respostasJson) { runCatching { parseRespostas(r.respostasJson) }.getOrDefault(emptyList()) }
     val naoConformes = respostas.count { it.valor == ValorResposta.NAO_CONFORME }
-    Column(
-        Modifier.fillMaxWidth().padding(vertical = 6.dp)
-            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(12.dp)
-    ) {
+    CartaoItem {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(r.modeloNome, color = Cores.texto, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))

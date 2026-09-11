@@ -152,10 +152,7 @@ private fun LinhaCondicionante(
         diasRestantes <= 30 -> Cores.atencaoClaro
         else -> Cores.bomClaro
     }
-    Column(
-        Modifier.fillMaxWidth().padding(vertical = 6.dp)
-            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(12.dp)
-    ) {
+    CartaoItem {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 prazo.format(formatoDataCondicionante), color = cor,

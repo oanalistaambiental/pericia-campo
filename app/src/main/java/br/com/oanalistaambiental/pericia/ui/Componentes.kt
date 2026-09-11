@@ -394,6 +394,19 @@ fun Mono(texto: String, cor: Color = Cores.textoFraco, tamanho: Int = Tipos.mono
     )
 }
 
+/**
+ * Cartão de item de lista — fundo, raio de canto e respiro que se repetiam, byte a byte, em cada
+ * lista do app (condicionante, registro de ficha, captação, norma, canal de denúncia).
+ */
+@Composable
+fun CartaoItem(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
+    Column(
+        modifier.fillMaxWidth().padding(vertical = 6.dp)
+            .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(12.dp),
+        content = content
+    )
+}
+
 /** Estado vazio com instrucao — em vez de uma tela em branco que nao ensina nada. */
 @Composable
 fun Vazio(titulo: String, texto: String, acao: String? = null, aoAgir: (() -> Unit)? = null) {
