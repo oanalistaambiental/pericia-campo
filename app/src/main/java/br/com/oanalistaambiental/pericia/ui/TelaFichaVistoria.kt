@@ -16,7 +16,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import br.com.oanalistaambiental.pericia.captura.EstadoCampo
@@ -256,24 +255,14 @@ private fun ItemChecklist(
 @Composable
 private fun SeletorResposta(valor: ValorResposta, aoEscolher: (ValorResposta) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        BotaoResposta("Conforme", valor == ValorResposta.CONFORME, Cores.bom) { aoEscolher(ValorResposta.CONFORME) }
-        BotaoResposta("Não conforme", valor == ValorResposta.NAO_CONFORME, Cores.alerta) { aoEscolher(ValorResposta.NAO_CONFORME) }
-        BotaoResposta("N/A", valor == ValorResposta.NAO_SE_APLICA, Cores.neutro) { aoEscolher(ValorResposta.NAO_SE_APLICA) }
+        ChipResposta("Conforme", valor == ValorResposta.CONFORME, Cores.bom) { aoEscolher(ValorResposta.CONFORME) }
+        ChipResposta("Não conforme", valor == ValorResposta.NAO_CONFORME, Cores.alerta) { aoEscolher(ValorResposta.NAO_CONFORME) }
+        ChipResposta("N/A", valor == ValorResposta.NAO_SE_APLICA, Cores.neutro) { aoEscolher(ValorResposta.NAO_SE_APLICA) }
     }
 }
 
+/** Ver nota em [TelaCondicionantes.kt]: `Modifier.weight` precisa do `RowScope` como receptor. */
 @Composable
-private fun RowScope.BotaoResposta(rotulo: String, selecionado: Boolean, cor: Color, aoClicar: () -> Unit) {
-    Box(
-        Modifier.weight(1f)
-            .background(if (selecionado) cor else Cores.superficie, RoundedCornerShape(6.dp))
-            .clickable { aoClicar() }
-            .padding(vertical = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            rotulo, color = if (selecionado) Color.White else Cores.textoFraco,
-            fontSize = 10.5.sp, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center
-        )
-    }
+private fun RowScope.ChipResposta(rotulo: String, selecionado: Boolean, corSelecionado: Color, aoEscolher: () -> Unit) {
+    Chip(rotulo, selecionado, aoEscolher, corSelecionado = corSelecionado, modifier = Modifier.weight(1f))
 }

@@ -315,11 +315,7 @@ private fun ColumnScope.FormularioCondicionante(
                 Rotulo("AVISAR COM QUANTOS DIAS DE ANTECEDÊNCIA")
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     DIAS_ANTECEDENCIA_OPCOES.forEach { dias ->
-                        Chip(
-                            "$dias dias", selecionado = diasAntecedencia == dias,
-                            aoEscolher = { diasAntecedencia = dias },
-                            modifier = Modifier.weight(1f)
-                        )
+                        ChipDias(dias, selecionado = diasAntecedencia == dias) { diasAntecedencia = dias }
                     }
                 }
 
@@ -437,5 +433,15 @@ private fun ColumnScope.FormularioCondicionante(
             aoTerminar()
         }
     }
+}
+
+/**
+ * `Modifier.weight` só resolve com um `RowScope` como receptor — por isso este wrapper existe:
+ * chamar `Chip(..., modifier = Modifier.weight(1f))` direto dentro do `forEach` de um `Row {}`
+ * quebra a compilação (o receptor implícito não alcança de dentro do lambda do `forEach`).
+ */
+@Composable
+private fun RowScope.ChipDias(dias: Int, selecionado: Boolean, aoEscolher: () -> Unit) {
+    Chip("$dias dias", selecionado, aoEscolher, modifier = Modifier.weight(1f))
 }
 
