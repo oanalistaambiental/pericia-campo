@@ -1,14 +1,18 @@
 package br.com.oanalistaambiental.pericia.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -80,8 +84,8 @@ private fun BlocoLagoLagoa() {
 
     Rotulo("ENTORNO DE LAGO OU LAGOA NATURAL (ART. 4º, II)")
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Chip("Rural", !zonaUrbana) { zonaUrbana = false }
-        Chip("Urbana", zonaUrbana) { zonaUrbana = true }
+        OpcaoZona("Rural", !zonaUrbana) { zonaUrbana = false }
+        OpcaoZona("Urbana", zonaUrbana) { zonaUrbana = true }
     }
     if (!zonaUrbana) {
         Spacer(Modifier.height(8.dp))
@@ -113,7 +117,7 @@ private fun BlocoReservaLegal() {
 
     Rotulo("RESERVA LEGAL — % DA ÁREA DO IMÓVEL (ART. 12)")
     RegiaoReservaLegal.entries.forEach { r ->
-        OpcaoLista(r.titulo, regiao == r) { regiao = r }
+        OpcaoRegiao(r.titulo, regiao == r) { regiao = r }
     }
     Spacer(Modifier.height(8.dp))
     CartaoResultado("Reserva Legal mínima", "${fmt(AppReservaLegal.percentualReservaLegal(regiao))}%")
@@ -129,3 +133,34 @@ private fun BlocoReservaLegal() {
 
 private fun fmt(v: Double): String =
     if (v == v.toLong().toDouble()) v.toLong().toString() else v.toString()
+
+@Composable
+private fun OpcaoZona(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit) {
+    Box(
+        Modifier
+            .background(if (selecionado) Cores.bom else Cores.superficie, RoundedCornerShape(6.dp))
+            .clickable { aoEscolher() }
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            rotulo, color = if (selecionado) Color.White else Cores.textoFraco,
+            fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold
+        )
+    }
+}
+
+@Composable
+private fun OpcaoRegiao(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth()
+            .background(if (selecionado) Cores.bom.copy(alpha = 0.18f) else Color.Transparent, RoundedCornerShape(6.dp))
+            .clickable { aoEscolher() }
+            .padding(horizontal = 10.dp, vertical = 8.dp)
+    ) {
+        Text(
+            rotulo,
+            color = if (selecionado) Cores.bomClaro else Cores.texto,
+            fontSize = 12.5.sp, fontWeight = if (selecionado) FontWeight.SemiBold else FontWeight.Normal
+        )
+    }
+}
