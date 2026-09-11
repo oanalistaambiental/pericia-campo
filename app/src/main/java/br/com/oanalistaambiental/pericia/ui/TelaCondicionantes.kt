@@ -74,10 +74,7 @@ fun TelaCondicionantes(vm: CapturaViewModel, voltar: () -> Unit) {
         Cabecalho("Condicionantes e prazos", voltar)
 
         if (!permitido) {
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
-                    .background(Cores.superficie, RoundedCornerShape(8.dp)).padding(12.dp)
-            ) {
+            CartaoPainel(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp), padding = 12.dp) {
                 Text(
                     "Sem aviso de prazo. Ative as notificações para ser lembrado antes de vencer.",
                     color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp

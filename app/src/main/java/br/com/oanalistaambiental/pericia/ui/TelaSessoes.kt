@@ -452,9 +452,7 @@ private fun ModoVistoria(vm: CapturaViewModel, sessao: Sessao) {
     Column(Modifier.padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
         // ---- caminhamento ----
-        Column(
-            Modifier.fillMaxWidth().background(Cores.superficie, RoundedCornerShape(8.dp)).padding(14.dp)
-        ) {
+        CartaoPainel {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Caminhamento", color = Cores.texto, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.weight(1f))
@@ -506,9 +504,7 @@ private fun ModoVistoria(vm: CapturaViewModel, sessao: Sessao) {
         }
 
         // ---- audio ----
-        Column(
-            Modifier.fillMaxWidth().background(Cores.superficie, RoundedCornerShape(8.dp)).padding(14.dp)
-        ) {
+        CartaoPainel {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("Gravação de áudio", color = Cores.texto, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
                 Spacer(Modifier.weight(1f))

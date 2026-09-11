@@ -190,10 +190,7 @@ fun TelaClinometro(vm: CapturaViewModel, voltar: () -> Unit) {
 
             Spacer(Modifier.height(28.dp))
 
-            Column(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp)
-                    .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(16.dp)
-            ) {
+            CartaoPainel(modifier = Modifier.padding(horizontal = 16.dp), padding = 16.dp) {
                 Text("COMO MEDIR", color = Cores.textoFraco, fontSize = Tipos.detalhe, letterSpacing = 1.sp)
                 Spacer(Modifier.height(8.dp))
                 Text(
@@ -504,10 +501,7 @@ fun TelaIrParaCoordenada(vm: CapturaViewModel, voltar: () -> Unit) {
                         color = Cores.atencaoClaro, fontSize = 12.sp, lineHeight = 18.sp
                     )
                     else -> {
-                        Column(
-                            Modifier.fillMaxWidth()
-                                .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(14.dp)
-                        ) {
+                        CartaoPainel {
                             Text("LIDO COMO ${lida.formato.uppercase()}", color = Cores.textoFraco,
                                 fontSize = 10.sp, letterSpacing = 1.sp)
                             Spacer(Modifier.height(8.dp))
@@ -758,10 +752,7 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                     )
                 }
                 if (camadas.isEmpty()) {
-                    Column(
-                        Modifier.padding(16.dp).fillMaxWidth()
-                            .background(Cores.superficie, RoundedCornerShape(4.dp)).padding(14.dp)
-                    ) {
+                    CartaoPainel(modifier = Modifier.padding(16.dp)) {
                         Text("Pacote ilegível", color = Cores.atencaoClaro, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(6.dp))
                         Text(
