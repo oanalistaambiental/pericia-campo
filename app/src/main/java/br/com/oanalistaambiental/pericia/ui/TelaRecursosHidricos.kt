@@ -301,11 +301,7 @@ private fun rotuloTipoCaptacao(nome: String): String = when (nome) {
 @Composable
 private fun CartaoResultadoUsoInsignificante(r: ResultadoUsoInsignificante) {
     val insignificante = r.classificacao == ClassificacaoUso.INSIGNIFICANTE
-    Column(
-        Modifier.fillMaxWidth()
-            .background(if (insignificante) Cores.bom else Cores.alerta, RoundedCornerShape(8.dp))
-            .padding(14.dp)
-    ) {
+    CartaoVeredito(positivo = insignificante) {
         Text(
             if (insignificante) "CADASTRO DE USO INSIGNIFICANTE" else "REQUER OUTORGA",
             color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp

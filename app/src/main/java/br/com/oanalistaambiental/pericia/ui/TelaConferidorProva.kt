@@ -6,7 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -119,11 +118,7 @@ fun TelaConferidorProva(voltar: () -> Unit) {
 
             if (hashCalculado != null && hashLimpo.isNotBlank()) {
                 Spacer(Modifier.height(16.dp))
-                Column(
-                    Modifier.fillMaxWidth()
-                        .background(if (confere) Cores.bom else Cores.alerta, RoundedCornerShape(8.dp))
-                        .padding(16.dp)
-                ) {
+                CartaoVeredito(positivo = confere, padding = 16.dp) {
                     Text(
                         if (confere) "CONFERE" else "NÃO CONFERE",
                         color = Color.White,

@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -406,6 +407,45 @@ fun CartaoItem(modifier: Modifier = Modifier, content: @Composable ColumnScope.(
     Column(
         modifier.fillMaxWidth().padding(vertical = 6.dp)
             .background(Cores.superficie, RoundedCornerShape(6.dp)).padding(12.dp),
+        content = content
+    )
+}
+
+/**
+ * Painel informativo/de configuração — fundo neutro, mesmo raio de canto do CartaoItem elevado
+ * (8dp, mais destaque que um item de lista) para o aviso de notificação, o texto de ajuda de uma
+ * ferramenta, o painel de caminhamento/áudio do Modo Vistoria. Cada um tinha seu próprio raio
+ * (6dp ou 8dp) e respiro por acidente de quem escreveu primeiro, não por diferença de propósito.
+ */
+@Composable
+fun CartaoPainel(
+    modifier: Modifier = Modifier,
+    padding: Dp = 14.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier.fillMaxWidth().background(Cores.superficie, RoundedCornerShape(8.dp)).padding(padding),
+        content = content
+    )
+}
+
+/**
+ * Cartão de veredito — faixa colorida cheia (verde quando ok, vermelho quando há problema) com
+ * texto branco em negrito: "CONFERE"/"NÃO CONFERE", árvore de Merkle íntegra ou não, uso
+ * insignificante ou requer outorga. Mesma ideia em 4 telas, cada uma com seu raio (4dp ou 8dp) e
+ * respiro diferente — unificado aqui.
+ */
+@Composable
+fun CartaoVeredito(
+    positivo: Boolean,
+    modifier: Modifier = Modifier,
+    padding: Dp = 14.dp,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier.fillMaxWidth()
+            .background(if (positivo) Cores.bom else Cores.alerta, RoundedCornerShape(8.dp))
+            .padding(padding),
         content = content
     )
 }

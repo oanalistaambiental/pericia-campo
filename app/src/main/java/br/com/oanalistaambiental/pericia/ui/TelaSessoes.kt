@@ -290,10 +290,8 @@ fun TelaDetalheSessao(
 
                 conferenciaCompleta?.let { r ->
                     val tudoBem = r.arvoreConfere && r.arquivosComProblema == 0
-                    Column(
-                        Modifier.padding(horizontal = 16.dp).fillMaxWidth()
-                            .background(if (tudoBem) Cores.bom else Cores.alerta, RoundedCornerShape(4.dp))
-                            .padding(12.dp)
+                    CartaoVeredito(
+                        positivo = tudoBem, modifier = Modifier.padding(horizontal = 16.dp), padding = 12.dp
                     ) {
                         Text(r.resumo(), color = Color.White, fontSize = Tipos.corpoPequeno,
                             lineHeight = 17.sp, fontWeight = FontWeight.SemiBold)
@@ -349,10 +347,8 @@ fun TelaDetalheSessao(
 
                 conferencia?.let { lista ->
                     val alterados = lista.count { it.estado != Integridade.Estado.INTEGRO }
-                    Column(
-                        Modifier.padding(horizontal = 16.dp).fillMaxWidth()
-                            .background(if (alterados == 0) Cores.bom else Cores.alerta, RoundedCornerShape(4.dp))
-                            .padding(12.dp)
+                    CartaoVeredito(
+                        positivo = alterados == 0, modifier = Modifier.padding(horizontal = 16.dp), padding = 12.dp
                     ) {
                         Text(
                             if (alterados == 0) "Todos os ${lista.size} arquivos conferem."
