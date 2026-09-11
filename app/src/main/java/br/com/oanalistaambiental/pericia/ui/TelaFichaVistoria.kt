@@ -13,7 +13,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -255,14 +254,17 @@ private fun ItemChecklist(
 @Composable
 private fun SeletorResposta(valor: ValorResposta, aoEscolher: (ValorResposta) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        ChipResposta("Conforme", valor == ValorResposta.CONFORME, Cores.bom) { aoEscolher(ValorResposta.CONFORME) }
-        ChipResposta("Não conforme", valor == ValorResposta.NAO_CONFORME, Cores.alerta) { aoEscolher(ValorResposta.NAO_CONFORME) }
-        ChipResposta("N/A", valor == ValorResposta.NAO_SE_APLICA, Cores.neutro) { aoEscolher(ValorResposta.NAO_SE_APLICA) }
+        Chip(
+            "Conforme", valor == ValorResposta.CONFORME,
+            corSelecionado = Cores.bom, modifier = Modifier.weight(1f)
+        ) { aoEscolher(ValorResposta.CONFORME) }
+        Chip(
+            "Não conforme", valor == ValorResposta.NAO_CONFORME,
+            corSelecionado = Cores.alerta, modifier = Modifier.weight(1f)
+        ) { aoEscolher(ValorResposta.NAO_CONFORME) }
+        Chip(
+            "N/A", valor == ValorResposta.NAO_SE_APLICA,
+            corSelecionado = Cores.neutro, modifier = Modifier.weight(1f)
+        ) { aoEscolher(ValorResposta.NAO_SE_APLICA) }
     }
-}
-
-/** Ver nota em [TelaCondicionantes.kt]: `Modifier.weight` precisa do `RowScope` como receptor. */
-@Composable
-private fun RowScope.ChipResposta(rotulo: String, selecionado: Boolean, corSelecionado: Color, aoEscolher: () -> Unit) {
-    Chip(rotulo, selecionado, aoEscolher, corSelecionado = corSelecionado, modifier = Modifier.weight(1f))
 }

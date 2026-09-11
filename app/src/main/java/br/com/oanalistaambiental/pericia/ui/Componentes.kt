@@ -459,10 +459,10 @@ fun CartaoResultado(
 fun Chip(
     rotulo: String,
     selecionado: Boolean,
-    aoEscolher: () -> Unit,
     corSelecionado: Color = Cores.bom,
     formato: Shape = RoundedCornerShape(6.dp),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    aoEscolher: () -> Unit
 ) {
     Box(
         modifier
@@ -480,11 +480,12 @@ fun Chip(
 
 /** Variante "pílula" — arredondamento maior, para filtros roláveis lado a lado (empreendimento, categoria). */
 @Composable
-fun ChipPilula(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit, modifier: Modifier = Modifier) {
+fun ChipPilula(rotulo: String, selecionado: Boolean, modifier: Modifier = Modifier, aoEscolher: () -> Unit) {
     Chip(
-        rotulo, selecionado, aoEscolher,
+        rotulo, selecionado,
         formato = RoundedCornerShape(14.dp),
-        modifier = modifier
+        modifier = modifier,
+        aoEscolher = aoEscolher
     )
 }
 
@@ -493,7 +494,7 @@ fun ChipPilula(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit, mod
  * (região da Reserva Legal, item de checklist), em vez de lado a lado.
  */
 @Composable
-fun OpcaoLista(rotulo: String, selecionado: Boolean, aoEscolher: () -> Unit, modifier: Modifier = Modifier) {
+fun OpcaoLista(rotulo: String, selecionado: Boolean, modifier: Modifier = Modifier, aoEscolher: () -> Unit) {
     Row(
         modifier.fillMaxWidth()
             .background(if (selecionado) Cores.bom.copy(alpha = 0.18f) else Color.Transparent, RoundedCornerShape(6.dp))
