@@ -204,7 +204,7 @@ fun FitaBussola(
                         Text(
                             Orientacoes.rosa(marca.toFloat()),
                             color = if (marca == 0) Cores.alertaClaro else Color.White,
-                            fontSize = if (marca % 90 == 0) 14.sp else 11.5.sp,
+                            fontSize = if (marca % 90 == 0) 14.sp else Tipos.explicativo,
                             fontWeight = if (marca == 0) FontWeight.Bold else FontWeight.Medium,
                             modifier = Modifier.padding(top = 4.dp)
                         )
@@ -282,7 +282,7 @@ fun AvisoRestricao(texto: String, situacao: Situacao) {
         Situacao.FORA -> Cores.neutro
     }
     Text(
-        texto, color = Color.White, fontSize = 11.5.sp, lineHeight = 15.sp,
+        texto, color = Color.White, fontSize = Tipos.explicativo, lineHeight = 15.sp,
         modifier = Modifier.fillMaxWidth().padding(top = 2.dp).background(cor)
             .padding(horizontal = 14.dp, vertical = 8.dp)
     )
@@ -309,12 +309,12 @@ fun Ajuda(titulo: String, texto: String, modifier: Modifier = Modifier) {
                 color = Cores.textoFraco, fontSize = 11.sp,
                 modifier = Modifier.padding(end = 7.dp)
             )
-            Text(titulo, color = Cores.textoFraco, fontSize = 11.5.sp, fontWeight = FontWeight.Medium)
+            Text(titulo, color = Cores.textoFraco, fontSize = Tipos.explicativo, fontWeight = FontWeight.Medium)
         }
         if (aberto) {
             Text(
                 texto,
-                color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 17.sp,
+                color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 17.sp,
                 modifier = Modifier.padding(start = 18.dp, top = 7.dp)
             )
         }
@@ -375,6 +375,8 @@ object Tipos {
     val rotulo = 12.sp
     val mono = 12
     val corpo = 13.5.sp
+    val corpoPequeno = 12.5.sp
+    val explicativo = 11.5.sp
     val detalhe = 10.5.sp
 }
 

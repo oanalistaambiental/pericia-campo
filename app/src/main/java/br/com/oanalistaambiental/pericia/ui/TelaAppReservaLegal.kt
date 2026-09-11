@@ -33,7 +33,7 @@ fun TelaAppReservaLegal(voltar: () -> Unit) {
                         "Lei 12.651/2012 (Código Florestal), arts. 4º e 12. É regra geral federal — " +
                             "não decide área consolidada, não confere CAR/PRA, e não substitui regra " +
                             "própria de órgão estadual para o caso concreto.",
-                        color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                        color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp
                     )
 
                     BlocoCursoDagua()

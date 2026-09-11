@@ -80,7 +80,7 @@ fun TelaConferidorProva(voltar: () -> Unit) {
                 "Confere se um arquivo bate com o SHA-256 escrito num laudo — sem precisar de " +
                     "terminal nem instalar mais nada. Escolha o arquivo (a foto, por exemplo) e " +
                     "cole o hash que está no laudo.",
-                color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp
             )
             Spacer(Modifier.height(14.dp))
 
@@ -96,11 +96,11 @@ fun TelaConferidorProva(voltar: () -> Unit) {
 
             if (calculando) {
                 Spacer(Modifier.height(8.dp))
-                Text("Calculando SHA-256…", color = Cores.textoFraco, fontSize = 11.5.sp)
+                Text("Calculando SHA-256…", color = Cores.textoFraco, fontSize = Tipos.explicativo)
             }
             erro?.let {
                 Spacer(Modifier.height(8.dp))
-                Text("Falha ao ler o arquivo: $it", color = Cores.atencaoClaro, fontSize = 11.5.sp)
+                Text("Falha ao ler o arquivo: $it", color = Cores.atencaoClaro, fontSize = Tipos.explicativo)
             }
             hashCalculado?.let {
                 Spacer(Modifier.height(8.dp))
@@ -135,7 +135,7 @@ fun TelaConferidorProva(voltar: () -> Unit) {
                         else "O arquivo NÃO é o mesmo que gerou esse hash — foi alterado, " +
                             "recomprimido, ou o hash colado não é deste arquivo.",
                         color = Color(0xE6FFFFFF),
-                        fontSize = 12.5.sp, lineHeight = 17.sp
+                        fontSize = Tipos.corpoPequeno, lineHeight = 17.sp
                     )
                 }
             }

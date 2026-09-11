@@ -208,7 +208,7 @@ private fun ColumnScope.NovaOcorrencia(
                     "Transcrito pelo reconhecimento de voz do Android — pode usar o serviço " +
                         "online do aparelho para melhorar a precisão, o que manda o áudio da " +
                         "fala para fora do aparelho. Revise antes de salvar: transcrição erra.",
-                    color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                    color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp
                 )
                 Spacer(Modifier.height(8.dp))
                 if (!transcritor.disponivel()) {
@@ -233,7 +233,7 @@ private fun ColumnScope.NovaOcorrencia(
                 }
                 erroDitado?.let {
                     Spacer(Modifier.height(6.dp))
-                    Text(it, color = Cores.alertaClaro, fontSize = 11.5.sp)
+                    Text(it, color = Cores.alertaClaro, fontSize = Tipos.explicativo)
                 }
                 if (transcricao.isNotBlank()) {
                     Spacer(Modifier.height(10.dp))
@@ -325,7 +325,7 @@ private fun ColumnScope.MinhasOcorrencias(vm: CapturaViewModel, aoEditar: (Ocorr
                 Mono(utm.formatado(), Cores.textoFraco, 10)
                 o.descricao?.let {
                     Spacer(Modifier.height(4.dp))
-                    Text(it, color = Cores.texto, fontSize = 12.5.sp, lineHeight = 17.sp, maxLines = 3)
+                    Text(it, color = Cores.texto, fontSize = Tipos.corpoPequeno, lineHeight = 17.sp, maxLines = 3)
                 }
                 if (o.fotos.isNotEmpty()) {
                     Spacer(Modifier.height(4.dp))
@@ -373,7 +373,7 @@ private fun ColumnScope.CanaisOficiais(vm: CapturaViewModel) {
     LazyColumn(Modifier.weight(1f)) {
         item {
             Text(
-                c.aviso, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp,
+                c.aviso, color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp)
             )
         }
@@ -383,7 +383,7 @@ private fun ColumnScope.CanaisOficiais(vm: CapturaViewModel) {
         item {
             Rotulo(c.uras.titulo.uppercase())
             Text(
-                c.uras.descricao, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp,
+                c.uras.descricao, color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
         }
@@ -412,7 +412,7 @@ private fun GrupoCanalBloco(grupo: GrupoCanal) {
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
         Rotulo(grupo.titulo.uppercase())
         Text(
-            grupo.descricao, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp,
+            grupo.descricao, color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp,
             modifier = Modifier.padding(bottom = 8.dp)
         )
         grupo.itens.forEach { item -> ItemCanalLinha(item) }
@@ -437,7 +437,7 @@ private fun ItemCanalLinha(item: ItemCanal) {
         Text(item.nome, color = Cores.texto, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         item.detalhe?.let {
             Spacer(Modifier.height(2.dp))
-            Text(it, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 15.sp)
+            Text(it, color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 15.sp)
         }
         item.telefone?.let {
             Spacer(Modifier.height(4.dp))

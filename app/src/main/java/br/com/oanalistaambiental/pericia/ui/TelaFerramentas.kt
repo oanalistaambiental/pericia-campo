@@ -202,7 +202,7 @@ fun TelaClinometro(vm: CapturaViewModel, voltar: () -> Unit) {
                         "numa parede dá 90°.\n\n" +
                         "A leitura não tem sinal, então não há como inverter por engano: ela é " +
                         "sempre o ângulo entre a superfície e o horizonte.",
-                    color = Cores.texto, fontSize = 12.5.sp, lineHeight = 19.sp
+                    color = Cores.texto, fontSize = Tipos.corpoPequeno, lineHeight = 19.sp
                 )
             }
 
@@ -486,7 +486,7 @@ fun TelaIrParaCoordenada(vm: CapturaViewModel, voltar: () -> Unit) {
                 ) { escolherArquivo.launch(arrayOf("*/*")) }
                 if (erroImportacao != null) {
                     Spacer(Modifier.height(8.dp))
-                    Text(erroImportacao!!, color = Cores.alertaClaro, fontSize = 11.5.sp, lineHeight = 16.sp)
+                    Text(erroImportacao!!, color = Cores.alertaClaro, fontSize = Tipos.explicativo, lineHeight = 16.sp)
                 }
                 Spacer(Modifier.height(12.dp))
 
@@ -570,7 +570,7 @@ private fun GuiaAteCoordenada(vm: CapturaViewModel, alvo: CapturaViewModel.Alvo,
                 guia!!.chegou -> "você chegou — dentro da precisão do GNSS"
                 else -> "rumo %.0f° até ${alvo.rotulo}".format(guia!!.rumoGraus)
             },
-            color = Cores.textoFraco, fontSize = 12.5.sp, textAlign = TextAlign.Center,
+            color = Cores.textoFraco, fontSize = Tipos.corpoPequeno, textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 24.dp)
         )
 
@@ -617,7 +617,7 @@ private fun Campo(rotulo: String, valor: String) {
         Modifier.fillMaxWidth().padding(vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(rotulo, color = Cores.textoFraco, fontSize = 12.5.sp)
+        Text(rotulo, color = Cores.textoFraco, fontSize = Tipos.corpoPequeno)
         Spacer(Modifier.weight(1f))
         Mono(valor, Cores.texto, 12)
     }
@@ -660,11 +660,11 @@ fun TelaPrazoRenovacao(voltar: () -> Unit) {
                 texto.isBlank() -> Text(
                     "Informe a data de vencimento da licença para calcular até quando dá para " +
                         "protocolar a renovação.",
-                    color = Cores.textoFraco, fontSize = 12.5.sp, lineHeight = 18.sp
+                    color = Cores.textoFraco, fontSize = Tipos.corpoPequeno, lineHeight = 18.sp
                 )
                 validade == null -> Text(
                     "Não reconheci essa data. Use o formato dd/mm/aaaa, por exemplo 15/03/2027.",
-                    color = Cores.atencaoClaro, fontSize = 12.5.sp, lineHeight = 18.sp
+                    color = Cores.atencaoClaro, fontSize = Tipos.corpoPequeno, lineHeight = 18.sp
                 )
                 else -> {
                     val r = remember(validade) { PrazoRenovacao.calcular(validade) }
@@ -771,7 +771,7 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                                 "laudo. Só o alerta de restrição fica desligado.\n\n" +
                                 "Para instalar o pacote oficial, gere o arquivo com " +
                                 "ferramentas/montar-pacote.sh e copie para:",
-                            color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                            color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp
                         )
                         Spacer(Modifier.height(8.dp))
                         Mono("Android/data/br.com.oanalistaambiental.pericia/\n  files/pacotes/mg-base.gpkg", Cores.texto, 10)
@@ -793,18 +793,18 @@ fun TelaConfiguracoes(vm: CapturaViewModel, voltar: () -> Unit) {
                                         "exemplo fictício só para mostrar como o alerta de restrição " +
                                         "funciona. Gere o pacote real com ferramentas/montar-pacote.sh " +
                                         "antes de usar em campo.",
-                                    color = Color(0xE6FFFFFF), fontSize = 11.5.sp, lineHeight = 16.sp
+                                    color = Color(0xE6FFFFFF), fontSize = Tipos.explicativo, lineHeight = 16.sp
                                 )
                             }
                         }
                         Text(
                             "Versão ${versao ?: "—"} · ${camadas.size} camadas",
-                            color = Cores.bomClaro, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold
+                            color = Cores.bomClaro, fontSize = Tipos.corpoPequeno, fontWeight = FontWeight.SemiBold
                         )
                         Spacer(Modifier.height(10.dp))
                         camadas.forEach { c ->
                             Column(Modifier.padding(bottom = 12.dp)) {
-                                Text(c.nome, color = Cores.texto, fontSize = 12.5.sp)
+                                Text(c.nome, color = Cores.texto, fontSize = Tipos.corpoPequeno)
                                 Mono(
                                     "${c.fonte} · extraído ${c.dataExtracao} · simplificação ${c.toleranciaM} m" +
                                         (c.raioM?.let { " · raio ${it.toInt()} m" } ?: ""),
@@ -895,7 +895,7 @@ private fun MarcaDaguaConfig(vm: CapturaViewModel) {
                 Spacer(Modifier.width(12.dp))
                 Text(
                     "Entra em todas as fotos a partir de agora, na posição escolhida abaixo.",
-                    color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp,
+                    color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -970,7 +970,7 @@ private fun MarcaDaguaConfig(vm: CapturaViewModel) {
             Text(
                 "Nenhuma marca definida. Aceita JPG, PNG ou WEBP — PNG com fundo transparente " +
                     "fica melhor sobre a foto.",
-                color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp
             )
             Spacer(Modifier.height(10.dp))
             BotaoLargo("Escolher imagem (brasão, logo)") { escolher.launch("image/*") }
@@ -1003,7 +1003,7 @@ private fun BackupConfig(vm: CapturaViewModel) {
                 "aparelho quebrar ou for perdido, é o que garante não perder o que já foi " +
                 "registrado. O pacote de camadas fica de fora (é dado público, não prova " +
                 "produzida por você — refazer é só \"Recarregar pacote\" acima).",
-            color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+            color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp
         )
         Spacer(Modifier.height(10.dp))
         BotaoLargo("Criar backup (.zip)") {
@@ -1015,7 +1015,7 @@ private fun BackupConfig(vm: CapturaViewModel) {
         Text(
             "Restaurar substitui TUDO que está no aparelho agora pelo conteúdo do backup " +
                 "escolhido — sem como desfazer, além de reinstalar de outro backup depois.",
-            color = Cores.atencaoClaro, fontSize = 11.5.sp, lineHeight = 16.sp
+            color = Cores.atencaoClaro, fontSize = Tipos.explicativo, lineHeight = 16.sp
         )
         Spacer(Modifier.height(10.dp))
         BotaoLargo("Restaurar backup (.zip)", habilitado = !restaurando) {
@@ -1023,7 +1023,7 @@ private fun BackupConfig(vm: CapturaViewModel) {
         }
         if (restaurando) {
             Spacer(Modifier.height(8.dp))
-            Text("Restaurando…", color = Cores.textoFraco, fontSize = 11.5.sp)
+            Text("Restaurando…", color = Cores.textoFraco, fontSize = Tipos.explicativo)
         }
     }
 
@@ -1257,7 +1257,7 @@ fun TelaAlturaTrigonometrica(vm: CapturaViewModel, voltar: () -> Unit) {
                     anguloBase == null -> {
                         Text(
                             "Aponte a mira para a BASE do que vai medir e toque para zerar ali.",
-                            color = Cores.textoFraco, fontSize = 12.5.sp, textAlign = TextAlign.Center
+                            color = Cores.textoFraco, fontSize = Tipos.corpoPequeno, textAlign = TextAlign.Center
                         )
                         Spacer(Modifier.height(14.dp))
                         BotaoLargo(
@@ -1268,7 +1268,7 @@ fun TelaAlturaTrigonometrica(vm: CapturaViewModel, voltar: () -> Unit) {
                     anguloTopo == null -> {
                         Text(
                             "Agora suba a mira até o TOPO do que está medindo e toque para marcar.",
-                            color = Cores.textoFraco, fontSize = 12.5.sp, textAlign = TextAlign.Center
+                            color = Cores.textoFraco, fontSize = Tipos.corpoPequeno, textAlign = TextAlign.Center
                         )
                         Spacer(Modifier.height(14.dp))
                         BotaoLargo(
@@ -1281,7 +1281,7 @@ fun TelaAlturaTrigonometrica(vm: CapturaViewModel, voltar: () -> Unit) {
                             Spacer(Modifier.height(8.dp))
                             Text(
                                 "Falta informar a distância horizontal até a base.",
-                                color = Cores.atencaoClaro, fontSize = 11.5.sp, textAlign = TextAlign.Center
+                                color = Cores.atencaoClaro, fontSize = Tipos.explicativo, textAlign = TextAlign.Center
                             )
                         }
                     }
@@ -1368,7 +1368,7 @@ fun TelaPontosSalvos(vm: CapturaViewModel, voltar: () -> Unit) {
                 Spacer(Modifier.height(6.dp))
                 Text(
                     "Aguarde o GNSS fixar para salvar.",
-                    color = Cores.atencaoClaro, fontSize = 11.5.sp
+                    color = Cores.atencaoClaro, fontSize = Tipos.explicativo
                 )
             }
         }
@@ -1479,7 +1479,7 @@ fun TelaTaxaUfemg(vm: CapturaViewModel, voltar: () -> Unit) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     "clique para escolher outro item",
-                    color = Cores.bomClaro, fontSize = 11.5.sp,
+                    color = Cores.bomClaro, fontSize = Tipos.explicativo,
                     modifier = Modifier.clickable { itemSelecionadoCodigo = null }
                 )
                 Spacer(Modifier.height(16.dp))
@@ -1510,7 +1510,7 @@ fun TelaTaxaUfemg(vm: CapturaViewModel, voltar: () -> Unit) {
                     Spacer(Modifier.height(8.dp))
                     Mono(memoriaCalculo, Cores.textoFraco, 12)
                 } else {
-                    Text("Informe a quantidade.", color = Cores.textoFraco, fontSize = 12.5.sp)
+                    Text("Informe a quantidade.", color = Cores.textoFraco, fontSize = Tipos.corpoPequeno)
                 }
             }
         }
@@ -1579,7 +1579,7 @@ fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
 
         if (grupo == null) {
             Text(
-                c.aviso, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp,
+                c.aviso, color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
             )
             Rotulo("ESCOLHA O GRUPO")
@@ -1594,7 +1594,7 @@ fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
                         Spacer(Modifier.height(4.dp))
                         Text(
                             "${g.categorias.size} categorias — ${g.baseLegal}",
-                            color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                            color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp
                         )
                     }
                     HorizontalDivider(color = Cores.linha)
@@ -1603,7 +1603,7 @@ fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
         } else {
             Text(
                 "clique para escolher outro grupo",
-                color = Cores.bomClaro, fontSize = 11.5.sp,
+                color = Cores.bomClaro, fontSize = Tipos.explicativo,
                 modifier = Modifier.clickable { grupoSelecionadoId = null }
                     .padding(horizontal = 16.dp, vertical = 10.dp)
             )
@@ -1621,7 +1621,7 @@ fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
                         Text(cat.nome, color = Cores.texto, fontSize = 13.sp, fontWeight = FontWeight.Medium, lineHeight = 18.sp)
                         if (cat.quemPrecisa != null) {
                             Spacer(Modifier.height(3.dp))
-                            Text(cat.quemPrecisa, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp)
+                            Text(cat.quemPrecisa, color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp)
                         }
                         if (cat.baseLegalEspecifica != null) {
                             Spacer(Modifier.height(2.dp))
@@ -1634,7 +1634,7 @@ fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
                     item {
                         Rotulo("QUEM PRECISA SE CADASTRAR")
                         Text(
-                            quemPrecisaGeral, color = Cores.texto, fontSize = 12.5.sp, lineHeight = 18.sp,
+                            quemPrecisaGeral, color = Cores.texto, fontSize = Tipos.corpoPequeno, lineHeight = 18.sp,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
@@ -1644,7 +1644,7 @@ fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
                     item {
                         Rotulo("ISENÇÃO")
                         Text(
-                            isencao, color = Cores.texto, fontSize = 12.5.sp, lineHeight = 18.sp,
+                            isencao, color = Cores.texto, fontSize = Tipos.corpoPequeno, lineHeight = 18.sp,
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
                     }
@@ -1653,7 +1653,7 @@ fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
                     item { Rotulo("DOCUMENTOS") }
                     items(grupo.documentos) { doc ->
                         Text(
-                            "• $doc", color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp,
+                            "• $doc", color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp,
                             modifier = Modifier.padding(horizontal = 16.dp, vertical = 3.dp)
                         )
                     }
@@ -1661,7 +1661,7 @@ fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
                 item {
                     Rotulo("RENOVAÇÃO")
                     Text(
-                        grupo.renovacao, color = Cores.texto, fontSize = 12.5.sp, lineHeight = 18.sp,
+                        grupo.renovacao, color = Cores.texto, fontSize = Tipos.corpoPequeno, lineHeight = 18.sp,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                 }
@@ -1680,7 +1680,7 @@ fun TelaCadastrosIef(vm: CapturaViewModel, voltar: () -> Unit) {
                             )
                             Spacer(Modifier.height(4.dp))
                         }
-                        Text(grupo.taxaNota, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp)
+                        Text(grupo.taxaNota, color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp)
                     }
                 }
                 item {

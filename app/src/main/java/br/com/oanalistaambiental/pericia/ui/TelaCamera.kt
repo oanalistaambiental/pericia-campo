@@ -190,7 +190,7 @@ fun TelaCamera(
                 )
                 erroCamera?.let {
                     Spacer(Modifier.height(8.dp))
-                    Text(it, color = Cores.atencaoClaro, fontSize = 11.5.sp, lineHeight = 16.sp,
+                    Text(it, color = Cores.atencaoClaro, fontSize = Tipos.explicativo, lineHeight = 16.sp,
                         textAlign = TextAlign.Center)
                     Spacer(Modifier.height(6.dp))
                     Text(
@@ -360,7 +360,7 @@ private fun BlocoMarcaDagua(vm: CapturaViewModel, irParaConfiguracoes: () -> Uni
     Text(
         if (temMarca) "Marca d'água ativa — toque para trocar a posição"
         else "Adicionar marca d'água (brasão, logo) ›",
-        color = Color.White, fontSize = 11.5.sp, fontWeight = FontWeight.Medium,
+        color = Color.White, fontSize = Tipos.explicativo, fontWeight = FontWeight.Medium,
         modifier = Modifier.fillMaxWidth().background(Cores.veuEscuro)
             .clickable { irParaConfiguracoes() }
             .padding(horizontal = 14.dp, vertical = 7.dp)
@@ -455,7 +455,7 @@ private fun BlocoGuia(vm: CapturaViewModel) {
         ) {
             Column(Modifier.weight(1f)) {
                 Text(a.rotulo, color = Color(0xCCFFFFFF), fontSize = 9.5.sp, fontWeight = FontWeight.Bold)
-                Text(o.instrucao(), color = Color.White, fontSize = 11.5.sp, lineHeight = 15.sp)
+                Text(o.instrucao(), color = Color.White, fontSize = Tipos.explicativo, lineHeight = 15.sp)
             }
             Text(
                 "✕", color = Color.White, fontSize = 15.sp,
@@ -543,7 +543,7 @@ private fun BotaoOcorrencia(vm: CapturaViewModel, aoTocar: () -> Unit) {
         Text(
             tipo ?: "definir",
             color = if (ativo) Cores.bomClaro else Cores.textoFraco,
-            fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp
+            fontSize = Tipos.corpoPequeno, fontWeight = FontWeight.SemiBold, lineHeight = 15.sp
         )
         if (ativo) {
             Text(

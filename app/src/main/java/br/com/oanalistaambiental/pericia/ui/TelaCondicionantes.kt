@@ -80,7 +80,7 @@ fun TelaCondicionantes(vm: CapturaViewModel, voltar: () -> Unit) {
             ) {
                 Text(
                     "Sem aviso de prazo. Ative as notificações para ser lembrado antes de vencer.",
-                    color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                    color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp
                 )
                 Spacer(Modifier.height(8.dp))
                 AcaoTexto("Ativar notificações") {
@@ -178,7 +178,7 @@ private fun LinhaCondicionante(
         Text(c.descricao, color = Cores.texto, fontSize = 13.sp, lineHeight = 18.sp)
         c.formaCumprimento?.takeIf { it.isNotBlank() }?.let {
             Spacer(Modifier.height(4.dp))
-            Text("Como cumprir: $it", color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp)
+            Text("Como cumprir: $it", color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp)
         }
         if (c.fotoArquivo != null) {
             Spacer(Modifier.height(4.dp))
@@ -291,7 +291,7 @@ private fun ColumnScope.FormularioCondicionante(
                     Spacer(Modifier.height(4.dp))
                     Text(
                         "Não reconheci essa data. Use dd/mm/aaaa.",
-                        color = Cores.atencaoClaro, fontSize = 11.5.sp
+                        color = Cores.atencaoClaro, fontSize = Tipos.explicativo
                     )
                 }
 
@@ -362,13 +362,13 @@ private fun ColumnScope.FormularioCondicionante(
 
                 if (lendoFoto) {
                     Spacer(Modifier.height(8.dp))
-                    Text("Lendo texto da foto…", color = Cores.textoFraco, fontSize = 11.5.sp)
+                    Text("Lendo texto da foto…", color = Cores.textoFraco, fontSize = Tipos.explicativo)
                 }
                 if (falhaLeitura) {
                     Spacer(Modifier.height(8.dp))
                     Text(
                         "Não consegui ler texto nessa foto — preencha à mão.",
-                        color = Cores.atencaoClaro, fontSize = 11.5.sp
+                        color = Cores.atencaoClaro, fontSize = Tipos.explicativo
                     )
                 }
                 if (linhasReconhecidas.isNotEmpty()) {

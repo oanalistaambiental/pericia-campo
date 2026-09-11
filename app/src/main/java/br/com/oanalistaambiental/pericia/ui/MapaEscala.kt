@@ -69,7 +69,7 @@ fun MapaEscala(
     ) {
         if (pontos.isEmpty() && referencia == null) {
             Text(
-                vazio, color = Cores.textoFraco, fontSize = 12.5.sp,
+                vazio, color = Cores.textoFraco, fontSize = Tipos.corpoPequeno,
                 modifier = Modifier.align(Alignment.Center)
             )
             return@BoxWithConstraints

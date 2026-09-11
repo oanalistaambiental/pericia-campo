@@ -295,7 +295,7 @@ fun TelaDetalheSessao(
                             .background(if (tudoBem) Cores.bom else Cores.alerta, RoundedCornerShape(4.dp))
                             .padding(12.dp)
                     ) {
-                        Text(r.resumo(), color = Color.White, fontSize = 12.5.sp,
+                        Text(r.resumo(), color = Color.White, fontSize = Tipos.corpoPequeno,
                             lineHeight = 17.sp, fontWeight = FontWeight.SemiBold)
                         Spacer(Modifier.height(10.dp))
                         // As duas perguntas ficam SEPARADAS na tela, e nao fundidas num
@@ -303,7 +303,7 @@ fun TelaDetalheSessao(
                         Text(
                             "ARQUIVOS: ${r.arquivosIntegros} de ${r.itens.size} conferem com o " +
                                 "hash gravado na captura.",
-                            color = Color.White, fontSize = 11.5.sp, lineHeight = 16.sp
+                            color = Color.White, fontSize = Tipos.explicativo, lineHeight = 16.sp
                         )
                         Spacer(Modifier.height(3.dp))
                         Text(
@@ -315,14 +315,14 @@ fun TelaDetalheSessao(
                                     "ÁRVORE: a raiz recalculada é ${r.raizRecalculada.take(16)}… e " +
                                         "não bate com a selada."
                             },
-                            color = Color.White, fontSize = 11.5.sp, lineHeight = 16.sp
+                            color = Color.White, fontSize = Tipos.explicativo, lineHeight = 16.sp
                         )
                         val forasteiros = r.itens.filter { !it.pertenceAArvore }
                         if (r.selada && forasteiros.isNotEmpty() && r.arvoreConfere) {
                             Spacer(Modifier.height(3.dp))
                             Text(
                                 "${forasteiros.size} registro(s) não fecham na raiz.",
-                                color = Color.White, fontSize = 11.5.sp, lineHeight = 16.sp
+                                color = Color.White, fontSize = Tipos.explicativo, lineHeight = 16.sp
                             )
                         }
                         val problemas = r.itens.filter {
@@ -470,7 +470,7 @@ private fun ModoVistoria(vm: CapturaViewModel, sessao: Sessao) {
             Text(
                 "Marca automaticamente a posição a cada 15 s enquanto ativo — o trajeto " +
                     "percorrido na vistoria, com início e fim, não um vértice por toque.",
-                color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp
             )
             if (pontos.isNotEmpty()) {
                 Spacer(Modifier.height(8.dp))
@@ -524,7 +524,7 @@ private fun ModoVistoria(vm: CapturaViewModel, sessao: Sessao) {
             Text(
                 "Para sozinha em 1 hora e salva o que gravou até lá. Não transcreve nem resume — " +
                     "fica íntegra, com hash, para você ouvir depois e escrever o parecer.",
-                color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
+                color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 16.sp
             )
             if (!temPermissaoAudio && !gravandoAudio) {
                 Spacer(Modifier.height(6.dp))
@@ -626,14 +626,14 @@ private fun LinhaFoto(
             if (sessaoSelada) {
                 Text(
                     "Prova desta foto",
-                    color = Cores.textoFraco, fontSize = 11.5.sp,
+                    color = Cores.textoFraco, fontSize = Tipos.explicativo,
                     modifier = Modifier.clickable { vm.exportarProvaDaFoto(sessao, f) }
                 )
                 Spacer(Modifier.width(14.dp))
             }
             Text(
                 "Voltar a este ponto",
-                color = Cores.bomClaro, fontSize = 11.5.sp,
+                color = Cores.bomClaro, fontSize = Tipos.explicativo,
                 modifier = Modifier.clickable { vm.definirAlvoRetorno(f); irParaCamera() }
             )
         }

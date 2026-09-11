@@ -99,7 +99,7 @@ private fun LinhaRegistroFicha(vm: CapturaViewModel, r: RegistroFicha) {
     val naoConformes = respostas.count { it.valor == ValorResposta.NAO_CONFORME }
     CartaoItem {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(r.modeloNome, color = Cores.texto, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold)
+            Text(r.modeloNome, color = Cores.texto, fontSize = Tipos.corpoPequeno, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.weight(1f))
             Text(
                 if (naoConformes > 0) "$naoConformes não conforme(s)" else "sem não conformidade",

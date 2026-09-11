@@ -64,7 +64,7 @@ fun TelaRelatorioPonto(vm: CapturaViewModel, voltar: () -> Unit) {
 
         if (!relatorio.isNullOrEmpty()) {
             Text(
-                "compartilhar relatório", color = Cores.bomClaro, fontSize = 12.5.sp,
+                "compartilhar relatório", color = Cores.bomClaro, fontSize = Tipos.corpoPequeno,
                 modifier = Modifier.clickable {
                     Exportador.compartilhar(
                         contexto, emptyList(), "Relatório do ponto",

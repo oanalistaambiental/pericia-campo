@@ -68,7 +68,7 @@ fun TelaConversorUnidades(voltar: () -> Unit) {
                     )
                     if (valorTexto.isNotBlank() && valor == null) {
                         Spacer(Modifier.height(4.dp))
-                        Text("Não reconheci esse número.", color = Cores.atencaoClaro, fontSize = 11.5.sp)
+                        Text("Não reconheci esse número.", color = Cores.atencaoClaro, fontSize = Tipos.explicativo)
                     }
 
                     Rotulo("UNIDADE DE ORIGEM")

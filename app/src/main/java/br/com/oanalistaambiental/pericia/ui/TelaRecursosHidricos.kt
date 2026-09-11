@@ -259,7 +259,7 @@ private fun LinhaRegistroCaptacao(vm: CapturaViewModel, r: RegistroCaptacao) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
                 rotuloTipoCaptacao(r.tipoCaptacao),
-                color = Cores.texto, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold
+                color = Cores.texto, fontSize = Tipos.corpoPequeno, fontWeight = FontWeight.SemiBold
             )
             Spacer(Modifier.weight(1f))
             Text(
@@ -324,7 +324,7 @@ private fun CartaoResultadoUsoInsignificante(r: ResultadoUsoInsignificante) {
             Spacer(Modifier.height(8.dp))
             Text(
                 "Também precisa, cumulativamente:",
-                color = Color.White, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold
+                color = Color.White, fontSize = Tipos.corpoPequeno, fontWeight = FontWeight.SemiBold
             )
             r.condicoesAdicionais.forEach {
                 Text("• $it", color = Color(0xE6FFFFFF), fontSize = 12.sp, lineHeight = 16.sp)
@@ -357,7 +357,7 @@ private fun ColumnScope.AbaEscritorio() {
                         "Conselho Estadual de Recursos Hídricos (CERH-MG). Abaixo do limiar: " +
                         "Cadastro de Uso Insignificante (hoje pelo módulo SOUT, com certidão " +
                         "online). Acima: Outorga de Direito de Uso de Recursos Hídricos.",
-                    color = Cores.textoFraco, fontSize = 12.5.sp, lineHeight = 17.sp
+                    color = Cores.textoFraco, fontSize = Tipos.corpoPequeno, lineHeight = 17.sp
                 )
                 Spacer(Modifier.height(12.dp))
                 NormaLinha(
@@ -389,7 +389,7 @@ private fun ColumnScope.AbaEscritorio() {
                         "de restrição ligadas a recursos hídricos que o pacote traz — área de " +
                         "conflito por recursos hídricos e rios de preservação permanente, entre " +
                         "outras. O alerta aparece na hora, sem precisar abrir esta aba.",
-                    color = Cores.textoFraco, fontSize = 12.5.sp, lineHeight = 17.sp
+                    color = Cores.textoFraco, fontSize = Tipos.corpoPequeno, lineHeight = 17.sp
                 )
                 Spacer(Modifier.height(24.dp))
             }
@@ -402,7 +402,7 @@ private fun NormaLinha(contexto: Context, titulo: String, descricao: String, url
     CartaoItem {
         Text(titulo, color = Cores.texto, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
         Spacer(Modifier.height(2.dp))
-        Text(descricao, color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 15.sp)
+        Text(descricao, color = Cores.textoFraco, fontSize = Tipos.explicativo, lineHeight = 15.sp)
         Spacer(Modifier.height(4.dp))
         Text(
             url, color = Cores.bomClaro, fontSize = 10.sp, textDecoration = TextDecoration.Underline,
