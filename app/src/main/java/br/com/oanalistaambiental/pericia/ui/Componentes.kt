@@ -510,6 +510,19 @@ fun OpcaoLista(rotulo: String, selecionado: Boolean, modifier: Modifier = Modifi
 }
 
 /**
+ * Ação de texto — "editar", "excluir", "compartilhar", "marcar cumprida"... o link colorido e
+ * clicável que se repetia em quase toda lista do app, cada tela escrevendo o mesmo
+ * `Text(..., modifier = Modifier.clickable {...})` com tamanho levemente diferente.
+ */
+@Composable
+fun AcaoTexto(rotulo: String, cor: Color = Cores.bomClaro, modifier: Modifier = Modifier, aoClicar: () -> Unit) {
+    Text(
+        rotulo, color = cor, fontSize = 12.sp, fontWeight = FontWeight.SemiBold,
+        modifier = modifier.clickable { aoClicar() }
+    )
+}
+
+/**
  * Câmera mínima — só tira uma foto e devolve o arquivo. Nada de sessão, legenda ou hash aqui:
  * quem grava o hash é o ViewModel, ao salvar o registro. Compartilhada entre qualquer tela que
  * precise de uma captura avulsa (Ocorrência ambiental, Recursos hídricos, ...) — extraída daqui

@@ -115,24 +115,20 @@ private fun LinhaRegistroFicha(vm: CapturaViewModel, r: RegistroFicha) {
         Mono("${respostas.size} item(ns) respondido(s)")
         Spacer(Modifier.height(6.dp))
         Row {
-            Text(
-                "compartilhar", color = Cores.bomClaro, fontSize = 11.5.sp,
-                modifier = Modifier.clickable {
-                    Exportador.compartilhar(
-                        contexto, emptyList(),
-                        "Ficha de vistoria — ${r.modeloNome}", textoFicha(r, respostas)
-                    )
-                }
-            )
+            AcaoTexto("compartilhar") {
+                Exportador.compartilhar(
+                    contexto, emptyList(),
+                    "Ficha de vistoria — ${r.modeloNome}", textoFicha(r, respostas)
+                )
+            }
             Spacer(Modifier.width(16.dp))
-            Text(
+            AcaoTexto(
                 if (confirmarExclusao) "confirmar exclusão?" else "excluir",
-                color = Cores.alertaClaro, fontSize = 11.5.sp,
-                modifier = Modifier.clickable {
-                    if (confirmarExclusao) { vm.excluirRegistroFicha(r); confirmarExclusao = false }
-                    else confirmarExclusao = true
-                }
-            )
+                cor = Cores.alertaClaro
+            ) {
+                if (confirmarExclusao) { vm.excluirRegistroFicha(r); confirmarExclusao = false }
+                else confirmarExclusao = true
+            }
         }
     }
 }

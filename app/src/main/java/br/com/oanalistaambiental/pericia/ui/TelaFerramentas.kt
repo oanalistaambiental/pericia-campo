@@ -1399,14 +1399,14 @@ fun TelaPontosSalvos(vm: CapturaViewModel, voltar: () -> Unit) {
                             Spacer(Modifier.height(2.dp))
                             Mono("%.6f, %.6f".format(java.util.Locale.US, pt.lat, pt.lon), Cores.textoFraco, 10)
                         }
-                        Text(
+                        AcaoTexto(
                             if (confirmarExclusao == pt.id) "confirmar?" else "excluir",
-                            color = Cores.alertaClaro, fontSize = 12.sp,
-                            modifier = Modifier.clickable {
-                                if (confirmarExclusao == pt.id) { vm.excluirPonto(pt.id); confirmarExclusao = null }
-                                else confirmarExclusao = pt.id
-                            }.padding(8.dp)
-                        )
+                            cor = Cores.alertaClaro,
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            if (confirmarExclusao == pt.id) { vm.excluirPonto(pt.id); confirmarExclusao = null }
+                            else confirmarExclusao = pt.id
+                        }
                     }
                     HorizontalDivider(color = Cores.linha)
                 }

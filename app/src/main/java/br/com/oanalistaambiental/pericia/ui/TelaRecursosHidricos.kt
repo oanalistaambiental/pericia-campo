@@ -284,14 +284,13 @@ private fun LinhaRegistroCaptacao(vm: CapturaViewModel, r: RegistroCaptacao) {
             Text("com foto", color = Cores.bomClaro, fontSize = 10.5.sp)
         }
         Spacer(Modifier.height(6.dp))
-        Text(
+        AcaoTexto(
             if (confirmarExclusao) "confirmar exclusão?" else "excluir",
-            color = Cores.alertaClaro, fontSize = 11.5.sp,
-            modifier = Modifier.clickable {
-                if (confirmarExclusao) { vm.excluirRegistroCaptacao(r); confirmarExclusao = false }
-                else confirmarExclusao = true
-            }
-        )
+            cor = Cores.alertaClaro
+        ) {
+            if (confirmarExclusao) { vm.excluirRegistroCaptacao(r); confirmarExclusao = false }
+            else confirmarExclusao = true
+        }
     }
 }
 

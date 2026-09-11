@@ -562,19 +562,18 @@ private fun ModoVistoria(vm: CapturaViewModel, sessao: Sessao) {
                                 color = Cores.texto, fontSize = 12.sp
                             )
                         }
-                        Text(
-                            "compartilhar", color = Cores.bomClaro, fontSize = 11.5.sp,
-                            modifier = Modifier.clickable { vm.compartilharAudio(a) }.padding(8.dp)
-                        )
-                        Text(
+                        AcaoTexto("compartilhar", modifier = Modifier.padding(8.dp)) {
+                            vm.compartilharAudio(a)
+                        }
+                        AcaoTexto(
                             if (confirmarExclusaoAudio == a.id) "confirmar?" else "excluir",
-                            color = Cores.alertaClaro, fontSize = 11.5.sp,
-                            modifier = Modifier.clickable {
-                                if (confirmarExclusaoAudio == a.id) {
-                                    vm.excluirAudio(sessao.id, a); confirmarExclusaoAudio = null
-                                } else confirmarExclusaoAudio = a.id
-                            }.padding(8.dp)
-                        )
+                            cor = Cores.alertaClaro,
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            if (confirmarExclusaoAudio == a.id) {
+                                vm.excluirAudio(sessao.id, a); confirmarExclusaoAudio = null
+                            } else confirmarExclusaoAudio = a.id
+                        }
                     }
                 }
             }

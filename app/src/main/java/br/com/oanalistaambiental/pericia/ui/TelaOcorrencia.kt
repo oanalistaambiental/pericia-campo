@@ -336,22 +336,21 @@ private fun ColumnScope.MinhasOcorrencias(vm: CapturaViewModel, aoEditar: (Ocorr
                 }
                 Spacer(Modifier.height(8.dp))
                 Row {
-                    Text(
-                        "editar", color = Cores.texto, fontSize = 12.sp,
-                        modifier = Modifier.clickable { aoEditar(o) }.padding(end = 20.dp, top = 4.dp, bottom = 4.dp)
-                    )
-                    Text(
-                        "compartilhar", color = Cores.bomClaro, fontSize = 12.sp,
-                        modifier = Modifier.clickable { vm.compartilharOcorrencia(o) }.padding(end = 20.dp, top = 4.dp, bottom = 4.dp)
-                    )
-                    Text(
+                    AcaoTexto("editar", modifier = Modifier.padding(end = 20.dp, top = 4.dp, bottom = 4.dp)) {
+                        aoEditar(o)
+                    }
+                    AcaoTexto(
+                        "compartilhar",
+                        modifier = Modifier.padding(end = 20.dp, top = 4.dp, bottom = 4.dp)
+                    ) { vm.compartilharOcorrencia(o) }
+                    AcaoTexto(
                         if (confirmarExclusao == o.id) "confirmar exclusão?" else "excluir",
-                        color = Cores.alertaClaro, fontSize = 12.sp,
-                        modifier = Modifier.clickable {
-                            if (confirmarExclusao == o.id) { vm.excluirOcorrencia(o); confirmarExclusao = null }
-                            else confirmarExclusao = o.id
-                        }.padding(vertical = 4.dp)
-                    )
+                        cor = Cores.alertaClaro,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    ) {
+                        if (confirmarExclusao == o.id) { vm.excluirOcorrencia(o); confirmarExclusao = null }
+                        else confirmarExclusao = o.id
+                    }
                 }
             }
             HorizontalDivider(color = Cores.linha)

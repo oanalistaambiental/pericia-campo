@@ -83,10 +83,9 @@ fun TelaCondicionantes(vm: CapturaViewModel, voltar: () -> Unit) {
                     color = Cores.textoFraco, fontSize = 11.5.sp, lineHeight = 16.sp
                 )
                 Spacer(Modifier.height(8.dp))
-                Text(
-                    "Ativar notificações", color = Cores.bomClaro, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { pedirNotificacao.launch(Manifest.permission.POST_NOTIFICATIONS) }
-                )
+                AcaoTexto("Ativar notificações") {
+                    pedirNotificacao.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
             }
         }
 
@@ -190,25 +189,19 @@ private fun LinhaCondicionante(
         }
         Spacer(Modifier.height(6.dp))
         Row {
-            Text(
-                if (c.cumprida) "reabrir" else "marcar cumprida",
-                color = Cores.bomClaro, fontSize = 11.5.sp,
-                modifier = Modifier.clickable { vm.marcarCondicionanteCumprida(c, !c.cumprida) }
-            )
+            AcaoTexto(if (c.cumprida) "reabrir" else "marcar cumprida") {
+                vm.marcarCondicionanteCumprida(c, !c.cumprida)
+            }
             Spacer(Modifier.width(16.dp))
-            Text(
-                "editar", color = Cores.bomClaro, fontSize = 11.5.sp,
-                modifier = Modifier.clickable { aoEditar(c) }
-            )
+            AcaoTexto("editar") { aoEditar(c) }
             Spacer(Modifier.width(16.dp))
-            Text(
+            AcaoTexto(
                 if (confirmarExclusao) "confirmar exclusão?" else "excluir",
-                color = Cores.alertaClaro, fontSize = 11.5.sp,
-                modifier = Modifier.clickable {
-                    if (confirmarExclusao) { vm.excluirCondicionante(c); confirmarExclusao = false }
-                    else confirmarExclusao = true
-                }
-            )
+                cor = Cores.alertaClaro
+            ) {
+                if (confirmarExclusao) { vm.excluirCondicionante(c); confirmarExclusao = false }
+                else confirmarExclusao = true
+            }
         }
     }
 }
@@ -341,28 +334,21 @@ private fun ColumnScope.FormularioCondicionante(
                     )
                     Spacer(Modifier.height(6.dp))
                     Row {
-                        Text(
-                            "criar", color = Cores.bomClaro, fontSize = 12.5.sp, fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.clickable {
-                                val nome = novoEmpreendimentoNome.trim()
-                                if (nome.isNotBlank()) {
-                                    vm.criarEmpreendimento(nome) { id -> empreendimentoId = id }
-                                    novoEmpreendimentoNome = ""
-                                    criandoEmpreendimento = false
-                                }
+                        AcaoTexto("criar") {
+                            val nome = novoEmpreendimentoNome.trim()
+                            if (nome.isNotBlank()) {
+                                vm.criarEmpreendimento(nome) { id -> empreendimentoId = id }
+                                novoEmpreendimentoNome = ""
+                                criandoEmpreendimento = false
                             }
-                        )
+                        }
                         Spacer(Modifier.width(16.dp))
-                        Text(
-                            "cancelar", color = Cores.textoFraco, fontSize = 12.5.sp,
-                            modifier = Modifier.clickable { criandoEmpreendimento = false; novoEmpreendimentoNome = "" }
-                        )
+                        AcaoTexto("cancelar", cor = Cores.textoFraco) {
+                            criandoEmpreendimento = false; novoEmpreendimentoNome = ""
+                        }
                     }
                 } else {
-                    Text(
-                        "+ novo empreendimento", color = Cores.bomClaro, fontSize = 12.5.sp,
-                        modifier = Modifier.clickable { criandoEmpreendimento = true }
-                    )
+                    AcaoTexto("+ novo empreendimento") { criandoEmpreendimento = true }
                 }
 
                 Rotulo("FOTO DO PARECER (OPCIONAL)")
